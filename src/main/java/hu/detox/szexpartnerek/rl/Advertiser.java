@@ -40,6 +40,7 @@ public class Advertiser implements TrafoEngine, Flushable {
     private final Map.Entry<String, Properties> likes = new AbstractMap.SimpleEntry<>("likes", new Properties());
     private final Map.Entry<String, Properties> lookings = new AbstractMap.SimpleEntry<>("looking", new Properties());
     private final Map.Entry<String, Properties> answers = new AbstractMap.SimpleEntry<>("answers", new Properties());
+    private transient Set<String> alreadyProcessed = new HashSet<>();
     private Properties addedProps = new Properties();
     private Map<String, String> map;
     private Map<String, String> massage;
@@ -74,7 +75,10 @@ public class Advertiser implements TrafoEngine, Flushable {
 
     @Override
     public Function<String, String> url() {
-        return s -> "rosszlanyok.php?pid=szexpartner-data&id=" + s + "&instantStat=0";
+        return s -> {
+            if (alreadyProcessed.contains(s)) return null;
+            return "rosszlanyok.php?pid=szexpartner-data&id=" + s + "&instantStat=0";
+        };
     }
 
     @Override
@@ -157,7 +161,7 @@ public class Advertiser implements TrafoEngine, Flushable {
     private boolean addMassage(ArrayNode arr, String prp) {
         String enm = Utils.toEnumLike(prp);
         boolean anyMass = enm != null && enm.contains("MASSZAZS") && !enm.equals("MASSZAZS");
-        enm = massageReverse.get(enm);
+        if (!massages.getValue().containsKey(enm)) enm = massageReverse.get(enm);
         boolean ret = enm != null || anyMass;
         if (ret) {
             if (enm == null) {
@@ -566,5 +570,11 @@ public class Advertiser implements TrafoEngine, Flushable {
             massages.getValue().store(fos, "Advertiser supported massages");
         }
         addedProps.clear();
+    }
+
+    @Override
+    public void close() throws Exception {
+        alreadyProcessed.clear();
+        TrafoEngine.super.close();
     }
 }
