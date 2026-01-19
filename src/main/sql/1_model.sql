@@ -18,9 +18,16 @@ CREATE TABLE user
     weight INTEGER,
     size   INTEGER,
     gender TEXT,
-    regd   DATE
+    regd   DATE,
+    ts     DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
+CREATE TRIGGER update_user_ingestion_date
+    AFTER UPDATE
+    ON user
+    FOR EACH ROW
+BEGIN
+    UPDATE user SET ts = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
 CREATE TABLE tmp_user_likes
 (
     user_id INTEGER NOT NULL REFERENCES user (id),
@@ -48,9 +55,17 @@ CREATE TABLE partner
     latitude        REAL,
     longitude       REAL,
     looking_age_min SMALLINT,
-    looking_age_max SMALLINT
+    looking_age_max SMALLINT,
+    ts              DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TRIGGER update_partner_ingestion_date
+    AFTER UPDATE
+    ON partner
+    FOR EACH ROW
+BEGIN
+    UPDATE partner SET ts = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
 -- Phone props: links phone to int_enum (props)
 CREATE TABLE partner_phone_prop
 (

@@ -13,6 +13,7 @@ import java.sql.*;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 public class AdvertiserPersister implements Persister, Flushable {
     private final PreparedStatement enumCount;
@@ -74,6 +75,14 @@ public class AdvertiserPersister implements Persister, Flushable {
         this.likeStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_like (partner_id, enum_id, option) VALUES (?, ?, ?)");
         this.imgStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_img (partner_id, ondate, path) VALUES (?, ?, ?)");
         this.activityStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_activity (partner_id, ondate, description) VALUES (?, ?, ?)");
+    }
+
+    public void loadAllIds(Set<String> ids) throws SQLException {
+        try (ResultSet rs = phonePropStmt.getConnection().createStatement().executeQuery("SELECT id FROM partner WHERE ts > datetime('now', '-1 day')")) {
+            while (rs.next()) {
+                ids.add(rs.getString(1));
+            }
+        }
     }
 
     public void addProps(Properties props) throws IOException, SQLException {

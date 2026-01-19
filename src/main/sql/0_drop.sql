@@ -2,6 +2,8 @@
 DROP VIEW IF EXISTS partner_view;
 
 -- Drop triggers first
+DROP TRIGGER IF EXISTS update_user_ingestion_date;
+DROP TRIGGER IF EXISTS update_partner_ingestion_date;
 DROP TRIGGER IF EXISTS partner_phone_prop_enum_type_check;
 DROP TRIGGER IF EXISTS partner_prop_enum_type_check;
 DROP TRIGGER IF EXISTS partner_answer_enum_type_check;

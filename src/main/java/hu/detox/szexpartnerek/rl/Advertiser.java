@@ -50,6 +50,7 @@ public class Advertiser implements TrafoEngine, Flushable {
     private Advertiser() {
         try {
             persister = new AdvertiserPersister();
+            persister.loadAllIds(alreadyProcessed);
             loadEnums();
             map = Utils.map("src/main/resources/adv-mapping.kv");
             massage = Utils.map("src/main/resources/massage-mapping.kv");
@@ -161,7 +162,7 @@ public class Advertiser implements TrafoEngine, Flushable {
     private boolean addMassage(ArrayNode arr, String prp) {
         String enm = Utils.toEnumLike(prp);
         boolean anyMass = enm != null && enm.contains("MASSZAZS") && !enm.equals("MASSZAZS");
-        if (!massages.getValue().containsKey(enm)) enm = massageReverse.get(enm);
+        if (enm != null && !massages.getValue().containsKey(enm)) enm = massageReverse.get(enm);
         boolean ret = enm != null || anyMass;
         if (ret) {
             if (enm == null) {
