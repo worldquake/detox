@@ -63,7 +63,7 @@ public class UserReviews implements TrafoEngine {
 
     @Override
     public File out() {
-        return new File("target/users.txt");
+        return new File("target/user-reviews.jsonl");
     }
 
     @Override

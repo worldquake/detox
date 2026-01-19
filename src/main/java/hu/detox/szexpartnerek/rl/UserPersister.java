@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import hu.detox.szexpartnerek.Db;
 import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.Utils;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -12,18 +11,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 
 public class UserPersister implements Persister, Flushable {
     private final PreparedStatement userStmt;
     private final PreparedStatement userLikesStmt;
     private final PreparedStatement userLikesDeleteStmt;
     private int batch;
-    private Map<String, String> advMapping;
 
     public UserPersister() throws SQLException, IOException {
         Connection conn = Main.APP.getConn();
-        advMapping = Utils.map("src/main/resources/adv-mapping.kv");
         String userSql = "INSERT INTO user (id, name, age, height, weight, gender, regd, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON CONFLICT(id) DO UPDATE SET " +
                 "name = excluded.name, " +
@@ -100,7 +96,6 @@ public class UserPersister implements Persister, Flushable {
             for (JsonNode likeNode : likesNode) {
                 String like = likeNode.asText();
                 if (like != null && !like.isEmpty()) {
-                    like = Utils.toEnumLike(advMapping.getOrDefault(like, like));
                     userLikesStmt.setObject(1, idObj);
                     userLikesStmt.setString(2, like);
                     userLikesStmt.addBatch();

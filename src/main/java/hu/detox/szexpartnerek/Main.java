@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import hu.detox.szexpartnerek.rl.Lista;
 import hu.detox.szexpartnerek.rl.New;
 import hu.detox.szexpartnerek.rl.User;
+import okhttp3.Response;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.Flushable;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,6 +23,7 @@ import java.util.function.Function;
 public class Main implements Callable<Integer>, AutoCloseable {
     public static final Main APP = new Main();
     public static final String JSONL = ".jsonl";
+    public static final String SER = ".ser";
     private Http rl = new Http("https://rosszlanyok.hu/");
     private static Db DB = new Db(new File("target/data/db.sqlite3"));
     private transient Set<AutoCloseable> closeables = new HashSet<>();
@@ -45,9 +49,9 @@ public class Main implements Callable<Integer>, AutoCloseable {
         System.out.println(Serde.OM.valueToTree(res));
     }
 
-    public void transformAll(Serde serde, TrafoEngine engine, boolean inJsonl, String... urls) throws IOException, SQLException {
+    public void transformAll(Serde serde, TrafoEngine engine, String... urls) throws IOException, SQLException {
         String typ = null;
-        int page = inJsonl ? 0 : engine.page();
+        int page = serde.isUrlMode() ? engine.page() : 0;
         int cpage;
         Persister p = engine.persister();
         if (page > 0) {
@@ -59,14 +63,14 @@ public class Main implements Callable<Integer>, AutoCloseable {
                 if (url == null) continue;
                 cpage = 0;
                 while (true) {
-                    JsonNode bodyNode;
-                    if (inJsonl) {
-                        bodyNode = Serde.OM.readTree(url);
-                    } else {
+                    JsonNode bodyNode = null;
+                    if (serde.inMode() == null || serde.inMode().equals(Serde.Mode.TXT)) {
                         String curl = url + (typ == null ? "" : "&" + typ + cpage);
                         var resp = rl.get(curl);
                         System.err.println("Current is " + curl);
                         bodyNode = serde.serialize(resp, engine);
+                    } else if (serde.inMode().equals(Serde.Mode.JSONL)) {
+                        bodyNode = Serde.OM.readTree(url);
                     }
                     if (bodyNode == null) {
                         break;
@@ -100,36 +104,38 @@ public class Main implements Callable<Integer>, AutoCloseable {
         boolean cont = true;
         String[] arr = new String[10];
         String ln;
-        File outf = engine.out();
-        boolean outJsonl = outf.getName().endsWith(Main.JSONL);
-        PrintStream ps = new PrintStream(new FileOutputStream(outf));
-        BufferedReader br = null;
-        boolean inJsonl = false;
+        File out = engine.out();
+        Serde serde = null;
         try {
             File in = null;
-            for (String fp : engine.in()) {
+            if (parent == null) for (String fp : engine.in()) {
                 File f = new File(fp);
                 if (f.isFile()) {
                     in = f;
-                    inJsonl = f.getName().endsWith(Main.JSONL);
                     break;
                 }
             }
             Iterator<?> ini = parent == null ? null : engine.input(parent);
-            br = parent != null || in == null ? null : new BufferedReader(new FileReader(in));
-            Serde serde = new Serde(outJsonl, ps, null);
+            serde = new Serde(out, in);
             while (cont) {
                 Arrays.fill(arr, null);
-                if (br == null && ini == null) {
+                if (in == null && ini == null) {
                     arr[0] = engine.url().apply(null);
                     cont = false;
                 } else {
                     for (int i = 0; i < 10; i++) {
                         ln = null;
-                        if (br != null) ln = br.readLine();
-                        else if (ini.hasNext()) {
-                            Object o = ini.next();
-                            ln = o instanceof JsonNode jn ? jn.asText() : o.toString();
+                        if (ini != null) {
+                            if (ini.hasNext()) {
+                                Object o = ini.next();
+                                ln = o instanceof JsonNode jn ? jn.asText() : o.toString();
+                            }
+                        } else if (serde.inMode().equals(Serde.Mode.TXT)) {
+                            ln = (String) serde.next();
+                        } else {
+                            Response resp = (Response) serde.next();
+                            var body = resp.body();
+                            ln = body == null ? null : body.string();
                         }
                         if (ln == null) {
                             cont = false;
@@ -138,12 +144,11 @@ public class Main implements Callable<Integer>, AutoCloseable {
                         arr[i] = engine.url().apply(ln);
                     }
                 }
-                transformAll(serde, engine, inJsonl, arr);
+                transformAll(serde, engine, arr);
             }
         } finally {
-            if (br != null) br.close();
+            if (serde != null) serde.close();
             if (engine instanceof Flushable fle) fle.flush();
-            ps.close();
             closeables.add(engine);
         }
     }

@@ -62,7 +62,7 @@ public class New implements TrafoEngine {
 
     @Override
     public File out() {
-        return new File("target/newids.txt");
+        return new File("target/newids.jsonl");
     }
 
     @Override

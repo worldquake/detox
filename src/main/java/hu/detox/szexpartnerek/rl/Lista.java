@@ -71,7 +71,7 @@ public class Lista implements TrafoEngine {
 
     @Override
     public File out() {
-        return new File("target/lists.txt");
+        return new File("target/lists.jsonl");
     }
 
     @Override
