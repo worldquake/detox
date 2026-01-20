@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 public class Lista implements TrafoEngine {
     public static final Lista INSTANCE = new Lista();
-    private static final TrafoEngine[] SUB = new TrafoEngine[]{Advertiser.INSTANCE};
+    private static final TrafoEngine[] SUB = new TrafoEngine[]{Partner.INSTANCE};
     private Set<Integer> ids;
     private transient ListaPersister persister;
 

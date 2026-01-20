@@ -25,7 +25,7 @@ public class ListaPersister implements Persister, Flushable {
         // Delete from partner_prop for dynamic lists
         conn.createStatement().executeUpdate(
                 "DELETE FROM partner_prop " +
-                        "WHERE enum_id IN (SELECT id FROM int_enum WHERE type = 'properties' AND name IN ('AJANLOTT', 'BARATNOVEL'))"
+                        "WHERE " + Persister.ENUM_IDR + " IN (SELECT id FROM int_enum WHERE type = 'properties' AND name IN ('AJANLOTT', 'BARATNOVEL'))"
         );
         this.partnerListStmt = conn.prepareStatement(
                 "INSERT OR IGNORE INTO partner_list (tag, id, name, age, image) VALUES (?, ?, ?, ?, ?)"
@@ -65,7 +65,7 @@ public class ListaPersister implements Persister, Flushable {
         flush();
         // Insert or ignore into partner_prop based on lists
         partnerListStmt.getConnection().createStatement().executeUpdate(
-                "INSERT OR IGNORE INTO partner_prop (partner_id, enum_id) " +
+                "INSERT OR IGNORE INTO partner_prop (" + Partner.IDR + ", " + Persister.ENUM_IDR + ") " +
                         "SELECT pl.id, ie.id " +
                         "FROM partner_list pl " +
                         "JOIN int_enum ie ON ie.type = 'properties' AND ie.name = pl.tag"

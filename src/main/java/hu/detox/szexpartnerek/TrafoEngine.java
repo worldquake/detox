@@ -12,7 +12,13 @@ public interface TrafoEngine extends Function<String, Object>, AutoCloseable {
 
     Iterator<?> input(JsonNode parent);
 
-    TrafoEngine[] subTrafos();
+    default TrafoEngine[] subTrafos() {
+        return null;
+    }
+
+    default TrafoEngine[] preTrafos() {
+        return null;
+    }
 
     Persister persister();
 
@@ -24,7 +30,9 @@ public interface TrafoEngine extends Function<String, Object>, AutoCloseable {
 
     File out();
 
-    Iterator<String> pager();
+    default Iterator<String> pager() {
+        return null;
+    }
 
     @Override
     default void close() throws Exception {

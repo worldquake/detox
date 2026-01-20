@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 public class New implements TrafoEngine {
     public static final New INSTANCE = new New();
-    private static final TrafoEngine[] SUB = new TrafoEngine[]{Advertiser.INSTANCE, User.INSTANCE};
+    private static final TrafoEngine[] SUB = new TrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
     public static final String PARTNERS = "partners";
     public static final String USERS = "users";
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import hu.detox.szexpartnerek.Db;
 import hu.detox.szexpartnerek.Persister;
+import hu.detox.szexpartnerek.TrafoEngine;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import static hu.detox.szexpartnerek.Utils.getField;
 
 
 public class UserReviewPersister implements Persister, Flushable {
+    private static final TrafoEngine[] PRE = new TrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
     private final PreparedStatement feedbackStmt;
     private final PreparedStatement ratingStmt;
     private final PreparedStatement gbStmt;
@@ -26,26 +28,26 @@ public class UserReviewPersister implements Persister, Flushable {
 
     public UserReviewPersister(Connection conn) throws SQLException {
         feedbackStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback (id, user_id, enum_id, partner_id, name, after_name, useful, age, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "INSERT INTO user_partner_feedback (id, user_id, " + Persister.ENUM_IDR + ", " + Partner.IDR + ", name, after_name, useful, age, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON CONFLICT(id, user_id) DO UPDATE SET " +
-                        "partner_id = COALESCE(user_partner_feedback.partner_id, excluded.partner_id), " +
-                        "enum_id = COALESCE(user_partner_feedback.enum_id, excluded.enum_id), " +
+                        Partner.IDR + " = COALESCE(user_partner_feedback." + Partner.IDR + ", excluded." + Partner.IDR + "), " +
+                        Persister.ENUM_IDR + " = COALESCE(user_partner_feedback." + Persister.ENUM_IDR + ", excluded." + Persister.ENUM_IDR + "), " +
                         "name = excluded.name, after_name = excluded.after_name, " +
                         "useful = COALESCE(user_partner_feedback.useful, excluded.useful), " +
                         "age = COALESCE(user_partner_feedback.age, excluded.age), " +
                         "ts = COALESCE(user_partner_feedback.ts, excluded.ts)"
         );
         ratingStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback_rating (fbid, enum_id, val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT(fbid, enum_id) DO UPDATE SET val=excluded.val"
+                "INSERT INTO user_partner_feedback_rating (fbid, " + Persister.ENUM_IDR + ", val) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, " + Persister.ENUM_IDR + ") DO UPDATE SET val=excluded.val"
         );
         gbStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback_gb (fbid, bad, enum_id) VALUES (?, ?, ?) " +
-                        "ON CONFLICT(fbid, bad, enum_id) DO NOTHING"
+                "INSERT INTO user_partner_feedback_gb (fbid, bad, " + Persister.ENUM_IDR + ") VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, bad, " + Persister.ENUM_IDR + ") DO NOTHING"
         );
         detailsStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback_details (fbid, enum_id, val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT(fbid, enum_id) DO UPDATE SET val=excluded.val"
+                "INSERT INTO user_partner_feedback_details (fbid, " + Persister.ENUM_IDR + ", val) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, " + Persister.ENUM_IDR + ") DO UPDATE SET val=excluded.val"
         );
     }
 
@@ -53,9 +55,9 @@ public class UserReviewPersister implements Persister, Flushable {
         // Insert main feedback
         int fbid = item.get("id").intValue();
         feedbackStmt.setInt(1, fbid);
-        feedbackStmt.setObject(2, getField(item, "user_id"));
+        feedbackStmt.setObject(2, getField(item, User.IDR));
         feedbackStmt.setInt(3, intk);
-        feedbackStmt.setObject(4, getField(item, "partner_id"), Types.INTEGER);
+        feedbackStmt.setObject(4, getField(item, Partner.IDR), Types.INTEGER);
         feedbackStmt.setObject(5, getField(item, "name"));
         feedbackStmt.setObject(6, getField(item, "after_name"));
         feedbackStmt.setObject(7, getField(item, "useful"), Types.INTEGER);
@@ -117,6 +119,10 @@ public class UserReviewPersister implements Persister, Flushable {
         if (batch >= Db.MAX_BATCH) {
             flush();
         }
+    }
+
+    TrafoEngine[] preTrafos() {
+        return PRE;
     }
 
     @Override

@@ -171,7 +171,7 @@ public class UserReview extends Mapper {
 
     protected ObjectNode readSingle(Integer idp, Element elem) {
         var ret = Serde.OM.createObjectNode();
-        ret.put("user_id", idp);
+        ret.put(User.IDR, idp);
 
         // 1. "ts" field: date from onmouseover attribute in the right dateDiv
         Element dateDiv = elem.selectFirst("div[id^=dateDiv]");
@@ -248,7 +248,6 @@ public class UserReview extends Mapper {
         // 6. "good" and "bad" arrays
         ArrayNode goodArr = ret.putArray("good");
         ArrayNode badArr = ret.putArray("bad");
-        // Good: border-color: #5AEA28 or rgb(90,234,40)
         for (Element div : elem.select("div[style]")) {
             String style = div.attr("style");
             ArrayNode an = style.contains("5AEA28") ? goodArr : style.contains("FF0000") ? badArr : null;
@@ -289,7 +288,7 @@ public class UserReview extends Mapper {
         Document soup = Jsoup.parse(s);
         String[] sels = selectors();
         Comment cmt = ((Comment) soup.childNode(0));
-        Matcher m = Advertiser.IDP.matcher(cmt.getData());
+        Matcher m = Partner.IDP.matcher(cmt.getData());
         Integer idp = null;
         if (m.find()) idp = Integer.parseInt(m.group(2));
         Element hel = soup.selectFirst("div#beszamoloHeaderDiv");

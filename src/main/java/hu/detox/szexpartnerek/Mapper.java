@@ -2,7 +2,7 @@ package hu.detox.szexpartnerek;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import hu.detox.szexpartnerek.rl.Advertiser;
+import hu.detox.szexpartnerek.rl.Partner;
 
 import java.io.*;
 import java.sql.Connection;
@@ -83,7 +83,7 @@ public abstract class Mapper implements TrafoEngine, Flushable {
 
     public void resetProps() throws IOException, SQLException {
         Properties props = new Properties();
-        props.load(new BufferedReader(new FileReader(Advertiser.ENUMS)));
+        props.load(new BufferedReader(new FileReader(Partner.ENUMS)));
         enumDel.executeUpdate();
         addProps(props);
     }

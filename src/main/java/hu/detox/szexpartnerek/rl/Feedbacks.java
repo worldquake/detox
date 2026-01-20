@@ -3,6 +3,7 @@ package hu.detox.szexpartnerek.rl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import hu.detox.szexpartnerek.Pager;
+import hu.detox.szexpartnerek.TrafoEngine;
 import hu.detox.szexpartnerek.Utils;
 import okhttp3.RequestBody;
 import org.apache.commons.io.FileUtils;
@@ -18,6 +19,7 @@ import java.util.regex.Matcher;
 
 public class Feedbacks extends UserReview {
     public static final Feedbacks INSTANCE = new Feedbacks();
+    private static final TrafoEngine[] SUB = new TrafoEngine[]{User.INSTANCE};
     private List<String> datas;
 
     public Feedbacks() {
@@ -69,7 +71,7 @@ public class Feedbacks extends UserReview {
     @Override
     protected ObjectNode readSingle(Integer idp, Element elem) {
         String href = elem.selectFirst("div.beszHeader a").attr("href");
-        Matcher m = Advertiser.IDP.matcher(href);
+        Matcher m = Partner.IDP.matcher(href);
         if (m.find()) idp = Integer.parseInt(m.group(2));
         else return null;
         return super.readSingle(idp, elem);

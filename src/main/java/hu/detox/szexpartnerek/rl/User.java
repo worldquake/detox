@@ -16,12 +16,14 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class User implements TrafoEngine {
+    public static final String IDR = "user_id";
     public static final User INSTANCE = new User();
     private static final TrafoEngine[] SUB = new TrafoEngine[]{UserReview.INSTANCE};
     private transient UserPersister persister;
@@ -130,8 +132,11 @@ public class User implements TrafoEngine {
     @Override
     public Iterator<?> input(JsonNode parent) {
         ArrayNode an = (ArrayNode) parent.get(New.USERS);
+        JsonNode uid = an.get(User.IDR);
         if (an != null) {
             return an.iterator();
+        } else if (uid != null) {
+            return List.of(uid).iterator();
         }
         return null;
     }
@@ -157,11 +162,6 @@ public class User implements TrafoEngine {
     @Override
     public File out() {
         return new File("target/gen-users.jsonl");
-    }
-
-    @Override
-    public Iterator<String> pager() {
-        return null;
     }
 
     @Override

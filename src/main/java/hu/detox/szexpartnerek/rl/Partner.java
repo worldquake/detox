@@ -3,7 +3,10 @@ package hu.detox.szexpartnerek.rl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.*;
+import hu.detox.szexpartnerek.Mapper;
+import hu.detox.szexpartnerek.Persister;
+import hu.detox.szexpartnerek.Serde;
+import hu.detox.szexpartnerek.Utils;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
@@ -21,8 +24,9 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Advertiser extends Mapper {
-    public static final Advertiser INSTANCE = new Advertiser();
+public class Partner extends Mapper {
+    public static final String IDR = "partner_id";
+    public static final Partner INSTANCE = new Partner();
     public static final Pattern IDP = Pattern.compile("(id=|member/|adatlap/)([0-9]+)");
 
     private static final String EMAILP = "mailto:";
@@ -32,16 +36,16 @@ public class Advertiser extends Mapper {
     private static final Pattern READING = Pattern.compile("(\\d+) levél, (\\d+) olvasatlan");
     private static final Pattern MEASUERS = Pattern.compile("(\\d+\\+?)\\s*(éves|kg|mell|derék|csípő|cm)");
 
-    private transient AdvertiserPersister persister;
+    private transient PartnerPersister persister;
     private transient Set<String> alreadyProcessed = new HashSet<>();
     private Map<String, String> massage;
     private Map<String, String> looking;
     private Map<String, String> massageReverse = new HashMap<>();
 
-    private Advertiser() {
+    private Partner() {
         super("src/main/resources/prop-mapping.kv");
         try {
-            persister = new AdvertiserPersister();
+            persister = new PartnerPersister();
             persister.loadAllIds(alreadyProcessed);
             massage = Utils.map("src/main/resources/massage-mapping.kv");
             looking = Utils.map("src/main/resources/looking-mapping.kv");
@@ -95,11 +99,6 @@ public class Advertiser extends Mapper {
     }
 
     @Override
-    public Iterator<String> pager() {
-        return null;
-    }
-
-    @Override
     public Function<String, String> url() {
         return s -> {
             if (alreadyProcessed.contains(s)) return null;
@@ -110,8 +109,11 @@ public class Advertiser extends Mapper {
     @Override
     public Iterator<?> input(JsonNode parent) {
         ArrayNode an = (ArrayNode) parent.get(New.PARTNERS);
+        JsonNode node = parent.get(Partner.IDR);
         if (an != null) {
             return an.iterator();
+        } else if (node != null) {
+            return List.of(node).iterator();
         } else if (parent instanceof ObjectNode on) {
             ArrayList<Integer> res = new ArrayList<>(2000);
             for (JsonNode ian : on) {
@@ -121,11 +123,6 @@ public class Advertiser extends Mapper {
             }
             return res.iterator();
         }
-        return null;
-    }
-
-    @Override
-    public TrafoEngine[] subTrafos() {
         return null;
     }
 

@@ -86,8 +86,12 @@ public class Main implements Callable<Integer>, AutoCloseable {
                     if (bodyNode == null) {
                         break;
                     }
+                    TrafoEngine[] tes = engine.preTrafos();
+                    if (tes != null) for (TrafoEngine ste : tes) {
+                        rlDataDl(ste, bodyNode);
+                    }
                     if (p != null) p.save(bodyNode);
-                    TrafoEngine[] tes = engine.subTrafos();
+                    tes = engine.subTrafos();
                     if (tes != null) for (TrafoEngine ste : tes) {
                         rlDataDl(ste, bodyNode);
                     }

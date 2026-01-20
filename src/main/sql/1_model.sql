@@ -71,9 +71,9 @@ END;
 -- Phone props: links phone to int_enum (props)
 CREATE TABLE partner_phone_prop
 (
-    phone_id INTEGER NOT NULL REFERENCES partner (id) ON DELETE CASCADE,
-    enum_id  TINYINT NOT NULL REFERENCES int_enum (id) ON DELETE CASCADE,
-    PRIMARY KEY (phone_id, enum_id)
+    partner_id INTEGER NOT NULL REFERENCES partner (id) ON DELETE CASCADE,
+    enum_id    TINYINT NOT NULL REFERENCES int_enum (id) ON DELETE CASCADE,
+    PRIMARY KEY (partner_id, enum_id)
 );
 
 
