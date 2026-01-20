@@ -168,11 +168,12 @@ public class User implements TrafoEngine {
     public ObjectNode apply(String data) {
         var soup = Jsoup.parse(data);
         Element frst = soup.selectFirst("#about-me-user-list");
-        return frst == null ? null : getNodeFromLines(
-                soup.selectFirst("div#content").text(),
-                soup.selectFirst("td#felsoLanguage a").attr("href"),
+        String frstln = frst == null ? "" : Utils.text(frst);
+        String name = Utils.text(soup.selectFirst("div#content h1"));
+        return name == null ? null : getNodeFromLines(
+                name, soup.selectFirst("td#felsoLanguage a").attr("href"),
                 soup.selectFirst("table#dataUpperTable").text(),
-                frst.text()
+                frstln
         );
     }
 }

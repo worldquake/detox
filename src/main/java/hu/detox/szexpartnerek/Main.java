@@ -1,9 +1,6 @@
 package hu.detox.szexpartnerek;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.rl.Feedbacks;
-import hu.detox.szexpartnerek.rl.Lista;
-import hu.detox.szexpartnerek.rl.New;
 import hu.detox.szexpartnerek.rl.User;
 import okhttp3.RequestBody;
 import org.apache.commons.io.IOUtils;
@@ -117,10 +114,10 @@ public class Main implements Callable<Integer>, AutoCloseable {
 
     @Override
     public Integer call() throws Exception {
-        rlDataDl(true, Feedbacks.INSTANCE, null);
+        //rlDataDl(true, Feedbacks.INSTANCE, null);
         rlDataDl(true, User.INSTANCE, null);
-        rlDataDl(true, New.INSTANCE, null);
-        rlDataDl(true, Lista.INSTANCE, null);
+        //rlDataDl(true, New.INSTANCE, null);
+        //rlDataDl(true, Lista.INSTANCE, null);
         return 0;
     }
 
