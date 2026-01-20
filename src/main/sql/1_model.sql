@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 -- ENUM table for all referenced types
 CREATE TABLE int_enum
 (
@@ -253,3 +255,86 @@ SELECT p.*,
         FROM partner_open_hour poh
         WHERE poh.partner_id = p.id)   AS open_hours
 FROM partner p;
+
+
+-- Feedback tables
+CREATE TABLE user_partner_feedback
+(
+    id         INTEGER PRIMARY KEY,
+    enum_id    INTEGER  NOT NULL, -- references int_enum(id) where int_enum.type='fbtype'
+    partner_id INTEGER,           -- Not always visible
+    name       TEXT,
+    age        TINYINT,
+    after_name TEXT,
+    useful     INTEGER  NOT NULL,
+    ts         DATETIME NOT NULL
+);
+CREATE TRIGGER upfb_enum_check
+    BEFORE INSERT
+    ON user_partner_feedback
+    FOR EACH ROW
+BEGIN
+    SELECT CASE
+               WHEN (SELECT count(*) FROM int_enum WHERE id = NEW.enum_id AND type = 'fbtype') != 1
+                   THEN RAISE(ABORT,
+                              'user_partner_feedback: attempted to insert enum_id not found or not unique for type=fbtype')
+               END;
+END;
+
+CREATE TABLE user_partner_feedback_rating
+(
+    fbid    INTEGER NOT NULL REFERENCES user_partner_feedback (id) ON DELETE CASCADE,
+    enum_id INTEGER NOT NULL, -- references int_enum(id) where int_enum.type='fbrtype'
+    val     TINYINT,          -- nullable
+    PRIMARY KEY (fbid, enum_id)
+);
+CREATE TRIGGER upfb_rating_enum_check
+    BEFORE INSERT
+    ON user_partner_feedback_rating
+    FOR EACH ROW
+BEGIN
+    SELECT CASE
+               WHEN (SELECT count(*) FROM int_enum WHERE id = NEW.enum_id AND type = 'fbrtype') != 1
+                   THEN RAISE(ABORT,
+                              'user_partner_feedback_rating: attempted to insert enum_id not found or not unique for type=fbrtype')
+               END;
+END;
+
+
+CREATE TABLE user_partner_feedback_gb
+(
+    fbid    INTEGER NOT NULL REFERENCES user_partner_feedback (id) ON DELETE CASCADE,
+    bad     BOOLEAN NOT NULL, -- true for bad, false for good
+    enum_id INTEGER NOT NULL, -- references int_enum(id) where int_enum.type='fbgbtype'
+    PRIMARY KEY (fbid, bad, enum_id)
+);
+CREATE TRIGGER upfb_gb_enum_check
+    BEFORE INSERT
+    ON user_partner_feedback_gb
+    FOR EACH ROW
+BEGIN
+    SELECT CASE
+               WHEN (SELECT count(*) FROM int_enum WHERE id = NEW.enum_id AND type = 'fbgbtype') != 1
+                   THEN RAISE(ABORT,
+                              'user_partner_feedback_gb: attempted to insert enum_id not found or not unique for type=fbgbtype')
+               END;
+END;
+
+CREATE TABLE user_partner_feedback_details
+(
+    fbid    INTEGER NOT NULL REFERENCES user_partner_feedback (id) ON DELETE CASCADE,
+    enum_id INTEGER NOT NULL, -- references int_enum(id) where int_enum.type='fbtype'
+    val     TEXT    NOT NULL,
+    PRIMARY KEY (fbid, enum_id)
+);
+CREATE TRIGGER upfb_details_enum_check
+    BEFORE INSERT
+    ON user_partner_feedback_details
+    FOR EACH ROW
+BEGIN
+    SELECT CASE
+               WHEN (SELECT count(*) FROM int_enum WHERE id = NEW.enum_id AND type = 'fbtype') != 1
+                   THEN RAISE(ABORT,
+                              'user_partner_feedback_details: attempted to insert enum_id not found or not unique for type=fbtype')
+               END;
+END;

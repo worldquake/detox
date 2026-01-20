@@ -1,5 +1,6 @@
 package hu.detox.szexpartnerek;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.jsoup.internal.StringUtil;
 
 import java.io.BufferedReader;
@@ -21,6 +22,17 @@ public class Utils {
             }
         }
         return res;
+    }
+
+    public static Object getField(JsonNode node, String key) {
+        JsonNode value = node.get(key);
+        if (value == null || value.isNull()) return null;
+        if (value.isInt()) return value.intValue();
+        if (value.isLong()) return value.longValue();
+        if (value.isDouble()) return value.doubleValue();
+        if (value.isTextual()) return value.textValue();
+        if (value.isBoolean()) return value.booleanValue();
+        return value.toString();
     }
 
     public static String normalize(String data) {

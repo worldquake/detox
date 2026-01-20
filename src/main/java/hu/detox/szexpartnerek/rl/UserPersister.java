@@ -12,6 +12,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import static hu.detox.szexpartnerek.Utils.getField;
+
 public class UserPersister implements Persister, Flushable {
     private final PreparedStatement userStmt;
     private final PreparedStatement userLikesStmt;
@@ -37,17 +39,6 @@ public class UserPersister implements Persister, Flushable {
 
         String likesDeleteSql = "DELETE FROM tmp_user_likes WHERE user_id = ?";
         this.userLikesDeleteStmt = conn.prepareStatement(likesDeleteSql);
-    }
-
-    private static Object getField(JsonNode node, String key) {
-        JsonNode value = node.get(key);
-        if (value == null || value.isNull()) return null;
-        if (value.isInt()) return value.intValue();
-        if (value.isLong()) return value.longValue();
-        if (value.isDouble()) return value.doubleValue();
-        if (value.isTextual()) return value.textValue();
-        if (value.isBoolean()) return value.booleanValue();
-        return value.toString();
     }
 
     @Override

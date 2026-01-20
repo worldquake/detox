@@ -1,0 +1,155 @@
+package hu.detox.szexpartnerek.rl;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import hu.detox.szexpartnerek.Db;
+import hu.detox.szexpartnerek.Persister;
+
+import java.io.Flushable;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
+
+import static hu.detox.szexpartnerek.Utils.getField;
+
+
+public class UserReviewPersister implements Persister, Flushable {
+    private final PreparedStatement feedbackStmt;
+    private final PreparedStatement ratingStmt;
+    private final PreparedStatement gbStmt;
+    private final PreparedStatement detailsStmt;
+    private int batch;
+
+    public UserReviewPersister(Connection conn) throws SQLException {
+        feedbackStmt = conn.prepareStatement(
+                "INSERT INTO user_partner_feedback (id, enum_id, partner_id, name, after_name, useful, age, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+                        "ON CONFLICT(id) DO UPDATE SET " +
+                        "enum_id=excluded.enum_id, partner_id=excluded.partner_id, name=excluded.name, after_name=excluded.after_name, useful=excluded.useful, age=excluded.age, ts=excluded.ts"
+        );
+        ratingStmt = conn.prepareStatement(
+                "INSERT INTO user_partner_feedback_rating (fbid, enum_id, val) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, enum_id) DO UPDATE SET val=excluded.val"
+        );
+        gbStmt = conn.prepareStatement(
+                "INSERT INTO user_partner_feedback_gb (fbid, bad, enum_id) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, bad, enum_id) DO NOTHING"
+        );
+        detailsStmt = conn.prepareStatement(
+                "INSERT INTO user_partner_feedback_details (fbid, enum_id, val) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, enum_id) DO UPDATE SET val=excluded.val"
+        );
+    }
+
+    public void saveSingle(ObjectNode item, Integer intk) throws SQLException, IOException {
+        // Insert main feedback
+        int fbid = item.get("id").intValue();
+        feedbackStmt.setInt(1, fbid);
+        feedbackStmt.setInt(2, intk);
+        feedbackStmt.setObject(3, getField(item, "partner_id"), Types.INTEGER);
+        feedbackStmt.setObject(4, getField(item, "name"));
+        feedbackStmt.setObject(5, getField(item, "after_name"));
+        feedbackStmt.setObject(6, getField(item, "useful"), Types.INTEGER);
+        feedbackStmt.setObject(7, getField(item, "age"), Types.INTEGER);
+        feedbackStmt.setObject(8, getField(item, "ts"), Types.TIMESTAMP);
+        feedbackStmt.addBatch();
+        batch++;
+
+        // Insert ratings
+        JsonNode rates = item.get("rates");
+        if (rates != null && rates.isArray()) {
+            for (int i = 0; i < rates.size(); i++) {
+                JsonNode valNode = rates.get(i);
+                if (!valNode.isNull()) {
+                    ratingStmt.setInt(1, fbid);
+                    ratingStmt.setInt(2, i);
+                    ratingStmt.setInt(3, valNode.asInt());
+                    ratingStmt.addBatch();
+                    batch++;
+                }
+            }
+        }
+
+        // Insert good/bad
+        JsonNode good = item.get("good");
+        if (good != null && good.isArray()) {
+            for (JsonNode valNode : good) {
+                gbStmt.setInt(1, fbid);
+                gbStmt.setBoolean(2, false);
+                gbStmt.setInt(3, valNode.intValue());
+                gbStmt.addBatch();
+                batch++;
+            }
+        }
+        JsonNode bad = item.get("bad");
+        if (bad != null && bad.isArray()) {
+            for (JsonNode valNode : bad) {
+                gbStmt.setInt(1, fbid);
+                gbStmt.setBoolean(2, true);
+                gbStmt.setInt(3, valNode.intValue());
+                gbStmt.addBatch();
+                batch++;
+            }
+        }
+
+        // Insert details
+        JsonNode details = item.get("details");
+        if (details != null && details.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = details.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                detailsStmt.setInt(1, fbid);
+                detailsStmt.setInt(2, Integer.parseInt(entry.getKey()));
+                detailsStmt.setString(3, entry.getValue().asText());
+                detailsStmt.addBatch();
+                batch++;
+            }
+        }
+        if (batch >= Db.MAX_BATCH) {
+            flush();
+        }
+    }
+
+    @Override
+    public void save(JsonNode root) throws SQLException, IOException {
+        var itemi = root.fields();
+        while (itemi.hasNext()) {
+            var eitem = itemi.next();
+            Integer intk = null;
+            try {
+                intk = Integer.parseInt(eitem.getKey());
+            } catch (NumberFormatException nfe) {
+                continue;
+            }
+            for (var item : eitem.getValue())
+                saveSingle((ObjectNode) item, intk);
+        }
+    }
+
+    @Override
+    public void flush() throws IOException {
+        if (batch == 0) return;
+        try {
+            feedbackStmt.executeBatch();
+            ratingStmt.executeBatch();
+            gbStmt.executeBatch();
+            detailsStmt.executeBatch();
+        } catch (SQLException ex) {
+            throw new IOException("Unable to flush " + batch + " feedback items", ex);
+        }
+        System.err.println("Flushed " + batch + " review related rows");
+        batch = 0;
+    }
+
+    @Override
+    public void close() throws SQLException, IOException {
+        flush();
+        feedbackStmt.close();
+        ratingStmt.close();
+        gbStmt.close();
+        detailsStmt.close();
+    }
+}

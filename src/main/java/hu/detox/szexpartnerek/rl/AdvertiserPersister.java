@@ -5,20 +5,14 @@ import hu.detox.szexpartnerek.Db;
 import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.Persister;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.Flushable;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 
 public class AdvertiserPersister implements Persister, Flushable {
-    private final PreparedStatement enumCount;
-    private final PreparedStatement enumDel;
-    private final PreparedStatement enumAdd;
     private final PreparedStatement partnerStmt;
     private final PreparedStatement phonePropStmt;
     private final PreparedStatement partnerPropStmt;
@@ -34,14 +28,6 @@ public class AdvertiserPersister implements Persister, Flushable {
 
     public AdvertiserPersister() throws SQLException, IOException {
         Connection conn = Main.APP.getConn();
-        this.enumDel = conn.prepareStatement("DELETE FROM int_enum");
-        this.enumAdd = conn.prepareStatement("INSERT INTO int_enum (id, parentid, type, name) VALUES (?, NULL, ?, ?)");
-        this.enumCount = conn.prepareStatement("SELECT count(*) FROM int_enum");
-        try (ResultSet rs = enumCount.executeQuery()) {
-            int enums = -1;
-            if (rs.next()) enums = rs.getInt(1);
-            if (enums == 0) resetProps();
-        }
 
         this.partnerStmt = conn.prepareStatement("INSERT INTO partner (\n" +
                 "    id, call_number, name, pass, about, active_info, expect, age, height, weight, breast, waist, hips, city, location_extra, latitude, longitude, looking_age_min, looking_age_max\n" +
@@ -83,34 +69,6 @@ public class AdvertiserPersister implements Persister, Flushable {
                 ids.add(rs.getString(1));
             }
         }
-    }
-
-    public void addProps(Properties props) throws IOException, SQLException {
-        for (String key : props.stringPropertyNames()) {
-            String value = props.getProperty(key);
-            int eq = key.indexOf('.');
-            if (eq < 0) continue; // skip comments or invalid lines
-            String type = key.substring(0, eq);
-            String name = key.substring(eq + 1);
-            int id;
-            try {
-                id = Integer.parseInt(value.trim());
-            } catch (NumberFormatException e) {
-                continue; // skip invalid values
-            }
-            enumAdd.setInt(1, id);
-            enumAdd.setString(2, type);
-            enumAdd.setString(3, name);
-            enumAdd.addBatch();
-        }
-        enumAdd.executeBatch();
-    }
-
-    public void resetProps() throws IOException, SQLException {
-        Properties props = new Properties();
-        props.load(new BufferedReader(new FileReader(Advertiser.ENUMS)));
-        enumDel.executeUpdate();
-        addProps(props);
     }
 
     @Override
@@ -268,11 +226,8 @@ public class AdvertiserPersister implements Persister, Flushable {
     @Override
     public void close() throws SQLException, IOException {
         flush();
-        if (enumCount != null) enumCount.close();
         if (partnerStmt != null) partnerStmt.close();
         if (phonePropStmt != null) phonePropStmt.close();
-        if (enumDel != null) enumDel.close();
-        if (enumAdd != null) enumAdd.close();
         if (partnerPropStmt != null) partnerPropStmt.close();
         if (openHourStmt != null) openHourStmt.close();
         if (langStmt != null) langStmt.close();

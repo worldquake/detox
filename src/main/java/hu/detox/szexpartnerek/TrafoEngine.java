@@ -16,11 +16,15 @@ public interface TrafoEngine extends Function<String, Object>, AutoCloseable {
 
     Persister persister();
 
+    default boolean post() {
+        return false;
+    }
+
     String[] in();
 
     File out();
 
-    int page();
+    Iterator<String> pager();
 
     @Override
     default void close() throws Exception {

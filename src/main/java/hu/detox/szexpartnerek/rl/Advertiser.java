@@ -3,10 +3,7 @@ package hu.detox.szexpartnerek.rl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.Serde;
-import hu.detox.szexpartnerek.TrafoEngine;
-import hu.detox.szexpartnerek.Utils;
+import hu.detox.szexpartnerek.*;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
@@ -15,44 +12,37 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Advertiser implements TrafoEngine, Flushable {
+public class Advertiser extends Mapper {
     public static final Advertiser INSTANCE = new Advertiser();
-    public static final String ENUMS = "src/main/resources/enums.properties";
+    public static final Pattern IDP = Pattern.compile("(id=|member/|adatlap/)([0-9]+)");
 
     private static final String EMAILP = "mailto:";
     private static final String DATEP = "\\d{4}-\\d{2}-\\d{2}";
-    private static final Pattern IDP = Pattern.compile("(id=|member/|adatlap/)([0-9]+)");
     private static final Pattern DATEF = Pattern.compile(DATEP);
     private static final Pattern LOOKING_AGE = Pattern.compile("(\\d+)\\D*(felett)?\\D*(\\d+)?\\D*(alatt)?");
     private static final Pattern READING = Pattern.compile("(\\d+) levél, (\\d+) olvasatlan");
     private static final Pattern MEASUERS = Pattern.compile("(\\d+\\+?)\\s*(éves|kg|mell|derék|csípő|cm)");
 
     private transient AdvertiserPersister persister;
-    private final Map.Entry<String, Properties> props = new AbstractMap.SimpleEntry<>("properties", new Properties());
-    private final Map.Entry<String, Properties> massages = new AbstractMap.SimpleEntry<>("massage", new Properties());
-    private final Map.Entry<String, Properties> likes = new AbstractMap.SimpleEntry<>("likes", new Properties());
-    private final Map.Entry<String, Properties> lookings = new AbstractMap.SimpleEntry<>("looking", new Properties());
-    private final Map.Entry<String, Properties> answers = new AbstractMap.SimpleEntry<>("answers", new Properties());
     private transient Set<String> alreadyProcessed = new HashSet<>();
-    private Properties addedProps = new Properties();
-    private Map<String, String> map;
     private Map<String, String> massage;
     private Map<String, String> looking;
     private Map<String, String> massageReverse = new HashMap<>();
 
     private Advertiser() {
+        super("src/main/resources/prop-mapping.kv");
         try {
             persister = new AdvertiserPersister();
             persister.loadAllIds(alreadyProcessed);
-            loadEnums();
-            map = Utils.map("src/main/resources/adv-mapping.kv");
             massage = Utils.map("src/main/resources/massage-mapping.kv");
             looking = Utils.map("src/main/resources/looking-mapping.kv");
             for (Map.Entry<String, String> me : massage.entrySet()) {
@@ -69,9 +59,44 @@ public class Advertiser implements TrafoEngine, Flushable {
         }
     }
 
+    protected boolean addMassage(ArrayNode arr, String prp) {
+        String enm = Utils.toEnumLike(prp);
+        boolean anyMass = enm != null && enm.contains("MASSZAZS") && !enm.equals("MASSZAZS");
+        if (enm != null && !massages.getValue().containsKey(enm)) enm = massageReverse.get(enm);
+        boolean ret = enm != null || anyMass;
+        if (ret) {
+            if (enm == null) {
+                enm = massage.keySet().iterator().next();
+            }
+            addProp(massages, arr, null, enm);
+        }
+        return ret;
+    }
+
     @Override
-    public int page() {
-        return 0;
+    protected Integer onEnum(Map.Entry<String, Properties> map, ArrayNode arr, ArrayNode propsArr, AtomicReference<String> en) {
+        String enm = en.get();
+        Integer res = null;
+        if (map == lookings) {
+            String nenm = looking.get(enm);
+            if (nenm == null) {
+                for (String w : looking.get("MINDEN").split(",")) {
+                    if (enm.contains(w)) {
+                        res = doAddProp(map, arr, w);
+                    }
+                }
+            } else if (nenm.equals("-")) {
+                if (propsArr != null) doAddProp(props, propsArr, enm);
+                return null;
+            }
+            en.set(nenm);
+        }
+        return res;
+    }
+
+    @Override
+    public Iterator<String> pager() {
+        return null;
     }
 
     @Override
@@ -120,31 +145,7 @@ public class Advertiser implements TrafoEngine, Flushable {
 
     @Override
     public File out() {
-        return new File("target/partners.jsonl");
-    }
-
-    private void loadEnums() throws IOException {
-        Properties fileProps = new Properties();
-        try (FileInputStream fis = new FileInputStream(ENUMS)) {
-            fileProps.load(fis);
-        } catch (FileNotFoundException fnf) {
-            // No worries
-        }
-        for (Map.Entry<Object, Object> keyVal : fileProps.entrySet()) {
-            String[] parts = ((String) keyVal.getKey()).split("\\.");
-            String enumType = parts[0];
-            String value = (String) keyVal.getValue();
-            if (enumType.equals(props.getKey()))
-                props.getValue().put(keyVal.getKey(), value);
-            else if (enumType.equals(lookings.getKey()))
-                lookings.getValue().put(keyVal.getKey(), value);
-            else if (enumType.equals(likes.getKey()))
-                likes.getValue().put(keyVal.getKey(), value);
-            else if (enumType.equals(answers.getKey()))
-                answers.getValue().put(keyVal.getKey(), value);
-            else if (enumType.equals(massages.getKey()))
-                massages.getValue().put(keyVal.getKey(), value);
-        }
+        return new File("target/gen-partners.jsonl");
     }
 
     private String text(Element el, String... attrs) {
@@ -161,72 +162,6 @@ public class Advertiser implements TrafoEngine, Flushable {
     private Element html(Element el, String repl) {
         if (repl == null) repl = ",";
         return Jsoup.parseBodyFragment(el.html().replaceAll("<br\\s*/?>", repl)).body();
-    }
-
-    private boolean addMassage(ArrayNode arr, String prp) {
-        String enm = Utils.toEnumLike(prp);
-        boolean anyMass = enm != null && enm.contains("MASSZAZS") && !enm.equals("MASSZAZS");
-        if (enm != null && !massages.getValue().containsKey(enm)) enm = massageReverse.get(enm);
-        boolean ret = enm != null || anyMass;
-        if (ret) {
-            if (enm == null) {
-                enm = massage.keySet().iterator().next();
-            }
-            addProp(massages, arr, null, enm);
-        }
-        return ret;
-    }
-
-    private Integer doAddProp(Map.Entry<String, Properties> map, ArrayNode arr, String prp) {
-        Integer res = null;
-        if (prp != null) {
-            res = Integer.parseInt((String) map.getValue().computeIfAbsent(map.getKey() + "." + prp,
-                    k -> {
-                        String val = "" + map.getValue().size();
-                        addedProps.put(k, val);
-                        try {
-                            persister.addProps(addedProps);
-                        } catch (IOException | SQLException ex) {
-                            throw new IllegalArgumentException(ex);
-                        }
-                        System.err.println("** Property " + map.getKey() + "." + prp + " added");
-                        return val;
-                    }));
-            if (arr != null) {
-                boolean alreadyPresent = false;
-                for (JsonNode node : arr) {
-                    if (node.isInt() && node.intValue() == res) {
-                        alreadyPresent = true;
-                        break;
-                    }
-                }
-                if (!alreadyPresent) arr.add(res);
-            }
-        }
-        return res;
-    }
-
-    private Integer addProp(Map.Entry<String, Properties> map, ArrayNode arr, ArrayNode propsArr, String prp) {
-        String enm = Utils.toEnumLike(prp);
-        enm = this.map.getOrDefault(enm, enm);
-        if (enm == null) return null;
-        Integer res = null;
-        if (map == lookings) {
-            String nenm = looking.get(enm);
-            if (nenm == null) {
-                for (String w : looking.get("MINDEN").split(",")) {
-                    if (enm.contains(w)) {
-                        res = doAddProp(map, arr, w);
-                    }
-                }
-            } else if (nenm.equals("-")) {
-                if (propsArr != null) doAddProp(props, propsArr, enm);
-                return null;
-            }
-            enm = nenm;
-        }
-        if (res == null) res = doAddProp(map, arr, enm);
-        return res;
     }
 
     private void quality(Element dataCol, ArrayNode propsArr, ObjectNode result) {
@@ -565,21 +500,8 @@ public class Advertiser implements TrafoEngine, Flushable {
     }
 
     @Override
-    public void flush() throws IOException {
-        if (addedProps.isEmpty()) return;
-        try (FileOutputStream fos = new FileOutputStream(ENUMS)) {
-            props.getValue().store(fos, "Properties of advertisers");
-            likes.getValue().store(fos, "Likes and preferences of services of advertisers");
-            lookings.getValue().store(fos, "What the advertiser can accept");
-            answers.getValue().store(fos, "Answers given to common questions");
-            massages.getValue().store(fos, "Advertiser supported massages");
-        }
-        addedProps.clear();
-    }
-
-    @Override
     public void close() throws Exception {
         alreadyProcessed.clear();
-        TrafoEngine.super.close();
+        super.close();
     }
 }

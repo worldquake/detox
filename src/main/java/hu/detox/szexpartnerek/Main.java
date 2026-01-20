@@ -1,10 +1,7 @@
 package hu.detox.szexpartnerek;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.rl.Lista;
-import hu.detox.szexpartnerek.rl.New;
 import hu.detox.szexpartnerek.rl.User;
-import okhttp3.Response;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -50,25 +47,31 @@ public class Main implements Callable<Integer>, AutoCloseable {
     }
 
     public void transformAll(Serde serde, TrafoEngine engine, String... urls) throws IOException, SQLException {
-        String typ = null;
-        int page = serde.isUrlMode() ? engine.page() : 0;
-        int cpage;
+        Iterator<String> pager = engine.pager();
         Persister p = engine.persister();
-        if (page > 0) {
-            if (page == 1) typ = "page=";
-            else typ = "offset=";
-        }
         try {
+            boolean first = true, cont;
             for (String url : urls) {
                 if (url == null) continue;
-                cpage = 0;
-                while (true) {
+                cont = true;
+                while (cont) {
                     JsonNode bodyNode = null;
                     if (serde.inMode() == null || serde.inMode().equals(Serde.Mode.TXT)) {
-                        String curl = url + (typ == null ? "" : "&" + typ + cpage);
-                        var resp = rl.get(curl);
+                        String curl = url;
+                        if (pager != null) {
+                            if (!pager.hasNext()) break;
+                            curl += "&" + pager.next();
+                        }
+                        var resp = engine.post() ? rl.post(curl, null) : rl.get(curl);
                         System.err.println("Current is " + curl);
-                        bodyNode = serde.serialize(resp, engine);
+                        bodyNode = serde.serialize(resp, curl, engine);
+                        if (bodyNode != null && pager instanceof Pager pg) {
+                            if (first) {
+                                pg.first(bodyNode);
+                                first = false;
+                            }
+                            cont = pg.current(bodyNode);
+                        }
                     } else if (serde.inMode().equals(Serde.Mode.JSONL)) {
                         bodyNode = Serde.OM.readTree(url);
                     }
@@ -80,12 +83,12 @@ public class Main implements Callable<Integer>, AutoCloseable {
                     if (tes != null) for (TrafoEngine ste : tes) {
                         rlDataDl(ste, bodyNode);
                     }
-                    if (page == 0) break;
-                    cpage++;
+                    if (pager == null) break;
                 }
             }
         } finally {
             serde.flush();
+            if (p instanceof Flushable flp) flp.flush();
             if (engine instanceof Flushable fl) {
                 fl.flush();
             }
@@ -95,8 +98,8 @@ public class Main implements Callable<Integer>, AutoCloseable {
     @Override
     public Integer call() throws Exception {
         rlDataDl(User.INSTANCE, null);
-        rlDataDl(New.INSTANCE, null);
-        rlDataDl(Lista.INSTANCE, null);
+        //rlDataDl(New.INSTANCE, null);
+        //rlDataDl(Lista.INSTANCE, null);
         return 0;
     }
 
@@ -130,12 +133,8 @@ public class Main implements Callable<Integer>, AutoCloseable {
                                 Object o = ini.next();
                                 ln = o instanceof JsonNode jn ? jn.asText() : o.toString();
                             }
-                        } else if (serde.inMode().equals(Serde.Mode.TXT)) {
-                            ln = (String) serde.next();
                         } else {
-                            Response resp = (Response) serde.next();
-                            var body = resp.body();
-                            ln = body == null ? null : body.string();
+                            ln = serde.nextStr();
                         }
                         if (ln == null) {
                             cont = false;

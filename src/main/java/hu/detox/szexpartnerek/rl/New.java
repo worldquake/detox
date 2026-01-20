@@ -66,8 +66,8 @@ public class New implements TrafoEngine {
     }
 
     @Override
-    public int page() {
-        return 0;
+    public Iterator<String> pager() {
+        return null;
     }
 
     @Override

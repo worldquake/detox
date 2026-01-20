@@ -11,7 +11,18 @@ DROP TRIGGER IF EXISTS partner_looking_enum_type_check;
 DROP TRIGGER IF EXISTS partner_massage_enum_type_check;
 DROP TRIGGER IF EXISTS partner_like_enum_type_check;
 
+
+DROP TRIGGER IF EXISTS upfb_rating_enum_check;
+DROP TRIGGER IF EXISTS upfb_enum_check;
+DROP TRIGGER IF EXISTS upfb_gb_enum_check;
+DROP TRIGGER IF EXISTS upfb_details_enum_check;
+
 -- Drop tables (children first, then parents)
+DROP TABLE IF EXISTS user_partner_feedback;
+DROP TABLE IF EXISTS user_partner_feedback_rating;
+DROP TABLE IF EXISTS user_partner_feedback_gb;
+DROP TABLE IF EXISTS user_partner_feedback_details;
+
 DROP TABLE IF EXISTS tmp_user_likes;
 DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS partner_list;

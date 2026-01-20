@@ -10,6 +10,7 @@ import hu.detox.szexpartnerek.Utils;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,13 +23,13 @@ import java.util.regex.Pattern;
 
 public class User implements TrafoEngine {
     public static final User INSTANCE = new User();
-    private static final TrafoEngine[] SUB = new TrafoEngine[]{UserReviews.INSTANCE};
+    private static final TrafoEngine[] SUB = new TrafoEngine[]{UserReview.INSTANCE};
     private transient UserPersister persister;
-    private Map<String, String> advMapping;
+    private Map<String, String> propMapping;
 
     private User() {
         try {
-            advMapping = Utils.map("src/main/resources/adv-mapping.kv");
+            propMapping = Utils.map("src/main/resources/prop-mapping.kv");
             persister = new UserPersister();
         } catch (SQLException | IOException e) {
             throw new ExceptionInInitializerError(e);
@@ -72,8 +73,9 @@ public class User implements TrafoEngine {
         // Gender
         String gender = null;
         String optLower = opt.toLowerCase();
-        if (optLower.contains("férfi")) gender = "male";
-        else if (optLower.contains("nő")) gender = "female";
+        if (optLower.contains("férfi")) gender = "FIU";
+        else if (optLower.contains("nő")) gender = "LANY";
+        else if (optLower.contains("transz")) gender = "TRANSZSZEXUALIS";
         if (gender != null) result.put("gender", gender);
 
         Matcher ageMatch = Pattern.compile("(\\d+\\+?)\\s*éves").matcher(opt);
@@ -112,7 +114,7 @@ public class User implements TrafoEngine {
                 ArrayNode likesNode = JsonNodeFactory.instance.arrayNode();
                 for (String like : likesArr) {
                     like = Utils.toEnumLike(like);
-                    like = advMapping.getOrDefault(like, like);
+                    like = propMapping.getOrDefault(like, like);
                     if (like != null) {
                         likesNode.add(like);
                     }
@@ -154,22 +156,23 @@ public class User implements TrafoEngine {
 
     @Override
     public File out() {
-        return new File("target/users.jsonl");
+        return new File("target/gen-users.jsonl");
     }
 
     @Override
-    public int page() {
-        return 0;
+    public Iterator<String> pager() {
+        return null;
     }
 
     @Override
     public ObjectNode apply(String data) {
         var soup = Jsoup.parse(data);
-        return getNodeFromLines(
+        Element frst = soup.selectFirst("#about-me-user-list");
+        return frst == null ? null : getNodeFromLines(
                 soup.selectFirst("div#content").text(),
                 soup.selectFirst("td#felsoLanguage a").attr("href"),
                 soup.selectFirst("table#dataUpperTable").text(),
-                soup.selectFirst("#about-me-user-list").text()
+                frst.text()
         );
     }
 }

@@ -64,14 +64,26 @@ public class Lista implements TrafoEngine {
     }
 
     @Override
-    public int page() {
+    public Iterator<String> pager() {
         ids.clear();
-        return 1;
+        return new Iterator<String>() {
+            int page = 0;
+
+            @Override
+            public boolean hasNext() {
+                return true;
+            }
+
+            @Override
+            public String next() {
+                return "page=" + page++;
+            }
+        };
     }
 
     @Override
     public File out() {
-        return new File("target/lists.jsonl");
+        return new File("target/gen-lists.jsonl");
     }
 
     @Override

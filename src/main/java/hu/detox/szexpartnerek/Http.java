@@ -8,6 +8,11 @@ import java.net.CookiePolicy;
 import java.util.concurrent.TimeUnit;
 
 public class Http {
+    private static final RequestBody EMPTY = RequestBody.create(
+            new byte[0],
+            MediaType.parse("application/x-www-form-urlencoded; charset=UTF-8")
+    );
+
     private final OkHttpClient client;
     private final String base;
     private String prev;
@@ -43,6 +48,11 @@ public class Http {
 
     public Response get(String url) throws IOException {
         Request.Builder requestBuilder = base(url).get();
+        return client.newCall(requestBuilder.build()).execute();
+    }
+
+    public Response post(String url, RequestBody data) throws IOException {
+        Request.Builder requestBuilder = base(url).post(data == null ? EMPTY : data);
         return client.newCall(requestBuilder.build()).execute();
     }
 

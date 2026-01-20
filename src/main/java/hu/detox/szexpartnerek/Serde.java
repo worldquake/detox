@@ -59,11 +59,11 @@ public class Serde implements Closeable, Flushable {
         return outMode;
     }
 
-    public JsonNode serialize(Response response, Function<String, ?> trafo) throws IOException {
+    public JsonNode serialize(Response response, String url, Function<String, ?> trafo) throws IOException {
         if (trafo == null) {
             trafo = TOSTR;
         }
-        String strBody = response.body().string();
+        String strBody = (url == null ? "" : "<!--" + url + "-->\n") + response.body().string();
         JsonNode bodyNode = null;
         if (Mode.TXT.equals(outMode)) {
             out.println(strBody);
@@ -93,6 +93,21 @@ public class Serde implements Closeable, Flushable {
             }
         }
         return bodyNode;
+    }
+
+    public String nextStr() throws IOException {
+        String ln = null;
+        var resp = next();
+        if (inMode().equals(Serde.Mode.TXT)) {
+            ln = (String) resp;
+        } else if (inMode().equals(Serde.Mode.JSONL)) {
+            ln = resp == null ? null : resp.toString();
+        } else if (resp != null) {
+            Response r = (Response) resp;
+            var body = r.body();
+            ln = body == null ? null : body.string();
+        }
+        return ln;
     }
 
     public Object next() throws IOException {
