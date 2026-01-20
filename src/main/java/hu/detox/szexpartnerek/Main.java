@@ -50,7 +50,7 @@ public class Main implements Callable<Integer>, AutoCloseable {
         System.out.println(Serde.OM.valueToTree(res));
     }
 
-    public void transformAll(Serde serde, TrafoEngine engine, String... urls) throws IOException, SQLException {
+    public void transformAll(boolean recurse, Serde serde, TrafoEngine engine, String... urls) throws IOException, SQLException {
         Iterator<String> pager = engine.pager();
         Persister p = engine.persister();
         try {
@@ -86,15 +86,7 @@ public class Main implements Callable<Integer>, AutoCloseable {
                     if (bodyNode == null) {
                         break;
                     }
-                    TrafoEngine[] tes = engine.preTrafos();
-                    if (tes != null) for (TrafoEngine ste : tes) {
-                        rlDataDl(ste, bodyNode);
-                    }
-                    if (p != null) p.save(bodyNode);
-                    tes = engine.subTrafos();
-                    if (tes != null) for (TrafoEngine ste : tes) {
-                        rlDataDl(ste, bodyNode);
-                    }
+                    save(recurse, engine, bodyNode);
                     if (pager == null) break;
                 }
             }
@@ -107,16 +99,34 @@ public class Main implements Callable<Integer>, AutoCloseable {
         }
     }
 
+    private void save(boolean recurse, TrafoEngine engine, JsonNode bodyNode) throws IOException, SQLException {
+        TrafoEngine[] tes;
+        if (recurse) {
+            tes = engine.preTrafos();
+            if (tes != null) for (TrafoEngine ste : tes) {
+                rlDataDl(false, ste, bodyNode);
+            }
+        }
+        Persister p = engine.persister();
+        if (p != null) p.save(bodyNode);
+        if (recurse) {
+            tes = engine.subTrafos();
+            if (tes != null) for (TrafoEngine ste : tes) {
+                rlDataDl(recurse, ste, bodyNode);
+            }
+        }
+    }
+
     @Override
     public Integer call() throws Exception {
-        rlDataDl(Feedbacks.INSTANCE, null);
-        rlDataDl(User.INSTANCE, null);
-        rlDataDl(New.INSTANCE, null);
-        rlDataDl(Lista.INSTANCE, null);
+        rlDataDl(true, Feedbacks.INSTANCE, null);
+        rlDataDl(true, User.INSTANCE, null);
+        rlDataDl(true, New.INSTANCE, null);
+        rlDataDl(true, Lista.INSTANCE, null);
         return 0;
     }
 
-    public void rlDataDl(TrafoEngine engine, JsonNode parent) throws IOException, SQLException {
+    public void rlDataDl(boolean recurse, TrafoEngine engine, JsonNode parent) throws IOException, SQLException {
         boolean cont = true;
         String[] arr = new String[10];
         String ln;
@@ -156,7 +166,7 @@ public class Main implements Callable<Integer>, AutoCloseable {
                         arr[i] = engine.url().apply(ln);
                     }
                 }
-                transformAll(serde, engine, arr);
+                transformAll(recurse, serde, engine, arr);
             }
         } finally {
             if (serde != null) serde.close();

@@ -341,35 +341,94 @@ BEGIN
 END;
 
 CREATE VIEW user_partner_feedback_view AS
-WITH ratings AS (SELECT fb.id,
-                        GROUP_CONCAT(e.name || ': ' || r.val, ', ') AS rating
-                 FROM user_partner_feedback fb
-                          LEFT JOIN user_partner_feedback_rating r ON r.fbid = fb.id
-                          LEFT JOIN int_enum e ON r.enum_id = e.id AND e.type = 'fbrtype'
-                 GROUP BY fb.id)
+WITH ratings AS
+         (SELECT fb.id,
+                 fb.partner_id,
+                 GROUP_CONCAT(e.name || ': ' || r.val, ', ') AS rating,
+                 AVG(r.val)                                  AS base_rating
+          FROM user_partner_feedback fb
+                   LEFT JOIN user_partner_feedback_rating r ON r.fbid = fb.id
+                   LEFT JOIN int_enum e ON r.enum_id = e.id
+              AND e.type = 'fbrtype'
+          GROUP BY fb.id),
+     gb_counts AS
+         (SELECT fb.id,
+                 SUM(CASE
+                         WHEN gb.bad = 0 THEN 1
+                         ELSE 0
+                     END) AS good_count,
+                 SUM(CASE
+                         WHEN gb.bad = 1 THEN 1
+                         ELSE 0
+                     END) AS bad_count
+          FROM user_partner_feedback fb
+                   LEFT JOIN user_partner_feedback_gb gb ON gb.fbid = fb.id
+          GROUP BY fb.id),
+     important_props AS
+         (SELECT fb.id,
+                 COUNT(DISTINCT e.name) AS prop_count
+          FROM user_partner_feedback fb
+                   LEFT JOIN partner_prop pp ON pp.partner_id = fb.partner_id
+                   LEFT JOIN int_enum e ON pp.enum_id = e.id
+              AND e.type = 'properties'
+          WHERE e.name IN ('ELLENORZOTT_TELEFON', 'ELLENORZOTT_KEPEK', 'ELLENORZOTT_KOR',
+                           'VAN_FRISS_KEPE', 'VAN_ARCOS_KEPE',
+                           'NINCS_PANASZ', 'GYAKRAN_BELEP', 'STABIL_HIRDETO',
+                           'VALTOZATLAN_VAROS', 'VALTOZATLAN_NEV', 'VALTOZATLAN_SZAM'
+              )
+          GROUP BY fb.id),
+     max_props AS
+         (SELECT 11 AS max_count -- total number of important properties
+         )
 SELECT fb.*,
-       rt.rating,
+       rt.rating,                                         -- Good: enum names (bad=0)
 
-       -- Good: enum names (bad=0)
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM user_partner_feedback_gb gb
-                 JOIN int_enum e ON gb.enum_id = e.id AND e.type = 'fbgbtype'
+                 JOIN int_enum e ON gb.enum_id = e.id
+            AND e.type = 'fbgbtype'
         WHERE gb.fbid = fb.id
-          AND gb.bad = 0)     AS good,
+          AND gb.bad = 0)                     AS good,    -- Bad: enum names (bad=1)
 
-       -- Bad: enum names (bad=1)
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM user_partner_feedback_gb gb
-                 JOIN int_enum e ON gb.enum_id = e.id AND e.type = 'fbgbtype'
+                 JOIN int_enum e ON gb.enum_id = e.id
+            AND e.type = 'fbgbtype'
         WHERE gb.fbid = fb.id
-          AND gb.bad = 1)     AS bad,
+          AND gb.bad = 1)                     AS bad,     -- Details: each as "ENUMNAME: val", separated by double newline
 
-       -- Details: each as "ENUMNAME: val", separated by double newline
        (SELECT GROUP_CONCAT(e.name || ': ' || d.val, CHAR(10) || CHAR(10))
         FROM user_partner_feedback_details d
-                 JOIN int_enum e ON d.enum_id = e.id AND e.type = 'fbdtype'
-        WHERE d.fbid = fb.id) AS details
+                 JOIN int_enum e ON d.enum_id = e.id
+            AND e.type = 'fbdtype'
+        WHERE d.fbid = fb.id)                 AS details, -- Improved avg_rating: blend of base_rating and good/bad ratio
+       ROUND(
+               CASE
+                   WHEN rt.base_rating IS NULL THEN NULL
+                   ELSE
+                       MIN(MAX(rt.base_rating * 0.7 +
+                               (CASE
+                                    WHEN (COALESCE(gc.good_count, 0) + COALESCE(gc.bad_count, 0)) = 0
+                                        THEN 0.5
+                                    ELSE 1.0 * COALESCE(gc.good_count, 0) /
+                                         (COALESCE(gc.good_count, 0) + COALESCE(gc.bad_count, 0))
+                                   END) * 5 * 0.3,
+                               0), 5) END, 1) AS avg_rating,
 
+       ROUND(CASE
+                 WHEN rt.base_rating IS NULL THEN NULL
+                 ELSE
+                     MIN(MAX((rt.base_rating * 0.7 +
+                              (CASE
+                                   WHEN (COALESCE(gc.good_count, 0) + COALESCE(gc.bad_count, 0)) = 0
+                                       THEN 0.5
+                                   ELSE 1.0 * COALESCE(gc.good_count, 0) /
+                                        (COALESCE(gc.good_count, 0) + COALESCE(gc.bad_count, 0))
+                                  END) * 5 * 0.3) * (COALESCE(ip.prop_count, 0) * 1.0 / mp.max_count * 0.3 + 0.7), 0
+                         ), 5) END, 1)        AS recommended_rating
 FROM user_partner_feedback fb
          JOIN ratings rt ON fb.id = rt.id
+         LEFT JOIN gb_counts gc ON fb.id = gc.id
+         LEFT JOIN important_props ip ON fb.id = ip.id
+         JOIN max_props mp
 WHERE rt.rating IS NOT NULL;

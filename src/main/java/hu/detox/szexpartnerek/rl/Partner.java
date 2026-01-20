@@ -135,7 +135,7 @@ public class Partner extends Mapper {
     public String[] in() {
         return new String[]{
                 "src/main/resources/partners.txt",
-                "target/partners.serde",
+                "target/partners.ser",
                 "target/partners.jsonl",
         };
     }
@@ -165,8 +165,7 @@ public class Partner extends Mapper {
         for (Element li : dataCol.select("li.check")) {
             String txt = text(li);
             if (txt == null
-                    || txt.contains("adatlap kitöltés") || txt.contains("beigazolódott")
-                    || txt.contains("Belépett")) continue;
+                    || txt.contains("adatlap kitöltés") || txt.contains("Belépett")) continue;
             addProp(props, propsArr, null, txt);
         }
     }

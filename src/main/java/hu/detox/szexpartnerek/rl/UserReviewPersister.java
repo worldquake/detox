@@ -19,7 +19,7 @@ import static hu.detox.szexpartnerek.Utils.getField;
 
 
 public class UserReviewPersister implements Persister, Flushable {
-    private static final TrafoEngine[] PRE = new TrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
+    private static final TrafoEngine[] PRE = new TrafoEngine[]{Partner.INSTANCE};
     private final PreparedStatement feedbackStmt;
     private final PreparedStatement ratingStmt;
     private final PreparedStatement gbStmt;
@@ -49,6 +49,10 @@ public class UserReviewPersister implements Persister, Flushable {
                 "INSERT INTO user_partner_feedback_details (fbid, " + Persister.ENUM_IDR + ", val) VALUES (?, ?, ?) " +
                         "ON CONFLICT(fbid, " + Persister.ENUM_IDR + ") DO UPDATE SET val=excluded.val"
         );
+    }
+
+    TrafoEngine[] preTrafos() {
+        return PRE;
     }
 
     public void saveSingle(ObjectNode item, Integer intk) throws SQLException, IOException {
@@ -119,10 +123,6 @@ public class UserReviewPersister implements Persister, Flushable {
         if (batch >= Db.MAX_BATCH) {
             flush();
         }
-    }
-
-    TrafoEngine[] preTrafos() {
-        return PRE;
     }
 
     @Override

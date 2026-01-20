@@ -19,7 +19,7 @@ import java.util.regex.Matcher;
 
 public class Feedbacks extends UserReview {
     public static final Feedbacks INSTANCE = new Feedbacks();
-    private static final TrafoEngine[] SUB = new TrafoEngine[]{User.INSTANCE};
+    private static final TrafoEngine[] PRE = new TrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
     private List<String> datas;
 
     public Feedbacks() {
@@ -45,6 +45,10 @@ public class Feedbacks extends UserReview {
     @Override
     public Iterator<?> input(JsonNode parent) {
         return null;
+    }
+
+    TrafoEngine[] preTrafos() {
+        return PRE;
     }
 
     @Override

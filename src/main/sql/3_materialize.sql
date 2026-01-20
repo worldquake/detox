@@ -250,30 +250,31 @@ SELECT p.*,
        -- Props
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM partner_prop pp
-                 JOIN int_enum e ON pp.enum_id = e.id AND e.type = 'properties'
-            AND NOT (
-                name LIKE '%_HAJ' OR name LIKE 'HAJ_%'
-                    OR name LIKE '%_SZEM' OR name LIKE '%_CICI'
-                    OR name LIKE '%_ALKAT' OR name LIKE 'INTIM_%'
-                    OR name IN ('HETERO', 'HOMO', 'BISZEX')
-                    OR name IN ('LANY', 'PAR', 'FIU', 'TRANSZSZEXUALIS')
-                    OR name IN ('LEGKONDICIONALT_LAKAS', 'NEM_LEGKONDICIONALT_LAKAS')
-                    OR name IN ('DOHANYZOM', 'NEM_DOHANYZOM')
-                    OR name IN ('SMSRE_VALASZOLOK', 'SMSRE_NEM_VALASZOLOK')
-                    OR name IN ('SZEXPARTNER', 'DOMINA', 'AKTUS_VELEM_KIZART', 'MASSZAZS', 'CSAK_MASSZAZS')
-                    OR name IN ('CSAK_NALAD', 'CSAK_NALAM', 'NALAM_NALAD')
-                )
+                 JOIN int_enum e ON pp.enum_id = e.id
+            AND e.type = 'properties'
+            AND NOT (name LIKE '%_HAJ' OR name LIKE 'HAJ_%' OR name LIKE '%_SZEM'
+                OR name LIKE '%_CICI' OR name LIKE '%_ALKAT'
+                OR name LIKE 'INTIM_%' OR name IN ('HETERO', 'HOMO', 'BISZEX')
+                OR name IN ('LANY', 'PAR', 'FIU', 'TRANSZSZEXUALIS')
+                OR name IN ('LEGKONDICIONALT_LAKAS', 'NEM_LEGKONDICIONALT_LAKAS')
+                OR name IN ('DOHANYZOM', 'NEM_DOHANYZOM')
+                OR name IN ('SMSRE_VALASZOLOK', 'SMSRE_NEM_VALASZOLOK')
+                OR name IN ('SZEXPARTNER', 'DOMINA', 'AKTUS_VELEM_KIZART', 'MASSZAZS', 'CSAK_MASSZAZS')
+                OR name IN ('CSAK_NALAD', 'CSAK_NALAM', 'NALAM_NALAD'))
         WHERE pp.partner_id = p.id)                                                    AS properties,
        -- Likes (filter out FRANCIA_* and handled keys)
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM partner_like pl
-                 JOIN int_enum e ON pl.enum_id = e.id AND e.type = 'likes'
+                 JOIN int_enum e ON pl.enum_id = e.id
+            AND e.type = 'likes'
         WHERE pl.partner_id = p.id
-          AND NOT (e.name LIKE 'FRANCIA_%' OR e.name LIKE '%WEBCAM%'))                 AS likes,
+          AND NOT (e.name LIKE 'FRANCIA_%'
+            OR e.name LIKE '%WEBCAM%'))                                                AS likes,
        -- Massages
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM partner_massage pm
-                 JOIN int_enum e ON pm.enum_id = e.id AND e.type = 'massage'
+                 JOIN int_enum e ON pm.enum_id = e.id
+            AND e.type = 'massage'
         WHERE pm.partner_id = p.id)                                                    AS massages,
        -- Languages
        (SELECT GROUP_CONCAT(plang.lang, ', ')
@@ -282,14 +283,26 @@ SELECT p.*,
        -- Looking (filter out *_ORARA and handled keys)
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM partner_looking plook
-                 JOIN int_enum e ON plook.enum_id = e.id AND e.type = 'looking'
+                 JOIN int_enum e ON plook.enum_id = e.id
+            AND e.type = 'looking'
         WHERE plook.partner_id = p.id
-          AND NOT (e.name LIKE '%_ORARA' OR e.name = 'TOBB_NAPRA')
+          AND NOT (e.name LIKE '%_ORARA'
+            OR e.name = 'TOBB_NAPRA')
           AND e.name NOT IN ('AUTOS_KALAND', 'BULIBA', 'BUCSUBA', 'CSAK_WEBCAM_SZEX')) AS looking,
        -- Open hours
        (SELECT GROUP_CONCAT(onday || ': ' || hours, ', ')
         FROM partner_open_hour poh
-        WHERE poh.partner_id = p.id)                                                   AS open_hours
+        WHERE poh.partner_id = p.id)                                                   AS open_hours,
+       -- Average rating from user_partner_feedback_view
+       (SELECT ROUND(AVG(upfv.avg_rating), 2)
+        FROM user_partner_feedback_view upfv
+        WHERE upfv.partner_id = p.id
+          AND upfv.avg_rating IS NOT NULL)                                             AS avg_rating,
+       -- Recommended rating: average of recommended_rating from user_partner_feedback_view
+       (SELECT ROUND(AVG(upfv.recommended_rating), 2)
+        FROM user_partner_feedback_view upfv
+        WHERE upfv.partner_id = p.id
+          AND upfv.recommended_rating IS NOT NULL)                                     AS recommended_rating
 FROM partner_ext p;
 
 -- Create user_likes related extensions
