@@ -147,7 +147,7 @@ public abstract class Mapper implements TrafoEngine, Flushable {
         String enm = Utils.toEnumLike(prp);
         enm = this.map.getOrDefault(enm, enm);
         if (enm == null) return null;
-        var ar = new AtomicReference<String>();
+        var ar = new AtomicReference<String>(enm);
         Integer res = onEnum(map, arr, propsArr, ar);
         if (res == null) res = doAddProp(map, arr, enm);
         return res;

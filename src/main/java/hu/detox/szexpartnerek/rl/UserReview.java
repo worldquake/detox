@@ -281,7 +281,7 @@ public class UserReview extends Mapper {
     }
 
     protected String[] selectors() {
-        return new String[]{"div#beszamoloMainContent>div"};
+        return new String[]{"div#beszamoloMainContent>div[style*=\"A0706E\"]"};
     }
 
     @Override
