@@ -47,7 +47,7 @@ public class Feedbacks extends UserReview {
         return null;
     }
 
-    TrafoEngine[] preTrafos() {
+    public TrafoEngine[] preTrafos() {
         return PRE;
     }
 
