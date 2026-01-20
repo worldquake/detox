@@ -1,7 +1,8 @@
 package hu.detox.szexpartnerek;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.rl.User;
+import hu.detox.szexpartnerek.rl.Feedbacks;
+import okhttp3.RequestBody;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -62,7 +63,11 @@ public class Main implements Callable<Integer>, AutoCloseable {
                             if (!pager.hasNext()) break;
                             curl += "&" + pager.next();
                         }
-                        var resp = engine.post() ? rl.post(curl, null) : rl.get(curl);
+                        RequestBody body = null;
+                        if (pager instanceof Pager pg) {
+                            body = pg.req();
+                        }
+                        var resp = engine.post() ? rl.post(curl, body) : rl.get(curl);
                         System.err.println("Current is " + curl);
                         bodyNode = serde.serialize(resp, curl, engine);
                         if (bodyNode != null && pager instanceof Pager pg) {
@@ -97,7 +102,8 @@ public class Main implements Callable<Integer>, AutoCloseable {
 
     @Override
     public Integer call() throws Exception {
-        rlDataDl(User.INSTANCE, null);
+        rlDataDl(Feedbacks.INSTANCE, null);
+        //rlDataDl(User.INSTANCE, null);
         //rlDataDl(New.INSTANCE, null);
         //rlDataDl(Lista.INSTANCE, null);
         return 0;

@@ -26,9 +26,9 @@ public class UserReviewPersister implements Persister, Flushable {
 
     public UserReviewPersister(Connection conn) throws SQLException {
         feedbackStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback (id, enum_id, partner_id, name, after_name, useful, age, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                        "ON CONFLICT(id) DO UPDATE SET " +
-                        "enum_id=excluded.enum_id, partner_id=excluded.partner_id, name=excluded.name, after_name=excluded.after_name, useful=excluded.useful, age=excluded.age, ts=excluded.ts"
+                "INSERT INTO user_partner_feedback (id, user_id, enum_id, partner_id, name, after_name, useful, age, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                        "ON CONFLICT(id, user_id) DO UPDATE SET " +
+                        "partner_id=excluded.partner_id,enum_id=excluded.enum_id, name=excluded.name, after_name=excluded.after_name, useful=excluded.useful, age=excluded.age, ts=excluded.ts"
         );
         ratingStmt = conn.prepareStatement(
                 "INSERT INTO user_partner_feedback_rating (fbid, enum_id, val) VALUES (?, ?, ?) " +
@@ -48,13 +48,14 @@ public class UserReviewPersister implements Persister, Flushable {
         // Insert main feedback
         int fbid = item.get("id").intValue();
         feedbackStmt.setInt(1, fbid);
-        feedbackStmt.setInt(2, intk);
-        feedbackStmt.setObject(3, getField(item, "partner_id"), Types.INTEGER);
-        feedbackStmt.setObject(4, getField(item, "name"));
-        feedbackStmt.setObject(5, getField(item, "after_name"));
-        feedbackStmt.setObject(6, getField(item, "useful"), Types.INTEGER);
-        feedbackStmt.setObject(7, getField(item, "age"), Types.INTEGER);
-        feedbackStmt.setObject(8, getField(item, "ts"), Types.TIMESTAMP);
+        feedbackStmt.setObject(2, getField(item, "user_id"));
+        feedbackStmt.setInt(3, intk);
+        feedbackStmt.setObject(4, getField(item, "partner_id"), Types.INTEGER);
+        feedbackStmt.setObject(5, getField(item, "name"));
+        feedbackStmt.setObject(6, getField(item, "after_name"));
+        feedbackStmt.setObject(7, getField(item, "useful"), Types.INTEGER);
+        feedbackStmt.setObject(8, getField(item, "age"), Types.INTEGER);
+        feedbackStmt.setObject(9, getField(item, "ts"), Types.TIMESTAMP);
         feedbackStmt.addBatch();
         batch++;
 

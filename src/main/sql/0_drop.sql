@@ -13,8 +13,8 @@ DROP TRIGGER IF EXISTS partner_like_enum_type_check;
 
 
 DROP TRIGGER IF EXISTS upfb_rating_enum_check;
-DROP TRIGGER IF EXISTS upfb_enum_check;
 DROP TRIGGER IF EXISTS upfb_gb_enum_check;
+DROP TRIGGER IF EXISTS upfb_enum_check;
 DROP TRIGGER IF EXISTS upfb_details_enum_check;
 
 -- Drop tables (children first, then parents)

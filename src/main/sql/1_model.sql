@@ -260,14 +260,16 @@ FROM partner p;
 -- Feedback tables
 CREATE TABLE user_partner_feedback
 (
-    id         INTEGER PRIMARY KEY,
-    enum_id    INTEGER  NOT NULL, -- references int_enum(id) where int_enum.type='fbtype'
-    partner_id INTEGER,           -- Not always visible
+    id         INTEGER,
+    user_id    INTEGER  NOT NULL REFERENCES user_partner_feedback (id) ON DELETE CASCADE,
+    enum_id    INTEGER  NOT NULL REFERENCES user_partner_feedback (id) ON DELETE CASCADE,
+    partner_id INTEGER, -- Not always visible
     name       TEXT,
     age        TINYINT,
     after_name TEXT,
     useful     INTEGER  NOT NULL,
-    ts         DATETIME NOT NULL
+    ts         DATETIME NOT NULL,
+    PRIMARY KEY (id, user_id)
 );
 CREATE TRIGGER upfb_enum_check
     BEFORE INSERT
@@ -333,8 +335,8 @@ CREATE TRIGGER upfb_details_enum_check
     FOR EACH ROW
 BEGIN
     SELECT CASE
-               WHEN (SELECT count(*) FROM int_enum WHERE id = NEW.enum_id AND type = 'fbtype') != 1
+               WHEN (SELECT count(*) FROM int_enum WHERE id = NEW.enum_id AND type = 'fbdtype') != 1
                    THEN RAISE(ABORT,
-                              'user_partner_feedback_details: attempted to insert enum_id not found or not unique for type=fbtype')
+                              'user_partner_feedback_details: attempted to insert enum_id not found or not unique for type=fbdtype')
                END;
 END;

@@ -28,6 +28,7 @@ public abstract class Mapper implements TrafoEngine, Flushable {
     protected final Map.Entry<String, Properties> fbgbtype = new AbstractMap.SimpleEntry<>("fbgbtype", new Properties());
     protected final Map.Entry<String, Properties> fbrtype = new AbstractMap.SimpleEntry<>("fbrtype", new Properties());
     protected final Map.Entry<String, Properties> fbtype = new AbstractMap.SimpleEntry<>("fbtype", new Properties());
+    protected final Map.Entry<String, Properties> fbdtype = new AbstractMap.SimpleEntry<>("fbdtype", new Properties());
     private Map<String, String> map;
 
     private void loadEnums() throws IOException {
@@ -57,6 +58,8 @@ public abstract class Mapper implements TrafoEngine, Flushable {
                 fbgbtype.getValue().put(keyVal.getKey(), value);
             else if (enumType.equals(fbrtype.getKey()))
                 fbrtype.getValue().put(keyVal.getKey(), value);
+            else if (enumType.equals(fbdtype.getKey()))
+                fbdtype.getValue().put(keyVal.getKey(), value);
         }
     }
 
@@ -162,6 +165,7 @@ public abstract class Mapper implements TrafoEngine, Flushable {
             fbgbtype.getValue().store(fos, "Feedback good/bad text");
             fbrtype.getValue().store(fos, "Feedback rating text");
             fbtype.getValue().store(fos, "Feedback text");
+            fbdtype.getValue().store(fos, "Feedback details key text");
         }
         addedProps.clear();
     }

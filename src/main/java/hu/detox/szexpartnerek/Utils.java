@@ -1,6 +1,8 @@
 package hu.detox.szexpartnerek;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.jsoup.internal.StringUtil;
 
 import java.io.BufferedReader;
@@ -11,6 +13,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Utils {
+
+    public static RequestBody bodyOf(String form) {
+        return RequestBody.create(
+                form,
+                MediaType.parse("application/x-www-form-urlencoded; charset=UTF-8")
+        );
+    }
 
     public static Map<String, String> map(String file) throws IOException {
         LinkedHashMap<String, String> res = new LinkedHashMap<>();

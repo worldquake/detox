@@ -28,14 +28,18 @@ import java.util.stream.IntStream;
 public class UserReview extends Mapper {
     public static final UserReview INSTANCE = new UserReview();
     public static final Pattern P_AGE = Pattern.compile("\\(([0-9]+)\\|");
-    private static String[] MODES = "Elfogadott Írt Kérdőjeles Elutasított".split(" ");
     private static String[] SMODES = "accepted received questioned hidden".split(" ");
     private static String[] RATES = "Környezet Külső Hozzáállás Technika Összkép".split(" ");
     private static String[] TEXTS = "Kapcsolatfelvétel,Lakás,Külső,Hozzáállás,Együttlét,Elégedettség és Ajánlás".split(",");
-    private static Pattern MODEP = Pattern.compile("(" + StringUtil.join(MODES, "|") + ") \\(([0-9]+)\\)");
+    private static Pattern MODEP;
     public final UserReviewPersister persister;
 
-    private UserReview() {
+    static {
+        String[] arr = "Elfogadott Kapott|Írt Kérdőjeles Elutasított".split(" ");
+        MODEP = Pattern.compile("(" + StringUtil.join(arr, "|") + ") \\(([0-9]+)\\)");
+    }
+
+    protected UserReview() {
         super("src/main/resources/prop-mapping.kv");
         try {
             persister = new UserReviewPersister(Main.APP.getConn());
@@ -93,6 +97,10 @@ public class UserReview extends Mapper {
         return new File("target/gen-user-reviews.jsonl");
     }
 
+    protected int pageSize() {
+        return 25;
+    }
+
     @Override
     public Pager pager() {
         return new Pager() {
@@ -115,7 +123,8 @@ public class UserReview extends Mapper {
             public boolean current(JsonNode node) {
                 int cr = 0;
                 for (String sm : SMODES) {
-                    JsonNode nd = node.get(sm);
+                    String key = addProp(fbtype, null, null, sm).toString();
+                    JsonNode nd = node.get(key);
                     curr[cr++] += nd == null ? 0 : nd.size();
                 }
                 boolean cont = hasNext();
@@ -129,7 +138,7 @@ public class UserReview extends Mapper {
             }
 
             private void nextMode() {
-                if (max == null) return;
+                if (max == null || max[mode] > curr[mode]) return;
                 int retm = max.length;
                 for (int mxi = mode + 1; mxi < max.length; mxi++) {
                     if (max[mxi] > 0) {
@@ -145,14 +154,15 @@ public class UserReview extends Mapper {
             public String next() {
                 String ret = Integer.toString(offset);
                 ret = "offset=" + ret + "&status=" + SMODES[mode];
-                offset += 25;
+                offset += pageSize();
                 return ret;
             }
         };
     }
 
-    public ObjectNode readContent(Integer idp, Element elem) {
+    protected ObjectNode readSingle(Integer idp, Element elem) {
         var ret = Serde.OM.createObjectNode();
+        ret.put("user_id", idp);
 
         // 1. "ts" field: date from onmouseover attribute in the right dateDiv
         Element dateDiv = elem.selectFirst("div[id^=dateDiv]");
@@ -160,7 +170,7 @@ public class UserReview extends Mapper {
         if (dateDiv == null || a == null) return null;
         String onMouseOver = dateDiv.attr("onmouseover");
         Integer id = Integer.parseInt(dateDiv.id().replace("dateDiv", ""));
-        ret.put("id", (idp == null ? 0 : idp) + id);
+        ret.put("id", id);
         Matcher m = Pattern
                 .compile("'(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2})'").matcher(onMouseOver);
         if (m.find()) {
@@ -195,32 +205,36 @@ public class UserReview extends Mapper {
 
         // 4. "useful" from hasznosDiv
         Element hasznosDiv = elem.selectFirst("#hasznosDiv");
+        int haszn = 0;
         if (hasznosDiv != null) {
             m = Pattern.compile("\\((\\d+)\\)").matcher(hasznosDiv.text());
             if (m.find()) {
-                ret.put("useful", Integer.parseInt(m.group(1)));
-            } else {
-                ret.put("useful", 0);
+                haszn = Integer.parseInt(m.group(1));
             }
         }
+        ret.put("useful", haszn);
 
         // 5. "rates" array
-        int[] ratesArr = new int[RATES.length];
+        int[] ratesArr;
         Elements ratingLabels = elem.select(".ratingLabel");
         Elements ratingStars = elem.select(".ratingStars img[alt]");
-        for (int i = 0; i < RATES.length; i++) {
-            int rate = -1;
-            int idx = addProp(fbrtype, null, null, ratingLabels.get(i).text());
-            if (i < ratingStars.size()) {
-                String alt = ratingStars.get(i).attr("alt");
-                try {
-                    rate = Integer.parseInt(alt);
-                } catch (Exception ignore) {
+        if (ratingLabels.size() == RATES.length) {
+            ratesArr = new int[RATES.length];
+            for (int i = 0; i < RATES.length; i++) {
+                int rate = -1;
+                Element rl = ratingLabels.get(i);
+                int idx = addProp(fbrtype, null, null, rl.text());
+                if (i < ratingStars.size()) {
+                    String alt = ratingStars.get(i).attr("alt");
+                    try {
+                        rate = Integer.parseInt(alt);
+                    } catch (Exception ignore) {
+                    }
                 }
+                ratesArr[idx] = rate;
             }
-            ratesArr[idx] = rate;
+            ret.put("rates", Serde.OM.valueToTree(ratesArr));
         }
-        ret.put("rates", Serde.OM.valueToTree(ratesArr));
 
         // 6. "good" and "bad" arrays
         ArrayNode goodArr = ret.putArray("good");
@@ -248,7 +262,7 @@ public class UserReview extends Mapper {
                     }
                 }
                 if (val != null) {
-                    id = addProp(fbtype, null, null, label);
+                    id = addProp(fbdtype, null, null, label);
                     details.put(id.toString(), val);
                 }
             }
@@ -257,9 +271,14 @@ public class UserReview extends Mapper {
         return ret;
     }
 
+    protected String[] selectors() {
+        return new String[]{"div#beszamoloMainContent>div"};
+    }
+
     @Override
     public ObjectNode apply(String s) {
         Document soup = Jsoup.parse(s);
+        String[] sels = selectors();
         Comment cmt = ((Comment) soup.childNode(0));
         Matcher m = Advertiser.IDP.matcher(cmt.getData());
         Integer idp = null;
@@ -282,8 +301,8 @@ public class UserReview extends Mapper {
         if (an == null) {
             an = Serde.OM.createArrayNode();
         }
-        for (Element iel : soup.select("div#beszamoloMainContent>div")) {
-            var con = readContent(idp, iel);
+        for (Element iel : soup.select(sels[0])) {
+            var con = readSingle(idp, iel);
             if (con == null) break;
             an.add(con);
         }
