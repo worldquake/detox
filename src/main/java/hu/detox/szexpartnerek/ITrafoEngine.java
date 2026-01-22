@@ -7,7 +7,7 @@ import java.io.Flushable;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public interface TrafoEngine extends Function<String, Object>, AutoCloseable {
+public interface ITrafoEngine extends Function<String, Object>, AutoCloseable {
 
     interface Filteres {
         boolean skips(String in);
@@ -17,15 +17,15 @@ public interface TrafoEngine extends Function<String, Object>, AutoCloseable {
 
     Iterator<?> input(JsonNode parent);
 
-    default TrafoEngine[] subTrafos() {
+    default ITrafoEngine[] subTrafos() {
         return null;
     }
 
-    default TrafoEngine[] preTrafos() {
+    default ITrafoEngine[] preTrafos() {
         return null;
     }
 
-    Persister persister();
+    IPersister persister();
 
     default boolean post() {
         return false;
@@ -42,11 +42,11 @@ public interface TrafoEngine extends Function<String, Object>, AutoCloseable {
     @Override
     default void close() throws Exception {
         if (this instanceof Flushable fl) fl.flush();
-        TrafoEngine[] sts = subTrafos();
-        if (sts != null) for (TrafoEngine te : sts) {
+        ITrafoEngine[] sts = subTrafos();
+        if (sts != null) for (ITrafoEngine te : sts) {
             te.close();
         }
-        Persister p = persister();
+        IPersister p = persister();
         if (p != null) p.close();
     }
 }

@@ -5,7 +5,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.*;
+import hu.detox.szexpartnerek.IPager;
+import hu.detox.szexpartnerek.ITrafoEngine;
+import hu.detox.szexpartnerek.Main;
+import hu.detox.szexpartnerek.Mapper;
+import hu.detox.szexpartnerek.utils.Serde;
+import hu.detox.szexpartnerek.utils.Utils;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
@@ -27,7 +32,7 @@ import java.util.stream.IntStream;
 
 public class UserReview extends Mapper {
     public static final UserReview INSTANCE = new UserReview();
-    private static final TrafoEngine[] PRE = new TrafoEngine[]{Partner.INSTANCE};
+    private static final ITrafoEngine[] PRE = new ITrafoEngine[]{Partner.INSTANCE};
     public static final Pattern P_AGE = Pattern.compile("\\(([0-9]+)\\|");
     private static String[] SMODES = "accepted received questioned hidden".split(" ");
     private static String[] RATES = "Környezet Külső Hozzáállás Technika Összkép".split(" ");
@@ -77,7 +82,7 @@ public class UserReview extends Mapper {
     }
 
     @Override
-    public TrafoEngine[] preTrafos() {
+    public ITrafoEngine[] preTrafos() {
         return PRE;
     }
 
@@ -103,8 +108,8 @@ public class UserReview extends Mapper {
     }
 
     @Override
-    public Pager pager() {
-        return new Pager() {
+    public IPager pager() {
+        return new IPager() {
             private transient int[] max;
             private transient int[] curr;
             private int offset;
@@ -133,7 +138,7 @@ public class UserReview extends Mapper {
                 if (max == null) first(node);
                 int cr = 0, cc = 0;
                 for (String sm : SMODES) {
-                    String key = addProp(fbtype, null, null, sm).toString();
+                    String key = addProp(null, fbtype, null, null, sm).toString();
                     JsonNode nd = node.get(key);
                     cc += curr[cr++] += nd == null ? 0 : nd.size();
                 }
@@ -233,7 +238,7 @@ public class UserReview extends Mapper {
             for (int i = 0; i < RATES.length; i++) {
                 int rate = -1;
                 Element rl = ratingLabels.get(i);
-                int idx = addProp(fbrtype, null, null, rl.text());
+                int idx = addProp(null, fbrtype, null, null, rl.text());
                 if (i < ratingStars.size()) {
                     String alt = ratingStars.get(i).attr("alt");
                     try {
@@ -253,7 +258,7 @@ public class UserReview extends Mapper {
             String style = div.attr("style");
             ArrayNode an = style.contains("5AEA28") ? goodArr : style.contains("FF0000") ? badArr : null;
             if (an != null) for (String el : Utils.normalize(div.text()).split(", ")) {
-                addProp(fbgbtype, an, null, el);
+                addProp(null, fbgbtype, an, null, el);
             }
         }
 
@@ -271,7 +276,7 @@ public class UserReview extends Mapper {
                     }
                 }
                 if (val != null) {
-                    id = addProp(fbdtype, null, null, label);
+                    id = addProp(null, fbdtype, null, null, label);
                     details.put(id.toString(), val);
                 }
             }
@@ -324,7 +329,7 @@ public class UserReview extends Mapper {
             pg.add(Integer.parseInt(m.group(2)));
         }
         res.put(Utils.PAGER, pg);
-        String okey = addProp(fbtype, null, null, SMODES[key]).toString();
+        String okey = addProp(null, fbtype, null, null, SMODES[key]).toString();
         ArrayNode an = (ArrayNode) res.get(okey);
         if (an == null) {
             an = Serde.OM.createArrayNode();

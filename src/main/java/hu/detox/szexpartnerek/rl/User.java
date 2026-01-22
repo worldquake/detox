@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.TrafoEngine;
-import hu.detox.szexpartnerek.Utils;
+import hu.detox.szexpartnerek.IPersister;
+import hu.detox.szexpartnerek.ITrafoEngine;
+import hu.detox.szexpartnerek.utils.Utils;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
@@ -15,18 +15,15 @@ import org.jsoup.nodes.Element;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class User implements TrafoEngine, TrafoEngine.Filteres {
+public class User implements ITrafoEngine, ITrafoEngine.Filteres {
     public static final String IDR = "user_id";
     public static final User INSTANCE = new User();
-    private static final TrafoEngine[] SUB = new TrafoEngine[]{UserReview.INSTANCE};
+    private static final ITrafoEngine[] SUB = new ITrafoEngine[]{UserReview.INSTANCE};
     private transient Collection<String> idList = List.of();
     private transient UserPersister persister;
     private Map<String, String> propMapping;
@@ -140,17 +137,27 @@ public class User implements TrafoEngine, TrafoEngine.Filteres {
             return an.iterator();
         } else if (uid != null) {
             return List.of(uid).iterator();
+        } else if (parent instanceof ObjectNode on) {
+            ArrayList<Integer> res = new ArrayList<>(2000);
+            for (Map.Entry<String, JsonNode> ian : on.properties()) {
+                if (Utils.PAGER.equals(ian.getKey())) continue;
+                for (JsonNode ien : ian.getValue()) {
+                    JsonNode userId = ien.get(User.IDR);
+                    if (userId != null) res.add(userId.asInt());
+                }
+            }
+            return res.iterator();
         }
         return null;
     }
 
     @Override
-    public TrafoEngine[] subTrafos() {
+    public ITrafoEngine[] subTrafos() {
         return SUB;
     }
 
     @Override
-    public Persister persister() {
+    public IPersister persister() {
         return persister;
     }
 

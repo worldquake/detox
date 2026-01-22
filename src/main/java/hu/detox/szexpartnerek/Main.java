@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import hu.detox.szexpartnerek.rl.Feedbacks;
 import hu.detox.szexpartnerek.rl.Lista;
 import hu.detox.szexpartnerek.rl.New;
-import hu.detox.szexpartnerek.rl.Partner;
+import hu.detox.szexpartnerek.utils.Db;
+import hu.detox.szexpartnerek.utils.Serde;
 import okhttp3.RequestBody;
 import org.apache.commons.io.IOUtils;
 
@@ -56,9 +57,9 @@ public class Main implements Callable<Integer>, AutoCloseable {
         System.out.println(Serde.OM.valueToTree(res));
     }
 
-    public void transformAll(boolean recurse, Serde serde, TrafoEngine engine, String... urls) throws IOException, SQLException {
+    public void transformAll(boolean recurse, Serde serde, ITrafoEngine engine, String... urls) throws IOException, SQLException {
         Iterator<String> pager = engine.pager();
-        Persister p = engine.persister();
+        IPersister p = engine.persister();
         try {
             boolean first = true, cont;
             for (String url : urls) {
@@ -73,13 +74,13 @@ public class Main implements Callable<Integer>, AutoCloseable {
                             curl += "&" + pager.next();
                         }
                         RequestBody body = null;
-                        if (pager instanceof Pager pg) {
+                        if (pager instanceof IPager pg) {
                             body = pg.req();
                         }
                         var resp = engine.post() ? rl.post(curl, body) : rl.get(curl);
                         System.err.println("Current is " + curl);
                         bodyNode = serde.serialize(resp, curl, engine);
-                        if (bodyNode != null && pager instanceof Pager pg) {
+                        if (bodyNode != null && pager instanceof IPager pg) {
                             if (first) {
                                 pg.first(bodyNode);
                                 first = false;
@@ -105,19 +106,19 @@ public class Main implements Callable<Integer>, AutoCloseable {
         }
     }
 
-    private void save(boolean recurse, TrafoEngine engine, JsonNode bodyNode) throws IOException, SQLException {
-        TrafoEngine[] tes;
+    private void save(boolean recurse, ITrafoEngine engine, JsonNode bodyNode) throws IOException, SQLException {
+        ITrafoEngine[] tes;
         if (recurse) {
             tes = engine.preTrafos();
-            if (tes != null) for (TrafoEngine ste : tes) {
+            if (tes != null) for (ITrafoEngine ste : tes) {
                 rlDataDl(false, ste, bodyNode);
             }
         }
-        Persister p = engine.persister();
+        IPersister p = engine.persister();
         if (p != null) p.save(bodyNode);
         if (recurse) {
             tes = engine.subTrafos();
-            if (tes != null) for (TrafoEngine ste : tes) {
+            if (tes != null) for (ITrafoEngine ste : tes) {
                 rlDataDl(recurse, ste, bodyNode);
             }
         }
@@ -125,15 +126,15 @@ public class Main implements Callable<Integer>, AutoCloseable {
 
     @Override
     public Integer call() throws Exception {
-        rlDataDl(true, Feedbacks.INSTANCE, null);
         //rlDataDl(true, User.INSTANCE, null);
-        rlDataDl(true, Partner.INSTANCE, null);
+        //rlDataDl(true, Partner.INSTANCE, null);
+        rlDataDl(true, Feedbacks.INSTANCE, null);
         rlDataDl(true, New.INSTANCE, null);
         rlDataDl(true, Lista.INSTANCE, null);
         return 0;
     }
 
-    public void rlDataDl(boolean recurse, TrafoEngine engine, JsonNode parent) throws IOException, SQLException {
+    public void rlDataDl(boolean recurse, ITrafoEngine engine, JsonNode parent) throws IOException, SQLException {
         boolean cont = true;
         String[] arr = new String[10];
         String ln;
@@ -165,7 +166,7 @@ public class Main implements Callable<Integer>, AutoCloseable {
                             }
                         } else {
                             ln = serde.nextStr();
-                            if (engine instanceof TrafoEngine.Filteres tf) {
+                            if (engine instanceof ITrafoEngine.Filteres tf) {
                                 if (serde.isListMode() && tf.skips(ln)) continue;
                             }
                         }

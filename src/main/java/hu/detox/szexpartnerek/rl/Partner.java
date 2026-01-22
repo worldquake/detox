@@ -3,10 +3,10 @@ package hu.detox.szexpartnerek.rl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import hu.detox.szexpartnerek.IPersister;
 import hu.detox.szexpartnerek.Mapper;
-import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.Serde;
-import hu.detox.szexpartnerek.Utils;
+import hu.detox.szexpartnerek.utils.Serde;
+import hu.detox.szexpartnerek.utils.Utils;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
@@ -24,7 +24,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static hu.detox.szexpartnerek.Utils.text;
+import static hu.detox.szexpartnerek.utils.Utils.text;
 
 public class Partner extends Mapper {
     public static final String IDR = "partner_id";
@@ -40,6 +40,7 @@ public class Partner extends Mapper {
 
     private transient PartnerPersister persister;
     private transient Set<String> alreadyProcessed = new HashSet<>();
+    private transient StringBuilder extra = new StringBuilder();
     private Map<String, String> massage;
     private Map<String, String> looking;
     private Map<String, String> massageReverse = new HashMap<>();
@@ -58,7 +59,7 @@ public class Partner extends Mapper {
             }
             Map<String, String> lm = Utils.map("src/main/resources/list-mapping.kv");
             for (Map.Entry<String, String> me : lm.entrySet()) {
-                addProp(props, null, null, Utils.normalize(me.getValue()));
+                doAddProp(props, null, Utils.normalize(me.getValue()));
             }
         } catch (IOException | SQLException ex) {
             throw new ExceptionInInitializerError(ex);
@@ -74,7 +75,7 @@ public class Partner extends Mapper {
             if (enm == null) {
                 enm = massage.keySet().iterator().next();
             }
-            addProp(massages, arr, null, enm);
+            addProp(extra, massages, arr, null, enm);
         }
         return ret;
     }
@@ -93,7 +94,7 @@ public class Partner extends Mapper {
                 }
             } else if (nenm.equals("-")) {
                 if (propsArr != null) doAddProp(props, propsArr, enm);
-                return null;
+                return -1;
             }
             en.set(nenm);
         }
@@ -103,8 +104,9 @@ public class Partner extends Mapper {
     @Override
     public Function<String, String> url() {
         return s -> {
-            if (alreadyProcessed.contains(s)) return null;
-            return "rosszlanyok.php?pid=szexpartner-data&id=" + s + "&instantStat=0";
+            String res = null;
+            if (alreadyProcessed.add(s)) res = "rosszlanyok.php?pid=szexpartner-data&id=" + s + "&instantStat=0";
+            return res;
         };
     }
 
@@ -121,8 +123,12 @@ public class Partner extends Mapper {
             for (Map.Entry<String, JsonNode> ian : on.properties()) {
                 if (Utils.PAGER.equals(ian.getKey())) continue;
                 for (JsonNode ien : ian.getValue()) {
-                    JsonNode partnerId = ien.get(Partner.IDR);
-                    if (partnerId != null) res.add(partnerId.asInt());
+                    if (ien instanceof ArrayNode iian) { // List node
+                        res.add(iian.get(0).asInt());
+                    } else {
+                        JsonNode partnerId = ien.get(Partner.IDR);
+                        if (partnerId != null) res.add(partnerId.asInt());
+                    }
                 }
             }
             return res.iterator();
@@ -131,7 +137,7 @@ public class Partner extends Mapper {
     }
 
     @Override
-    public Persister persister() {
+    public IPersister persister() {
         return persister;
     }
 
@@ -159,7 +165,7 @@ public class Partner extends Mapper {
             String txt = text(li);
             if (txt == null
                     || txt.contains("adatlap kitöltés") || txt.contains("Belépett")) continue;
-            addProp(props, propsArr, null, txt);
+            addProp(extra, props, propsArr, null, txt);
         }
     }
 
@@ -208,7 +214,7 @@ public class Partner extends Mapper {
             for (String prop : txt.split(",")) {
                 prop = Jsoup.parseBodyFragment(prop).text();
                 if (!addMassage(massageArr, prop)) {
-                    addProp(props, propsArr, null, prop);
+                    addProp(extra, props, propsArr, null, prop);
                 }
             }
         } catch (IndexOutOfBoundsException ioob) {
@@ -237,7 +243,7 @@ public class Partner extends Mapper {
         txt = parseOutMeasures(result, txt.substring(idx2 + 1));
 
         for (String prop : txt.split("[,⚠️]\\s*")) {
-            addProp(props, propsArr, null, prop);
+            addProp(extra, props, propsArr, null, prop);
         }
         result.set("properties", propsArr);
         return loc;
@@ -263,9 +269,7 @@ public class Partner extends Mapper {
                 val = val.replace("Negyed (SOS francia)", "SOS")
                         .replace("órára", "").replace("akár", "");
                 var am = LOOKING_AGE.matcher(val);
-                if (val.length() > 40) {
-                    result.put("expect", Utils.normalize(val));
-                } else if (am.find()) {
+                if (am.find()) {
                     Integer from = Integer.valueOf(am.group(1));
                     Integer to;
                     ArrayNode ara = Serde.OM.createArrayNode();
@@ -287,14 +291,14 @@ public class Partner extends Mapper {
                     result.put("looking_age", ara);
                 } else {
                     for (String iv : val.split(",")) {
-                        addProp(lookings, arr, propsArr, iv);
+                        addProp(extra, lookings, arr, propsArr, iv);
                     }
                 }
             } else if (props == answers) {
                 if (enumOfQ == null) {
                     enumOfQ = val;
                 } else {
-                    int qenum = addProp(props, arr, null, enumOfQ);
+                    int qenum = addProp(extra, props, arr, null, enumOfQ);
                     answerMap.put(String.valueOf(qenum), val);
                     enumOfQ = null;
                 }
@@ -340,6 +344,7 @@ public class Partner extends Mapper {
 
     @Override
     public ObjectNode apply(String html) {
+        extra.setLength(0);
         Document doc = Jsoup.parse(html);
         ObjectNode result = Serde.OM.createObjectNode();
         ArrayNode propsArr = Serde.OM.createArrayNode();
@@ -381,7 +386,7 @@ public class Partner extends Mapper {
             if (!txt.isEmpty()) phoneArr.add(txt);
             for (Element img : link.select("img")) {
                 String alt = img.attr("src").replaceAll(".+/([a-z]+)_icon.+", "$1");
-                addProp(props, phoneArr, null, alt);
+                addProp(extra, props, phoneArr, null, alt);
             }
         }
         result.set("phone", phoneArr);
@@ -476,7 +481,7 @@ public class Partner extends Mapper {
                     ArrayNode arr = noArr;
                     if (font.hasClass("leftLikes1")) arr = yesArr;
                     else if (font.hasClass("leftLikes2")) arr = askArr;
-                    addProp(likes, arr, null, txt);
+                    addProp(extra, likes, arr, null, txt);
                 }
             }
             possibilitiesObj.set("no", noArr);
@@ -485,6 +490,9 @@ public class Partner extends Mapper {
             result.set("likes", possibilitiesObj);
         }
         result.put("massages", massageArr);
+        if (!extra.isEmpty()) {
+            result.put("expect", Utils.normalize(extra.toString()));
+        }
         return result;
     }
 

@@ -273,11 +273,11 @@ END;
 CREATE TABLE IF NOT EXISTS partner_list
 (
     tag   TEXT    NOT NULL,
-    id    INTEGER NOT NULL,
+    partner_id    INTEGER NOT NULL REFERENCES partner (id) ON DELETE CASCADE,
     name  TEXT    NOT NULL,
     age   TEXT,
     image TEXT,
-    PRIMARY KEY (tag, id)
+    PRIMARY KEY (tag, partner_id)
 );
 
 CREATE VIEW partner_view AS
@@ -491,3 +491,19 @@ FROM user_partner_feedback fb
          JOIN max_props mp
 WHERE rt.rating IS NOT NULL
   AND fb.partner_id > 0;
+
+CREATE TRIGGER ienum_delete_cascade
+    BEFORE DELETE ON int_enum
+    FOR EACH ROW
+BEGIN
+    DELETE FROM partner_prop WHERE enum_id = OLD.id AND 'properties' = OLD.type;
+    DELETE FROM partner_phone_prop WHERE enum_id = OLD.id AND 'properties' = OLD.type;
+    DELETE FROM partner_answer WHERE enum_id = OLD.id AND 'answers' = OLD.type;
+    DELETE FROM partner_looking WHERE enum_id = OLD.id AND 'looking' = OLD.type;
+    DELETE FROM partner_massage WHERE enum_id = OLD.id AND 'massage' = OLD.type;
+    DELETE FROM partner_like WHERE enum_id = OLD.id AND 'likes' = OLD.type;
+    DELETE FROM user_partner_feedback WHERE enum_id = OLD.id AND 'fbtype' = OLD.type;
+    DELETE FROM user_partner_feedback_rating WHERE enum_id = OLD.id AND 'fbrtype' = OLD.type;
+    DELETE FROM user_partner_feedback_gb WHERE enum_id = OLD.id AND 'fbgbtype' = OLD.type;
+    DELETE FROM user_partner_feedback_details WHERE enum_id = OLD.id AND 'fbdtype' = OLD.type;
+END;

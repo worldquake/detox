@@ -1,4 +1,4 @@
-package hu.detox.szexpartnerek;
+package hu.detox.szexpartnerek.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

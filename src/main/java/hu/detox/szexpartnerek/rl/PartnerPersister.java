@@ -1,9 +1,9 @@
 package hu.detox.szexpartnerek.rl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.Db;
+import hu.detox.szexpartnerek.IPersister;
 import hu.detox.szexpartnerek.Main;
-import hu.detox.szexpartnerek.Persister;
+import hu.detox.szexpartnerek.utils.Db;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
-public class PartnerPersister implements Persister, Flushable {
+public class PartnerPersister implements IPersister, Flushable {
     private final PreparedStatement partnerStmt;
     private final PreparedStatement phonePropStmt;
     private final PreparedStatement partnerPropStmt;
@@ -51,14 +51,14 @@ public class PartnerPersister implements Persister, Flushable {
                 "    longitude = excluded.longitude,\n" +
                 "    looking_age_min = excluded.looking_age_min,\n" +
                 "    looking_age_max = excluded.looking_age_max\n");
-        this.phonePropStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_phone_prop (" + Partner.IDR + ", " + Persister.ENUM_IDR + ") VALUES (?, ?)");
-        this.partnerPropStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_prop (" + Partner.IDR + ", " + Persister.ENUM_IDR + ") VALUES (?, ?)");
+        this.phonePropStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_phone_prop (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)");
+        this.partnerPropStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_prop (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)");
         this.openHourStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_open_hour (" + Partner.IDR + ", onday, hours) VALUES (?, ?, ?)");
         this.langStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_lang (" + Partner.IDR + ", lang) VALUES (?, ?)");
-        this.answerStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_answer (" + Partner.IDR + ", " + Persister.ENUM_IDR + ", answer) VALUES (?, ?, ?)");
-        this.lookingStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_looking (" + Partner.IDR + ", " + Persister.ENUM_IDR + ") VALUES (?, ?)");
-        this.massageStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_massage (" + Partner.IDR + ", " + Persister.ENUM_IDR + ") VALUES (?, ?)");
-        this.likeStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_like (" + Partner.IDR + ", " + Persister.ENUM_IDR + ", option) VALUES (?, ?, ?)");
+        this.answerStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_answer (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ", answer) VALUES (?, ?, ?)");
+        this.lookingStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_looking (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)");
+        this.massageStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_massage (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)");
+        this.likeStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_like (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ", option) VALUES (?, ?, ?)");
         this.imgStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_img (" + Partner.IDR + ", ondate, path) VALUES (?, ?, ?)");
         this.activityStmt = conn.prepareStatement("INSERT OR IGNORE INTO partner_activity (" + Partner.IDR + ", ondate, description) VALUES (?, ?, ?)");
     }

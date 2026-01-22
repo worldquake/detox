@@ -1,9 +1,9 @@
 package hu.detox.szexpartnerek.rl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.Db;
+import hu.detox.szexpartnerek.IPersister;
 import hu.detox.szexpartnerek.Main;
-import hu.detox.szexpartnerek.Persister;
+import hu.detox.szexpartnerek.utils.Db;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -11,9 +11,9 @@ import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
 
-import static hu.detox.szexpartnerek.Utils.getField;
+import static hu.detox.szexpartnerek.utils.Utils.getField;
 
-public class UserPersister implements Persister, Flushable {
+public class UserPersister implements IPersister, Flushable {
     private final PreparedStatement userStmt;
     private final PreparedStatement userLikesStmt;
     private final PreparedStatement userLikesDeleteStmt;

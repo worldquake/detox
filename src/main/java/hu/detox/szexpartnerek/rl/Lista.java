@@ -1,8 +1,8 @@
 package hu.detox.szexpartnerek.rl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.TrafoEngine;
+import hu.detox.szexpartnerek.IPersister;
+import hu.detox.szexpartnerek.ITrafoEngine;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
@@ -13,9 +13,9 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 
-public class Lista implements TrafoEngine {
+public class Lista implements ITrafoEngine {
     public static final Lista INSTANCE = new Lista();
-    private static final TrafoEngine[] SUB = new TrafoEngine[]{Partner.INSTANCE};
+    private static final ITrafoEngine[] PRE = new ITrafoEngine[]{Partner.INSTANCE};
     private Set<Integer> ids;
     private transient ListaPersister persister;
 
@@ -47,12 +47,12 @@ public class Lista implements TrafoEngine {
     }
 
     @Override
-    public TrafoEngine[] subTrafos() {
-        return SUB;
+    public ITrafoEngine[] preTrafos() {
+        return PRE;
     }
 
     @Override
-    public Persister persister() {
+    public IPersister persister() {
         return persister;
     }
 

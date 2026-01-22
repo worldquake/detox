@@ -3,23 +3,25 @@ package hu.detox.szexpartnerek;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import hu.detox.szexpartnerek.rl.Partner;
+import hu.detox.szexpartnerek.utils.Utils;
 
 import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class Mapper implements TrafoEngine, Flushable {
+public abstract class Mapper implements ITrafoEngine, Flushable {
     public static final String ENUMS = "src/main/resources/enums.properties";
+    private static final Set<String> FROZEN = Set.of("looking,properties".split(","));
     private final PreparedStatement enumCount;
     private final PreparedStatement enumDel;
     private final PreparedStatement enumAdd;
     private transient Properties addedProps = new Properties();
+    protected final Map<String, Integer> maxId = new HashMap<>();
+
     protected final Map.Entry<String, Properties> props = new AbstractMap.SimpleEntry<>("properties", new Properties());
     protected final Map.Entry<String, Properties> massages = new AbstractMap.SimpleEntry<>("massage", new Properties());
     protected final Map.Entry<String, Properties> likes = new AbstractMap.SimpleEntry<>("likes", new Properties());
@@ -113,43 +115,69 @@ public abstract class Mapper implements TrafoEngine, Flushable {
         }
     }
 
-    protected Integer doAddProp(Map.Entry<String, Properties> map, ArrayNode arr, String prp) {
-        Integer res = null;
-        if (prp != null) {
-            res = Integer.parseInt((String) map.getValue().computeIfAbsent(map.getKey() + "." + prp,
-                    k -> {
-                        String val = "" + map.getValue().size();
-                        System.err.println("** Property " + k + " added");
-                        try {
-                            addProp((String) k, val);
-                        } catch (IOException | SQLException ex) {
-                            throw new IllegalArgumentException(ex);
-                        }
-                        return val;
-                    }));
-            if (arr != null) {
-                boolean alreadyPresent = false;
-                for (JsonNode node : arr) {
-                    if (node.isInt() && node.intValue() == res) {
-                        alreadyPresent = true;
-                        break;
-                    }
+    private String nextId(Map.Entry<String, Properties> map) {
+        int id;
+        if (maxId == null) id = map.getValue().size();
+        else {
+            id = maxId.computeIfAbsent(map.getKey(), s -> {
+                int mx = 0, curr;
+                for (Object v : map.getValue().values()) {
+                    curr = Integer.parseInt(v.toString());
+                    if (curr > mx) mx = curr;
                 }
-                if (!alreadyPresent) arr.add(res);
+                return mx;
+            });
+            maxId.put(map.getKey(), id + 1);
+        }
+        return "" + id;
+    }
+
+    protected Integer doAddProp(Map.Entry<String, Properties> map, ArrayNode arr, String prp) {
+        if (prp == null) return null;
+        Integer res = Integer.parseInt((String) map.getValue().computeIfAbsent(map.getKey() + "." + prp,
+                k -> {
+                    String val = nextId(map);
+                    System.err.println("** Property " + k + " added");
+                    try {
+                        addProp((String) k, val);
+                    } catch (IOException | SQLException ex) {
+                        throw new IllegalArgumentException(ex);
+                    }
+                    return val;
+                }));
+        if (arr != null) {
+            boolean alreadyPresent = false;
+            for (JsonNode node : arr) {
+                if (node.isInt() && node.intValue() == res) {
+                    alreadyPresent = true;
+                    break;
+                }
             }
+            if (!alreadyPresent) arr.add(res);
         }
         return res;
     }
 
     protected abstract Integer onEnum(Map.Entry<String, Properties> map, ArrayNode arr, ArrayNode propsArr, AtomicReference<String> en);
 
-    protected final Integer addProp(Map.Entry<String, Properties> map, ArrayNode arr, ArrayNode propsArr, String prp) {
+    protected final Integer addProp(StringBuilder sb, Map.Entry<String, Properties> map, ArrayNode arr, ArrayNode propsArr, String prp) {
         String enm = Utils.toEnumLike(prp);
         enm = this.map.getOrDefault(enm, enm);
         if (enm == null) return null;
-        var ar = new AtomicReference<String>(enm);
+        var ar = new AtomicReference<>(enm);
         Integer res = onEnum(map, arr, propsArr, ar);
-        if (res == null) res = doAddProp(map, arr, enm);
+        if (res == null) {
+            if (FROZEN.contains(map.getKey())) {
+                enm = (String) map.getValue().get(map.getKey() + "." + enm);
+                if (enm != null) res = Integer.parseInt(enm);
+            } else res = doAddProp(map, arr, enm);
+            if (sb != null && res == null) {
+                if (!sb.isEmpty()) sb.append(", ");
+                sb.append(prp);
+            }
+        } else if (res == -1) {
+            res = null;
+        }
         return res;
     }
 
@@ -176,6 +204,6 @@ public abstract class Mapper implements TrafoEngine, Flushable {
         if (enumCount != null) enumCount.close();
         if (enumDel != null) enumDel.close();
         if (enumAdd != null) enumAdd.close();
-        TrafoEngine.super.close();
+        ITrafoEngine.super.close();
     }
 }

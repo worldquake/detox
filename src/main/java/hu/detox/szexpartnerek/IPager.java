@@ -5,12 +5,12 @@ import okhttp3.RequestBody;
 
 import java.util.Iterator;
 
-public interface Pager extends Iterator<String> {
+public interface IPager extends Iterator<String> {
 
-    class PagerWrap implements Pager {
-        protected Pager wrapped;
+    class PagerWrap implements IPager {
+        protected IPager wrapped;
 
-        public PagerWrap(Pager p) {
+        public PagerWrap(IPager p) {
             wrapped = p;
         }
 

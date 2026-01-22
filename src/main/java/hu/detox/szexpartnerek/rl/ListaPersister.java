@@ -1,10 +1,10 @@
 package hu.detox.szexpartnerek.rl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.Db;
+import hu.detox.szexpartnerek.IPersister;
 import hu.detox.szexpartnerek.Main;
-import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.Utils;
+import hu.detox.szexpartnerek.utils.Db;
+import hu.detox.szexpartnerek.utils.Utils;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
 
-public class ListaPersister implements Persister, Flushable {
+public class ListaPersister implements IPersister, Flushable {
     private final PreparedStatement partnerListStmt;
     private int batch;
     private Map<String, String> map;
@@ -25,10 +25,10 @@ public class ListaPersister implements Persister, Flushable {
         // Delete from partner_prop for dynamic lists
         Main.APP.getStmt().executeUpdate(
                 "DELETE FROM partner_prop " +
-                        "WHERE " + Persister.ENUM_IDR + " IN (SELECT id FROM int_enum WHERE type = 'properties' AND name IN ('AJANLOTT', 'BARATNOVEL'))"
+                        "WHERE " + IPersister.ENUM_IDR + " IN (SELECT id FROM int_enum WHERE type = 'properties' AND name IN ('AJANLOTT', 'BARATNOVEL'))"
         );
         this.partnerListStmt = conn.prepareStatement(
-                "INSERT OR IGNORE INTO partner_list (tag, id, name, age, image) VALUES (?, ?, ?, ?, ?)"
+                "INSERT OR IGNORE INTO partner_list (tag, partner_id, name, age, image) VALUES (?, ?, ?, ?, ?)"
         );
     }
 
@@ -37,8 +37,9 @@ public class ListaPersister implements Persister, Flushable {
         String title = root.get("title").asText();
         title = map.getOrDefault(title, title);
         for (JsonNode item : root.get("list")) {
+            Integer partnerId = item.get(0).asInt();
             partnerListStmt.setString(1, title);
-            partnerListStmt.setInt(2, item.get(0).asInt());
+            partnerListStmt.setInt(2, partnerId);
             partnerListStmt.setString(3, item.get(1).asText());
             partnerListStmt.setString(4, item.get(2).isNull() ? null : item.get(2).asText());
             partnerListStmt.setString(5, item.get(3).isNull() ? null : item.get(3).asText());
@@ -65,10 +66,10 @@ public class ListaPersister implements Persister, Flushable {
         flush();
         // Insert or ignore into partner_prop based on lists
         Main.APP.getStmt().executeUpdate(
-                "INSERT OR IGNORE INTO partner_prop (" + Partner.IDR + ", " + Persister.ENUM_IDR + ") " +
-                        "SELECT pl.id, ie.id " +
+                "INSERT OR IGNORE INTO partner_prop (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") " +
+                        "SELECT pl." + Partner.IDR + ", ie.id " +
                         "FROM partner_list pl " +
-                        "JOIN int_enum ie ON ie.type = 'properties' AND ie.name = pl.tag"
+                        "JOIN int_enum ie ON ie.type = 'properties' AND ie.name = pl.tag "
         );
         if (partnerListStmt != null) partnerListStmt.close();
     }

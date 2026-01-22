@@ -3,6 +3,7 @@ DROP VIEW IF EXISTS partner_view;
 DROP VIEW IF EXISTS user_partner_feedback_view;
 
 -- Drop triggers
+DROP TRIGGER IF EXISTS ienum_delete_cascade;
 DROP TRIGGER IF EXISTS update_user_ingestion_date;
 DROP TRIGGER IF EXISTS update_partner_ingestion_date;
 DROP TRIGGER IF EXISTS ppropetchk_insert;

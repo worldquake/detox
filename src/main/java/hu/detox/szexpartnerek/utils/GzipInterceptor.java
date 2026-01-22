@@ -1,4 +1,4 @@
-package hu.detox.szexpartnerek;
+package hu.detox.szexpartnerek.utils;
 
 import okhttp3.*;
 import okio.GzipSource;

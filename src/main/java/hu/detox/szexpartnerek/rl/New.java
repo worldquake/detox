@@ -3,9 +3,9 @@ package hu.detox.szexpartnerek.rl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.Serde;
-import hu.detox.szexpartnerek.TrafoEngine;
+import hu.detox.szexpartnerek.IPersister;
+import hu.detox.szexpartnerek.ITrafoEngine;
+import hu.detox.szexpartnerek.utils.Serde;
 import okhttp3.HttpUrl;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
@@ -15,9 +15,9 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public class New implements TrafoEngine {
+public class New implements ITrafoEngine {
     public static final New INSTANCE = new New();
-    private static final TrafoEngine[] SUB = new TrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
+    private static final ITrafoEngine[] SUB = new ITrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
     public static final String PARTNERS = "partners";
     public static final String USERS = "users";
 
@@ -39,12 +39,12 @@ public class New implements TrafoEngine {
     }
 
     @Override
-    public TrafoEngine[] subTrafos() {
+    public ITrafoEngine[] subTrafos() {
         return SUB;
     }
 
     @Override
-    public Persister persister() {
+    public IPersister persister() {
         return null;
     }
 

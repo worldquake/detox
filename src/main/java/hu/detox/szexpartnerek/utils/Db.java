@@ -1,4 +1,4 @@
-package hu.detox.szexpartnerek;
+package hu.detox.szexpartnerek.utils;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

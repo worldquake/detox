@@ -1,5 +1,6 @@
 package hu.detox.szexpartnerek;
 
+import hu.detox.szexpartnerek.utils.GzipInterceptor;
 import okhttp3.*;
 
 import java.io.IOException;

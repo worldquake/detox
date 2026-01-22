@@ -2,9 +2,8 @@ package hu.detox.szexpartnerek.rl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.Db;
-import hu.detox.szexpartnerek.Persister;
-import hu.detox.szexpartnerek.TrafoEngine;
+import hu.detox.szexpartnerek.IPersister;
+import hu.detox.szexpartnerek.utils.Db;
 
 import java.io.Flushable;
 import java.io.IOException;
@@ -12,11 +11,10 @@ import java.sql.*;
 import java.util.Iterator;
 import java.util.Map;
 
-import static hu.detox.szexpartnerek.Utils.getField;
+import static hu.detox.szexpartnerek.utils.Utils.getField;
 
 
-public class UserReviewPersister implements Persister, Flushable {
-    private static final TrafoEngine[] PRE = new TrafoEngine[]{Partner.INSTANCE};
+public class UserReviewPersister implements IPersister, Flushable {
     private final PreparedStatement maxDateStmt;
     private final PreparedStatement feedbackStmt;
     private final PreparedStatement ratingStmt;
@@ -29,32 +27,28 @@ public class UserReviewPersister implements Persister, Flushable {
                 "SELECT MAX(ts)|| ':00' FROM user_partner_feedback"
         );
         feedbackStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback (id, " + User.IDR + ", " + Partner.IDR + ", " + Persister.ENUM_IDR + ", name, after_name, useful, age, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "INSERT INTO user_partner_feedback (id, " + User.IDR + ", " + Partner.IDR + ", " + IPersister.ENUM_IDR + ", name, after_name, useful, age, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                         "ON CONFLICT(id) DO UPDATE SET " +
                         User.IDR + " = COALESCE(user_partner_feedback." + User.IDR + ", excluded." + User.IDR + "), " +
                         Partner.IDR + " = COALESCE(user_partner_feedback." + Partner.IDR + ", excluded." + Partner.IDR + "), " +
-                        Persister.ENUM_IDR + " = COALESCE(user_partner_feedback." + Persister.ENUM_IDR + ", excluded." + Persister.ENUM_IDR + "), " +
+                        IPersister.ENUM_IDR + " = COALESCE(user_partner_feedback." + IPersister.ENUM_IDR + ", excluded." + IPersister.ENUM_IDR + "), " +
                         "name = excluded.name, after_name = excluded.after_name, " +
                         "useful = COALESCE(user_partner_feedback.useful, excluded.useful), " +
                         "age = COALESCE(user_partner_feedback.age, excluded.age), " +
                         "ts = COALESCE(user_partner_feedback.ts, excluded.ts)"
         );
         ratingStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback_rating (fbid, " + Persister.ENUM_IDR + ", val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT(fbid, " + Persister.ENUM_IDR + ") DO UPDATE SET val=excluded.val"
+                "INSERT INTO user_partner_feedback_rating (fbid, " + IPersister.ENUM_IDR + ", val) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, " + IPersister.ENUM_IDR + ") DO UPDATE SET val=excluded.val"
         );
         gbStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback_gb (fbid, " + Persister.ENUM_IDR + ", bad) VALUES (?, ?, ?) " +
-                        "ON CONFLICT(fbid, " + Persister.ENUM_IDR + ") DO NOTHING"
+                "INSERT INTO user_partner_feedback_gb (fbid, " + IPersister.ENUM_IDR + ", bad) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, " + IPersister.ENUM_IDR + ") DO NOTHING"
         );
         detailsStmt = conn.prepareStatement(
-                "INSERT INTO user_partner_feedback_details (fbid, " + Persister.ENUM_IDR + ", val) VALUES (?, ?, ?) " +
-                        "ON CONFLICT(fbid, " + Persister.ENUM_IDR + ") DO UPDATE SET val=excluded.val"
+                "INSERT INTO user_partner_feedback_details (fbid, " + IPersister.ENUM_IDR + ", val) VALUES (?, ?, ?) " +
+                        "ON CONFLICT(fbid, " + IPersister.ENUM_IDR + ") DO UPDATE SET val=excluded.val"
         );
-    }
-
-    TrafoEngine[] preTrafos() {
-        return PRE;
     }
 
     public void saveSingle(ObjectNode item, Integer enumId) throws SQLException, IOException {
@@ -150,7 +144,7 @@ public class UserReviewPersister implements Persister, Flushable {
         } catch (SQLException ex) {
             throw new IOException("Unable to flush " + batch + " feedback items", ex);
         }
-        System.err.println("Flushed " + batch + " review related rows");
+        System.err.println("Flushed " + batch + " feedback items");
         batch = 0;
     }
 

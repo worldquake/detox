@@ -2,9 +2,9 @@ package hu.detox.szexpartnerek.rl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.Pager;
-import hu.detox.szexpartnerek.TrafoEngine;
-import hu.detox.szexpartnerek.Utils;
+import hu.detox.szexpartnerek.IPager;
+import hu.detox.szexpartnerek.ITrafoEngine;
+import hu.detox.szexpartnerek.utils.Utils;
 import okhttp3.RequestBody;
 import org.apache.commons.io.FileUtils;
 import org.jsoup.internal.StringUtil;
@@ -12,8 +12,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.List;
@@ -22,7 +20,7 @@ import java.util.regex.Matcher;
 
 public class Feedbacks extends UserReview {
     public static final Feedbacks INSTANCE = new Feedbacks();
-    private static final TrafoEngine[] PRE = new TrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
+    private static final ITrafoEngine[] PRE = new ITrafoEngine[]{Partner.INSTANCE, User.INSTANCE};
     private List<String> datas;
     private Timestamp last;
 
@@ -31,7 +29,7 @@ public class Feedbacks extends UserReview {
         try {
             last = persister().maxTs();
             datas = FileUtils.readLines(new File("src/main/resources/search-reviews-data.txt"));
-        } catch (IOException | SQLException e) {
+        } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
     }
@@ -52,7 +50,7 @@ public class Feedbacks extends UserReview {
         return null;
     }
 
-    public TrafoEngine[] preTrafos() {
+    public ITrafoEngine[] preTrafos() {
         return PRE;
     }
 
@@ -95,14 +93,14 @@ public class Feedbacks extends UserReview {
         String uid = curr.selectFirst(".beszHeader a").attr("href");
         Matcher m = Partner.IDP.matcher(uid);
         Timestamp now = Timestamp.valueOf(ts + ":00");
-        if (now.before(last)) return null;
+        if (last != null && now.before(last)) return null;
         return m.find() ? Integer.parseInt(m.group(2)) : null;
     }
 
     @Override
-    public Pager pager() {
-        Pager p = super.pager();
-        return new Pager.PagerWrap(p) {
+    public IPager pager() {
+        IPager p = super.pager();
+        return new IPager.PagerWrap(p) {
             private int di;
 
             @Override
