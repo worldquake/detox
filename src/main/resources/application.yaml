@@ -1,0 +1,33 @@
+application:
+  name: DeToX
+spring:
+  jackson:
+
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+  http:
+    converters:
+      preferred-json-mapper: jackson2
+  main:
+    web-application-type: servlet
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+  cloud:
+    config:
+      enabled: false
+  flyway:
+    enabled: false
+  shell:
+    help:
+      enabled: true
+      long-names: help
+      short-names: h
+      command: help
+    script:
+      enabled: true
+    noninteractive:
+      enabled: true
+    interactive:
+      enabled: true

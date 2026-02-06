@@ -1,5 +1,8 @@
 # Compiled class file
 target
+build
+.gradle
+.github
 .idea
 *.class
 *.log

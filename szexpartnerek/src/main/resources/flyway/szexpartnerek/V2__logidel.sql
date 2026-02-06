@@ -1,0 +1,2 @@
+ALTER TABLE user ADD COLUMN del boolean NOT NULL DEFAULT false;
+ALTER TABLE partner ADD COLUMN del boolean NOT NULL DEFAULT false;

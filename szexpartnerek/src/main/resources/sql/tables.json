@@ -1,0 +1,851 @@
+{
+  "int_enum": {
+    "cols": [
+      {
+        "title": "Type",
+        "field": "type",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 160
+      },
+      {
+        "title": "Name",
+        "field": "name",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 240
+      }
+    ]
+  },
+  "partner": {
+    "sort": "ts desc",
+    "cols": [
+      {
+        "title": "Phone",
+        "field": "call_number",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 110
+      },
+      {
+        "title": "Name",
+        "field": "name",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 200
+      },
+      {
+        "title": "Active",
+        "field": "active_info",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 50
+      },
+      {
+        "title": "About",
+        "field": "about",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 220
+      },
+      {
+        "title": "Expect",
+        "field": "expect",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 220
+      },
+      {
+        "title": "Age",
+        "field": "age",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 50
+      },
+      {
+        "title": "Height",
+        "field": "height",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 60
+      },
+      {
+        "title": "Weight",
+        "field": "weight",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 60
+      },
+      {
+        "title": "Breast",
+        "field": "breast",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 60
+      },
+      {
+        "title": "Waist",
+        "field": "waist",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 60
+      },
+      {
+        "title": "Hips",
+        "field": "hips",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 60
+      },
+      {
+        "title": "Location",
+        "field": "location",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 160
+      },
+      {
+        "title": "Location Extra",
+        "field": "location_extra",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 200
+      },
+      {
+        "title": "Latitude",
+        "field": "latitude",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 120
+      },
+      {
+        "title": "Longitude",
+        "field": "longitude",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 120
+      },
+      {
+        "title": "Looking Age Min",
+        "field": "looking_age_min",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 150
+      },
+      {
+        "title": "Looking Age Max",
+        "field": "looking_age_max",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 150
+      },
+      {
+        "title": "Timestamp",
+        "field": "ts",
+        "sorter": "datetime",
+        "hozAlign": "center",
+        "width": 140
+      },
+      {
+        "title": "Deleted",
+        "field": "del",
+        "sorter": "boolean",
+        "formatter": "tickCross",
+        "hozAlign": "center",
+        "width": 30
+      }
+    ],
+    "sub": {
+      "_activity": {
+        "cols": [
+          {
+            "title": "Partner ID",
+            "field": "partner_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 120
+          },
+          {
+            "title": "On Date",
+            "field": "ondate",
+            "sorter": "date",
+            "hozAlign": "center",
+            "width": 130
+          },
+          {
+            "title": "Description",
+            "field": "description",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 300
+          }
+        ]
+      },
+      "_answer": {
+        "cols": [
+          {
+            "title": "Partner ID",
+            "field": "partner_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 120
+          },
+          {
+            "title": "Question ID",
+            "field": "enum_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          },
+          {
+            "title": "Answer",
+            "field": "answer",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 280
+          }
+        ]
+      },
+      "_img": {
+        "cols": [
+          {
+            "title": "Partner ID",
+            "field": "partner_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 120
+          },
+          {
+            "title": "On Date",
+            "field": "ondate",
+            "sorter": "date",
+            "hozAlign": "center",
+            "width": 130
+          },
+          {
+            "title": "Path",
+            "field": "path",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 320
+          }
+        ]
+      },
+      "_lang": {
+        "cols": [
+          {
+            "title": "Partner ID",
+            "field": "partner_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 120
+          },
+          {
+            "title": "Language",
+            "field": "lang",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          }
+        ]
+      },
+      "_like": {
+        "cols": [
+          {
+            "title": "Partner ID",
+            "field": "partner_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 120
+          },
+          {
+            "title": "Like ID",
+            "field": "enum_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          },
+          {
+            "title": "Option",
+            "field": "option",
+            "sorter": "string",
+            "headerFilter": "list",
+            "headerFilterParams": {
+              "values": [
+                "no",
+                "yes",
+                "ask"
+              ]
+            },
+            "width": 110
+          }
+        ]
+      },
+      "_open_hour": {
+        "cols": [
+          {
+            "title": "Partner ID",
+            "field": "partner_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 120
+          },
+          {
+            "title": "Day",
+            "field": "onday",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 90
+          },
+          {
+            "title": "Hours",
+            "field": "hours",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 220
+          }
+        ]
+      }
+    },
+    "view": {
+      "_ext": {
+        "minus": [
+          "looking_age_max",
+          "looking_age_min",
+          "del",
+          "latitude",
+          "longitude"
+        ],
+        "cols": [
+          {
+            "title": "Accepted age",
+            "field": "ages",
+            "sorter": "string",
+            "hozAlign": "left",
+            "width": 50
+          },
+          {
+            "title": "Geolocation",
+            "field": "geoloc",
+            "sorter": "string",
+            "hozAlign": "left",
+            "width": 100
+          },
+          {
+            "title": "Hair",
+            "field": "hair",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "Eyes",
+            "field": "eyes",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "Breasts",
+            "field": "breasts",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 130
+          },
+          {
+            "title": "Body",
+            "field": "body",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 130
+          },
+          {
+            "title": "Intim",
+            "field": "intim",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 130
+          },
+          {
+            "title": "Orientation",
+            "field": "orientation",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 140
+          },
+          {
+            "title": "Gender",
+            "field": "gender",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "Act",
+            "field": "act",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "Aircond",
+            "field": "aircond",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "Smoker",
+            "field": "smoker",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "SMS",
+            "field": "sms",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 110
+          },
+          {
+            "title": "Lengths",
+            "field": "lengths",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "French",
+            "field": "french",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "Place",
+            "field": "place",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 120
+          },
+          {
+            "title": "Client Type",
+            "field": "client_type",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 140
+          }
+        ],
+        "view": {
+          "_view": {
+            "sort": "rating desc",
+            "cols": [
+              {
+                "title": "Rating",
+                "field": "rating",
+                "sorter": "number",
+                "hozAlign": "right",
+                "width": 110,
+                "formatter": "star"
+              },
+              {
+                "title": "Properties",
+                "field": "properties",
+                "sorter": "string",
+                "headerFilter": "input",
+                "minWidth": 280
+              },
+              {
+                "title": "Likes",
+                "field": "likes",
+                "sorter": "string",
+                "headerFilter": "input",
+                "minWidth": 220
+              },
+              {
+                "title": "Massages",
+                "field": "massages",
+                "sorter": "string",
+                "headerFilter": "input",
+                "minWidth": 220
+              },
+              {
+                "title": "Languages",
+                "field": "extra_languages",
+                "sorter": "string",
+                "headerFilter": "input",
+                "minWidth": 180
+              },
+              {
+                "title": "Looking",
+                "field": "looking",
+                "sorter": "string",
+                "headerFilter": "input",
+                "minWidth": 220
+              },
+              {
+                "title": "Open Hours",
+                "field": "open_hours",
+                "sorter": "string",
+                "headerFilter": "input",
+                "minWidth": 240
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "partner_list": {
+    "cols": [
+      {
+        "title": "Tag",
+        "field": "tag",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 140
+      },
+      {
+        "title": "Partner ID",
+        "field": "partner_id",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 120
+      },
+      {
+        "title": "Name",
+        "field": "name",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 200
+      },
+      {
+        "title": "Age",
+        "field": "age",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 90
+      },
+      {
+        "title": "Image",
+        "field": "image",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 240
+      }
+    ]
+  },
+  "user": {
+    "cols": [
+      {
+        "title": "Name",
+        "field": "name",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 200
+      },
+      {
+        "title": "Age",
+        "field": "age",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 90
+      },
+      {
+        "title": "Height",
+        "field": "height",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 110
+      },
+      {
+        "title": "Weight",
+        "field": "weight",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 110
+      },
+      {
+        "title": "Size",
+        "field": "size",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 100
+      },
+      {
+        "title": "Gender",
+        "field": "gender",
+        "sorter": "string",
+        "headerFilter": "input",
+        "width": 120
+      },
+      {
+        "title": "Regd",
+        "field": "regd",
+        "sorter": "date",
+        "hozAlign": "center",
+        "width": 130
+      },
+      {
+        "title": "TS",
+        "field": "ts",
+        "sorter": "datetime",
+        "hozAlign": "center",
+        "width": 180
+      },
+      {
+        "title": "Deleted",
+        "field": "del",
+        "sorter": "boolean",
+        "formatter": "tickCross",
+        "hozAlign": "center",
+        "width": 110
+      }
+    ],
+    "sub": {
+      "cols": {
+        "title": "User ID",
+        "field": "user_id",
+        "sorter": "number",
+        "hozAlign": "left",
+        "width": 110,
+        "sub": true
+      },
+      "_like": {
+        "minus": "*",
+        "cols": [
+          {
+            "title": "Like ID",
+            "field": "like_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          }
+        ],
+        "view": {
+          "_view": {
+            "minus": [
+              "like_id"
+            ],
+            "cols": [
+              {
+                "title": "Likes",
+                "field": "likes",
+                "sorter": "string",
+                "headerFilter": "input",
+                "minWidth": 220
+              }
+            ]
+          }
+        }
+      },
+      "_partner_like": {
+        "minus": "*",
+        "cols": [
+          {
+            "title": "User ID",
+            "field": "user_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          },
+          {
+            "title": "Partner ID",
+            "field": "partner_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 120
+          }
+        ]
+      }
+    }
+  },
+  "user_partner_feedback": {
+    "cols": [
+      {
+        "title": "User ID",
+        "field": "user_id",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 110
+      },
+      {
+        "title": "Type",
+        "field": "enum_id",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 110
+      },
+      {
+        "title": "Partner ID",
+        "field": "partner_id",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 120
+      },
+      {
+        "title": "Name",
+        "field": "name",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 160
+      },
+      {
+        "title": "Age",
+        "field": "age",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 90
+      },
+      {
+        "title": "After Name",
+        "field": "after_name",
+        "sorter": "string",
+        "headerFilter": "input",
+        "minWidth": 160
+      },
+      {
+        "title": "Useful",
+        "field": "useful",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 100
+      },
+      {
+        "title": "On Date",
+        "field": "log",
+        "sorter": "datetime",
+        "hozAlign": "center",
+        "width": 180
+      },
+      {
+        "title": "Timestamp",
+        "field": "ts",
+        "sorter": "datetime",
+        "hozAlign": "center",
+        "width": 180
+      }
+    ],
+    "sub": {
+      "cols": {
+        "title": "FBID",
+        "field": "fbid",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 110,
+        "sub": true
+      },
+      "_bad": {
+        "minus": "*",
+        "cols": [
+          {
+            "title": "Negative ID",
+            "field": "enum_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          }
+        ]
+      },
+      "_good": {
+        "minus": "*",
+        "cols": [
+          {
+            "title": "Positive ID",
+            "field": "enum_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          }
+        ]
+      },
+      "_details": {
+        "minus": "*",
+        "cols": [
+          {
+            "title": "Detail IS",
+            "field": "enum_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          },
+          {
+            "title": "Value",
+            "field": "val",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 240
+          }
+        ]
+      },
+      "_rating": {
+        "minus": "*",
+        "cols": [
+          {
+            "title": "Rating ID",
+            "field": "enum_id",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 110
+          },
+          {
+            "title": "Value",
+            "field": "val",
+            "sorter": "number",
+            "hozAlign": "right",
+            "width": 100,
+            "formatter": "star"
+          }
+        ]
+      }
+    },
+    "view": {
+      "_view": {
+        "minus": [
+          "name",
+          "age",
+          "after_name"
+        ],
+        "cols": [
+          {
+            "title": "Rating",
+            "field": "rating",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 220
+          },
+          {
+            "title": "Good",
+            "field": "good",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 180
+          },
+          {
+            "title": "Bad",
+            "field": "bad",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 180
+          },
+          {
+            "title": "Details",
+            "field": "details",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 320,
+            "formatter": "textarea"
+          },
+          {
+            "title": "Location",
+            "field": "location",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 160
+          }
+        ]
+      }
+    }
+  }
+}

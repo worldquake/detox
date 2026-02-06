@@ -1,0 +1,25 @@
+group = 'hu.detox.szexpartnerek'
+version = '1.0-SNAPSHOT'
+description = 'Szexpartnerek web scraper'
+
+dependencies {
+    implementation project(':')
+
+    implementation 'com.github.jsqlparser:jsqlparser:4.8'
+
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    implementation 'org.xerial:sqlite-jdbc:3.44.1.0'
+}
+
+application {
+    mainClass = "hu.detox.szexpartnerek.Main"
+}

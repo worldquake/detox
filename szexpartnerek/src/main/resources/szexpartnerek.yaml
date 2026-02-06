@@ -1,0 +1,23 @@
+rl:
+  client.login: "action=login&lname=kand-ur&lpass=D1kk44.&rememberMe=1"
+szexpartnerek:
+  flyway:
+    enabled: true
+    mixed: true
+    locations: classpath:flyway/szexpartnerek
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    jdbcUrl: jdbc:sqlite:${user_base}/szexpartnerek.sqlite3
+    driver-class-name: org.sqlite.JDBC
+    username: sa
+    password: sa
+    maximumPoolSize: 5
+    connection-test-query: SELECT 1
+    idle-timeout: 1000
+
+spring:
+  flyway:
+    enabled: false
+
+application:
+  name: szexpartnerek

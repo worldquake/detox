@@ -1,0 +1,327 @@
+package hu.detox.szexpartnerek.sync.rl.component;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import hu.detox.szexpartnerek.sync.AbstractTrafoEngine;
+import hu.detox.szexpartnerek.sync.IPager;
+import hu.detox.szexpartnerek.sync.ITrafoEngine;
+import hu.detox.szexpartnerek.sync.rl.component.sub.User;
+import hu.detox.szexpartnerek.sync.rl.persister.UserPartnerFeedbackPersister;
+import hu.detox.utils.Progress;
+import hu.detox.utils.Serde;
+import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
+
+import static hu.detox.szexpartnerek.spring.SyncCommand.normalize;
+import static hu.detox.szexpartnerek.spring.SyncCommand.text;
+
+public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
+    public static final Pattern P_AGE = Pattern.compile("\\(([0-9]+)\\|");
+    public static String[] SMODES = "accepted received questioned hidden".split(" ");
+    private static String[] RATES = "Környezet Külső Hozzáállás Technika Összkép".split(" ");
+    private static String[] TEXTS = "Kapcsolatfelvétel,Lakás,Külső,Hozzáállás,Együttlét,Elégedettség és Ajánlás".split(",");
+    private static Pattern MODEP;
+
+    public class ModeOffsetPager implements IPager {
+        private transient Progress meter = new Progress();
+        private transient int[] max;
+        private transient int[] curr;
+        private int offset;
+        private int mode;
+
+        @Override
+        public void reset() {
+            max = null;
+            curr = null;
+            offset = 0;
+            mode = 0;
+        }
+
+        @Override
+        public boolean first(JsonNode node) {
+            try {
+                JsonNode n = node.get(IPager.PAGER);
+                if (n == null) return false;
+                max = Serde.OM.treeToValue(n, int[].class);
+                meter.setTotal(Arrays.stream(max).sum());
+                curr = new int[max.length];
+            } catch (JsonProcessingException e) {
+                throw new IllegalStateException(e);
+            }
+            return true;
+        }
+
+        @Override
+        public int current(JsonNode node) {
+            if (max == null) first(node);
+            int cr = 0, cc = 0;
+            for (String sm : SMODES) {
+                String key = addProp(null, FBTYPE, null, null, sm).toString();
+                JsonNode nd = node.get(key);
+                cc += curr[cr++] += nd == null ? 0 : nd.size();
+            }
+            boolean cont = hasNext();
+            if (cont) nextMode(!node.get("cont").asBoolean());
+            return cont ? cc : -1;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return mode < SMODES.length;
+        }
+
+        private void nextMode(boolean force) {
+            if (!force && (max == null || max[mode] > curr[mode])) return;
+            int retm = max.length;
+            for (int mxi = mode + 1; mxi < max.length; mxi++) {
+                if (max[mxi] > 0) {
+                    retm = mxi;
+                    offset = 0;
+                    break;
+                }
+            }
+            mode = retm;
+        }
+
+        @Override
+        public String next() {
+            String ret = Integer.toString(offset);
+            ret = "offset=" + ret + "&status=" + SMODES[mode];
+            offset += pageSize();
+            if (meter != null) meter.step(pageSize());
+            return ret;
+        }
+    }
+
+    static {
+        String[] arr = "Elfogadott Kapott|Írt Kérdőjeles Elutasított".split(" ");
+        MODEP = Pattern.compile("(" + StringUtil.join(arr, "|") + ") \\(([0-9]+)\\)");
+    }
+
+    protected ITrafoEngine[] pre;
+    public final UserPartnerFeedbackPersister persister;
+
+    protected AbstractFeedbackTrafo(ITrafoEngine[] pre) {
+        this.pre = pre;
+        persister = new UserPartnerFeedbackPersister();
+    }
+
+    @Override
+    public Function<String, String> url() {
+        return rest -> {
+            if (StringUtil.isBlank(rest)) return null;
+            if (StringUtil.isNumeric(rest)) {
+                rest = "4layer/???left_beszamolo.php?id=" + rest;
+            }
+            return rest;
+        };
+    }
+
+    @Override
+    public UserPartnerFeedbackPersister persister() {
+        return persister;
+    }
+
+    @Override
+    public ITrafoEngine[] preTrafos() {
+        return pre;
+    }
+
+    @Override
+    public boolean post() {
+        return true;
+    }
+
+    @Override
+    public IPager pager() {
+        return new ModeOffsetPager();
+    }
+
+    protected Timestamp tsIfToProcess(ObjectNode ret, Comment c, String ts) {
+        return Timestamp.valueOf(ts + ":00");
+    }
+
+    protected abstract Integer getUserId(Document soup, Element curr);
+
+    protected abstract Element partnerIdAdderGetExtra(ObjectNode map, Element curr);
+
+    @Override
+    protected Integer onEnum(Properties map, ArrayNode arr, ArrayNode propsArr, AtomicReference<String> en) {
+        return null;
+    }
+
+    @Override
+    public boolean skips(String in) {
+        return StringUtil.isBlank(in);
+    }
+
+    @Override
+    protected Set<Integer> findProcessableIds() {
+        return null;
+    }
+
+
+    @Override
+    public ObjectNode apply(String s) {
+        Document soup = Jsoup.parse(s);
+        String[] sels = selectors();
+        Element hel = soup.selectFirst("div#beszamoloHeaderDiv");
+        if (hel == null) return null;
+        Matcher m = MODEP.matcher(hel.text());
+        Elements chds = hel.select(".beszamoloHeadTitle");
+        int key = IntStream.range(0, chds.size())
+                .filter(i -> chds.get(i).hasClass("bHTabAct"))
+                .findFirst()
+                .orElse(-1);
+        ObjectNode res = Serde.OM.createObjectNode();
+        ArrayNode pg = Serde.OM.createArrayNode();
+        while (m.find()) {
+            pg.add(Integer.parseInt(m.group(2)));
+        }
+        if (!pg.isEmpty()) res.put(IPager.PAGER, pg);
+        String okey = addProp(null, FBTYPE, null, null, Feedbacks.SMODES[key]).toString();
+        ArrayNode an = (ArrayNode) res.get(okey);
+        if (an == null) {
+            an = Serde.OM.createArrayNode();
+        }
+        res.put("cont", true);
+        for (Element iel : soup.select(sels[0])) {
+            var con = readSingle(sels, soup, iel);
+            if (con == null) {
+                res.put("cont", false);
+                break; // Ok, this is not to be processed from now on
+            }
+            an.add(con);
+        }
+        if (!an.isEmpty()) res.put(okey, an);
+        return res;
+    }
+
+    protected ObjectNode readSingle(String[] sel, Document soup, Element elem) {
+        var ret = Serde.OM.createObjectNode();
+        Matcher m;
+        Element dateDiv = elem.selectFirst("div[id^=dateDiv]");
+        if (dateDiv == null) return null;
+        String onMouseOver = dateDiv.attr("onmouseover");
+        m = Pattern.compile("'(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2})'").matcher(onMouseOver);
+        Integer id = Integer.parseInt(dateDiv.id().replace("dateDiv", ""));
+        ret.put("id", id);
+        Integer userId = getUserId(soup, elem);
+        ret.put(User.IDR, userId);
+
+        // Finding the partner "name" and all data we can use about the partner
+        Element a = sel.length > 1 ? elem.selectFirst(sel[1]) : null;
+        String name = normalize(text(a));
+        if (name != null) ret.put("name", name);
+        Element extra = partnerIdAdderGetExtra(ret, elem);
+        Timestamp ts = null;
+        Comment cmt = ((Comment) soup.childNode(0));
+        if (m.find()) ts = tsIfToProcess(ret, cmt, m.group(1));
+        if (ts == null) return null;
+        ret.put("log", ts.toString());
+        if (extra != null) {
+            String after = normalize(a.parent().ownText()
+                    .replace("(inaktív)", "")
+                    .replace(')', '|'));
+            if (after != null) {
+                m = P_AGE.matcher(after);
+                if (m.find()) {
+                    ret.put("age", Integer.parseInt(m.group(1)));
+                    after = after.substring(m.end()).trim();
+                }
+                if (after.startsWith("|")) after = after.substring(1);
+                after = normalize(after);
+                if (after != null) ret.put("after_name", after);
+            }
+        }
+
+        // "useful" from hasznosDiv
+        Element hasznosDiv = elem.selectFirst("#hasznosDiv");
+        int haszn = 0;
+        if (hasznosDiv != null) {
+            m = Pattern.compile("\\((\\d+)\\)").matcher(hasznosDiv.text());
+            if (m.find()) {
+                haszn = Integer.parseInt(m.group(1));
+            }
+        }
+        ret.put("useful", haszn);
+
+        // "rates" array
+        int[] ratesArr;
+        Elements ratingLabels = elem.select(".ratingLabel");
+        Elements ratingStars = elem.select(".ratingStars img[alt]");
+        if (ratingLabels.size() == RATES.length) {
+            ratesArr = new int[RATES.length];
+            for (int i = 0; i < RATES.length; i++) {
+                int rate = -1;
+                Element rl = ratingLabels.get(i);
+                int idx = addProp(null, FBRTYPE, null, null, rl.text());
+                if (i < ratingStars.size()) {
+                    String alt = ratingStars.get(i).attr("alt");
+                    try {
+                        rate = Integer.parseInt(alt);
+                    } catch (Exception ignore) {
+                    }
+                }
+                ratesArr[idx] = rate;
+            }
+            ret.put("rates", Serde.OM.valueToTree(ratesArr));
+        }
+
+        // "good" and "bad" arrays
+        ArrayNode goodArr = ret.putArray("good");
+        ArrayNode badArr = ret.putArray("bad");
+        for (Element div : elem.select("div[style]")) {
+            String style = div.attr("style");
+            ArrayNode an = style.contains("5AEA28") ? goodArr : style.contains("FF0000") ? badArr : null;
+            if (an != null) for (String el : normalize(div.text()).split(", ")) {
+                addProp(null, FBGBTYPE, an, null, el);
+            }
+        }
+
+        // "details" of the review
+        ObjectNode details = ret.putObject("details");
+        Element detailsDiv = elem.selectFirst("div[style*=font-size: 11px]");
+        if (detailsDiv != null) {
+            for (String label : TEXTS) {
+                String val = null;
+                for (Element p : detailsDiv.select("p")) {
+                    Element font = p.selectFirst("font");
+                    if (font != null && font.text().replace(":", "").trim().equals(label)) {
+                        val = normalize(p.ownText());
+                        break;
+                    }
+                }
+                if (val != null) {
+                    id = addProp(null, FBDTYPE, null, null, label);
+                    details.put(id.toString(), val);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    protected int pageSize() {
+        return 25;
+    }
+
+    protected abstract String[] selectors();
+
+}

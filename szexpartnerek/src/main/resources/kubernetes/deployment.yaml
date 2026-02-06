@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: szexpertnerek
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: szexpertnerek
+  template:
+    metadata:
+      labels:
+        app: szexpertnerek
+    spec:
+      containers:
+        - name: springboot-container
+          image: your-docker-image:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://your-database-service:5432/your_database
+            - name: SPRING_DATASOURCE_USERNAME
+              value: your_username
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: your_password

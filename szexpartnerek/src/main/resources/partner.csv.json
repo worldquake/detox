@@ -1,0 +1,148 @@
+{
+  "sort": [
+    "ts desc"
+  ],
+  "cols": [
+    {
+      "title": "ID",
+      "field": "id",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 90
+    },
+    {
+      "title": "Phone",
+      "field": "call_number",
+      "sorter": "string",
+      "headerFilter": "input",
+      "width": 140
+    },
+    {
+      "title": "Name",
+      "field": "name",
+      "sorter": "string",
+      "headerFilter": "input",
+      "minWidth": 200
+    },
+    {
+      "title": "Active",
+      "field": "active_info",
+      "sorter": "string",
+      "headerFilter": "input",
+      "minWidth": 220
+    },
+    {
+      "title": "About",
+      "field": "about",
+      "sorter": "string",
+      "headerFilter": "input",
+      "minWidth": 220
+    },
+    {
+      "title": "Expect",
+      "field": "expect",
+      "sorter": "string",
+      "headerFilter": "input",
+      "minWidth": 220
+    },
+    {
+      "title": "Age",
+      "field": "age",
+      "sorter": "string",
+      "headerFilter": "input",
+      "width": 90
+    },
+    {
+      "title": "Height",
+      "field": "height",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 110
+    },
+    {
+      "title": "Weight",
+      "field": "weight",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 110
+    },
+    {
+      "title": "Breast",
+      "field": "breast",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 110
+    },
+    {
+      "title": "Waist",
+      "field": "waist",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 110
+    },
+    {
+      "title": "Hips",
+      "field": "hips",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 110
+    },
+    {
+      "title": "Location",
+      "field": "location",
+      "sorter": "string",
+      "headerFilter": "input",
+      "width": 160
+    },
+    {
+      "title": "Location Extra",
+      "field": "location_extra",
+      "sorter": "string",
+      "headerFilter": "input",
+      "minWidth": 200
+    },
+    {
+      "title": "Latitude",
+      "field": "latitude",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 120
+    },
+    {
+      "title": "Longitude",
+      "field": "longitude",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 120
+    },
+    {
+      "title": "Looking Age Min",
+      "field": "looking_age_min",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 150
+    },
+    {
+      "title": "Looking Age Max",
+      "field": "looking_age_max",
+      "sorter": "number",
+      "hozAlign": "right",
+      "width": 150
+    },
+    {
+      "title": "Timestamp",
+      "field": "ts",
+      "sorter": "datetime",
+      "hozAlign": "center",
+      "width": 180
+    },
+    {
+      "title": "Deleted",
+      "field": "del",
+      "sorter": "boolean",
+      "formatter": "tickCross",
+      "hozAlign": "center",
+      "width": 110
+    }
+  ]
+}
