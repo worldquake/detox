@@ -1,5 +1,6 @@
 package hu.detox.szexpartnerek.ws;
 
+import hu.detox.spring.Shell;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
@@ -32,7 +33,7 @@ public class Command implements Function<CommandContext, Boolean> {
     }
 
     public Boolean apply(CommandContext cmd) {
-        String cmdStr = cmd.getCommandRegistration().getCommand();
+        String cmdStr = Shell.getCmd(cmd);
         return main.apply(cmdStr);
     }
 }
