@@ -10,21 +10,25 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.shell.command.CommandContext;
 import org.springframework.shell.command.CommandRegistration;
 
+import java.util.List;
+
 @Configuration
 @RequiredArgsConstructor
 @ConditionalOnExpression("'${root}' == 'hu.detox.szexpartnerek'")
 public class WSCommand {
     @SneakyThrows
-    public Void ws(CommandContext ctx) {
+    public Boolean ws(CommandContext ctx) {
         var ws = hu.detox.Main.ctx().getBean(Shell.class)
                 .loadBean(hu.detox.szexpartnerek.ws.Main.class);
-        return ws.apply(ctx.getParserResults().positional());
+        List<String> args = ctx.getParserResults().positional();
+        return ws.apply(args.isEmpty() ? "start" : args.getFirst());
     }
 
     @Bean
     public CommandRegistration szexpartnerekWs() {
         return Main.cr("ws")
-                .description("Manages the webservice.").withTarget().function(this::ws).and().build();
+                .description("Manages the webservice.").withTarget()
+                .function(this::ws).and().build();
     }
 
 }
