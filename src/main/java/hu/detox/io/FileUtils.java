@@ -4,10 +4,10 @@ import com.google.api.client.util.ByteStreams;
 import com.google.common.net.HttpHeaders;
 import hu.detox.Agent;
 import hu.detox.parsers.AmountCalculator;
-import hu.detox.utils.ReflectionUtils;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.SystemUtils;
-import hu.detox.utils.Time;
+import hu.detox.utils.TimeUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import kotlin.Pair;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FilenameUtils;
@@ -162,7 +162,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
     public static void cleanDirectory(final File directory) throws IOException {
         if (directory.isDirectory()) {
             org.apache.commons.io.FileUtils.cleanDirectory(directory);
-            directory.setLastModified(Time.time());
+            directory.setLastModified(TimeUtils.time());
         } else {
             FileUtils.createFolder(directory);
         }
@@ -197,7 +197,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
     }
 
     public static String concat(final String... paths) {
-        return hu.detox.utils.StringUtils.concat("/", paths);
+        return StringUtils.concat("/", paths);
     }
 
     public static void createFolder(final File parFolder) throws IOException {
@@ -213,7 +213,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
     }
 
     public static <T> T deserialize(final File f) throws IOException {
-        final InputStream bis = IOHelper.getBufferedInput(f);
+        final InputStream bis = IOHelper.getBuffered(f);
         try {
             return (T) SerializationUtils.deserialize(bis);
         } finally {
@@ -281,7 +281,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
             }
         }
         // Append Charset to the filename if not present already
-        final Pair<String, Charset> csf = CharIOHelper.getEncoding(ret);
+        final Pair<String, Charset> csf = CharIOHelper.tryEncoding(ret);
         if (cs != null && csf == null) {
             ext = FilenameUtils.getExtension(ret);
             if (StringUtils.isNotEmpty(ext)) {
@@ -534,7 +534,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
         } catch (final NoSuchAlgorithmException e) {
             throw new IllegalStateException("Cannot get hash", e);
         }
-        final InputStream br = IOHelper.getBufferedInput(f1);
+        final InputStream br = IOHelper.getBuffered(f1);
         final byte[] buf = new byte[FileUtils.largeBufferSize];
         int read;
         final float len = f1.length();
@@ -637,8 +637,8 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
             InputStream is1 = ByteStreams.limit(new FileInputStream(f1), lenLimit);
             InputStream is2 = ByteStreams.limit(new FileInputStream(f2), lenLimit);
             try {
-                is1 = IOHelper.getBufferedInput(is1, (long) IOHelper.calcBufferSize(-lenLimit));
-                is2 = IOHelper.getBufferedInput(is2, (long) IOHelper.calcBufferSize(-lenLimit));
+                is1 = IOHelper.getBuffered(is1, -lenLimit);
+                is2 = IOHelper.getBuffered(is2, -lenLimit);
                 ret = IOUtils.contentEquals(is1, is2);
             } finally {
                 is1.close();
@@ -655,7 +655,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
         }
         if (l1 <= lenLimit) {
             final CRC32 crc = new CRC32();
-            final InputStream br = IOHelper.getBufferedInput(f1);
+            final InputStream br = IOHelper.getBuffered(f1);
             final byte[] buf = new byte[FileUtils.largeBufferSize];
             int read;
             try {
@@ -709,7 +709,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
             if (!(write instanceof File)) {
                 final File tf = File.createTempFile("merge", "." + ext);
                 try (final IOHelper io = IOHelper.attempt(write)) {
-                    io.copyBytes(tf);
+                    io.copy(tf);
                     write = tf;
                 }
             }
@@ -723,7 +723,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
         } else if (any instanceof URL) {
             any = ((URL) any).getPath();
         }
-        if (hu.detox.utils.StringUtils.isNull(any)) {
+        if (StringUtils.isNull(any)) {
             return null;
         }
         return String.valueOf(any).replace("\\", "/");

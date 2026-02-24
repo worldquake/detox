@@ -1,8 +1,8 @@
 package hu.detox;
 
-import hu.detox.io.IOHelper;
+import hu.detox.io.IOUtils;
 import hu.detox.parsers.AmountCalculator;
-import hu.detox.utils.ReflectionUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import org.jline.utils.AttributedString;
 import org.jscience.physics.amount.Amount;
 import org.jspecify.annotations.Nullable;
@@ -107,7 +107,7 @@ public class Main implements ApplicationContextAware, BeanPostProcessor, Quit.Co
     public void setApplicationContext(ApplicationContext ctx) throws BeansException {
         Main.context = ctx;
         Main.resolver = context.getBean(PropertyResolver.class);
-        IOHelper.initStatic();
+        IOUtils.initStatic();
     }
 
     @Override

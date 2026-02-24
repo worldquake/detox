@@ -2,9 +2,9 @@ package hu.detox.config;
 
 import hu.detox.Agent;
 import hu.detox.io.CharIOHelper;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.ThreadUtils;
-import hu.detox.utils.Time;
+import hu.detox.utils.TimeUtils;
 import kotlin.Pair;
 import kotlin.jvm.functions.Function2;
 import org.apache.commons.configuration2.*;
@@ -235,7 +235,7 @@ public class ConfigReader {
                 final Configuration clconfig = toConfiguration(cio);
                 ConfigReader.loadInternal(CharIOHelper.attempt(cond), clconfig);
                 final String conds = clconfig.getString(TIMED);
-                if (StringUtils.isEmpty(conds) || ((Date) hu.detox.utils.StringUtils.to(Date.class, conds, this)).before(Time.date())) {
+                if (StringUtils.isEmpty(conds) || ((Date) StringUtils.to(Date.class, conds, this)).before(TimeUtils.date())) {
                     msg += ", applied=" + cond + " because " + conds + " reached";
                     clconfig.clearProperty(TIMED);
                     ac.copy(clconfig);

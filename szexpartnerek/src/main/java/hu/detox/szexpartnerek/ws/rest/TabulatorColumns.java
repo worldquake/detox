@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import hu.detox.Agent;
 import hu.detox.io.CharIOHelper;
-import hu.detox.utils.Serde;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -16,6 +15,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static hu.detox.parsers.JSonUtils.OM;
 
 @Component
 @RequiredArgsConstructor
@@ -29,7 +30,7 @@ public class TabulatorColumns {
 
     static {
         try {
-            ROWID = Serde.OM.readValue("""
+            ROWID = OM.readValue("""
                     {
                         "title": "ID",
                         "field": "rowid",
@@ -45,17 +46,17 @@ public class TabulatorColumns {
     TabulatorColumns() throws IOException {
         Resource rs = Agent.resource("sql/tables.json");
         try (CharIOHelper cio = CharIOHelper.attempt(rs)) {
-            root = (ObjectNode) Serde.OM.readTree(cio.getReader());
+            root = (ObjectNode) OM.readTree(cio.getReader());
         }
     }
 
     public ObjectNode generateTabulatorColumns(String tableViewName, Collection<String> prj) {
         StringBuilder sb = new StringBuilder();
-        ArrayNode an = Serde.OM.createArrayNode();
-        ArrayNode sort = Serde.OM.createArrayNode();
+        ArrayNode an = OM.createArrayNode();
+        ArrayNode sort = OM.createArrayNode();
         findAndBuildColumns(root, prj, an, sort, tableViewName, sb);
         if (tableViewName.contentEquals(sb)) {
-            ObjectNode ret = Serde.OM.createObjectNode();
+            ObjectNode ret = OM.createObjectNode();
             ret.set(F_SORT, sort);
             ret.set(F_COLUMNS, an);
             ret.put(F_TABLE, tableViewName);

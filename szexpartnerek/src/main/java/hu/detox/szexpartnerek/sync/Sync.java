@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import hu.detox.ifaces.ID;
 import hu.detox.io.CharIOHelper;
 import hu.detox.io.IOHelper;
+import hu.detox.io.Serde;
 import hu.detox.utils.Http;
-import hu.detox.utils.ReflectionUtils;
-import hu.detox.utils.Serde;
+import hu.detox.utils.reflection.ReflectionUtils;
 
 import java.io.File;
 import java.io.Flushable;
@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+
+import static hu.detox.parsers.JSonUtils.OM;
 
 public class Sync implements AutoCloseable {
     @Override
@@ -62,7 +64,7 @@ public class Sync implements AutoCloseable {
                     try {
                         StringBuilder sb = new StringBuilder(engine.getId());
                         JsonNode bodyNode = null;
-                        if (serde.inMode() == null || serde.inMode().equals(Serde.Mode.TXT)) {
+                        if (serde.getInMode() == null || serde.getInMode().equals(Serde.Mode.TXT)) {
                             String curl = url;
                             if (pager != null) {
                                 if (!pager.hasNext()) break;
@@ -88,8 +90,8 @@ public class Sync implements AutoCloseable {
                                 cont = pg.current(bodyNode) >= 0;
                                 sb.append(cont ? " ..." : " last");
                             }
-                        } else if (serde.inMode().equals(Serde.Mode.JSONL)) {
-                            bodyNode = Serde.OM.readTree(url);
+                        } else if (serde.getInMode().equals(Serde.Mode.JSONL)) {
+                            bodyNode = OM.readTree(url);
                         }
                         if (bodyNode == null) {
                             System.err.println(sb.append(" end"));
@@ -179,7 +181,7 @@ public class Sync implements AutoCloseable {
                                 ln = o instanceof JsonNode jn ? jn.asText() : o.toString();
                             }
                         } else {
-                            ln = serde.nextStr();
+                            ln = serde.next();
                         }
                         if (!hu.detox.szexpartnerek.sync.Main.ARGS.get().isFull() && ln != null &&
                                 engine instanceof ITrafoEngine.Filters tf && tf.skips(ln)) {

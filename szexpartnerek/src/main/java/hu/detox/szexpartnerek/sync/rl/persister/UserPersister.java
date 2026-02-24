@@ -8,7 +8,7 @@ import hu.detox.szexpartnerek.sync.rl.component.sub.User;
 import java.util.ArrayList;
 import java.util.List;
 
-import static hu.detox.parsers.JSonUtil.getField;
+import static hu.detox.parsers.JSonUtils.getField;
 
 public class UserPersister extends AbstractPersister {
     private final List<Object[]> userBatch = new ArrayList<>();

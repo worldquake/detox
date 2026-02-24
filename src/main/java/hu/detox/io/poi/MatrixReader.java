@@ -11,9 +11,12 @@ import hu.detox.config.ConfigReader;
 import hu.detox.io.CharIOHelper;
 import hu.detox.io.FileUtils;
 import hu.detox.io.IOHelper;
-import hu.detox.parsers.JSonUtil;
-import hu.detox.parsers.JsonConverter;
+import hu.detox.parsers.JSonUtils;
+import hu.detox.parsers.JsonXmlUtils;
 import hu.detox.utils.*;
+import hu.detox.utils.reflection.ReflectionUtils;
+import hu.detox.utils.strings.StringConverter;
+import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.url.URL;
 import kotlin.Pair;
 import lombok.Getter;
@@ -65,6 +68,7 @@ import org.supercsv.prefs.CsvPreference;
 import org.supercsv.prefs.CsvPreference.Builder;
 import org.supercsv.quote.AlwaysQuoteMode;
 
+import javax.annotation.Nullable;
 import javax.crypto.Cipher;
 import javax.print.attribute.standard.Destination;
 import java.io.*;
@@ -244,7 +248,7 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
         } else {
             wb = new HSSFWorkbook();
         }
-        MatrixReader.setProperty(wb, Property.CREATED, Time.date());
+        MatrixReader.setProperty(wb, Property.CREATED, TimeUtils.date());
         return wb;
     }
 
@@ -260,7 +264,7 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
             ext = StringUtils.firstNonBlank(mt.getSubtype(), ext);
         }
         CsvPreference preference = toPreference(ext);
-        final Pair<String, Charset> pcs = CharIOHelper.getEncoding(name.get());
+        final Pair<String, Charset> pcs = CharIOHelper.tryEncoding(name.get());
         if (pcs != null) {
             cs = pcs.getSecond();
             name.set(pcs.getFirst());
@@ -377,9 +381,9 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
             if (si != null) {
                 JsonObject obj = null;
                 if (si.getComments() != null) {
-                    obj = (JsonObject) JsonConverter.INSTANCE.apply(si.getComments());
+                    obj = (JsonObject) JsonXmlUtils.INSTANCE.apply(si.getComments());
                 }
-                ret = JSonUtil.getProperty(obj, (String) key);
+                ret = JSonUtils.getProperty(obj, (String) key);
             }
         }
         if (ret instanceof Calendar) {
@@ -598,14 +602,14 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
         final String cup = MatrixReader.setUserPassword(pw);
         final String cp = Biff8EncryptionKey.getCurrentUserPassword();
         try {
-            final Date now = Time.date();
+            final Date now = TimeUtils.date();
             if (ret != null && !ret.exists() && MatrixReader.getProperty(wb, Property.CREATED) == null) {
                 MatrixReader.setProperty(wb, Property.CREATED, now);
             }
             MatrixReader.setProperty(wb, Property.MODIFIED, now);
             if (wb instanceof HSSFWorkbook) {
                 final HSSFWorkbook hwb = (HSSFWorkbook) wb;
-                try (OutputStream nos = IOHelper.getBufferedOutput(new FileOutputStream(ret))) {
+                try (OutputStream nos = IOHelper.getOutput(new FileOutputStream(ret))) {
                     if (cp != null) {
                         hwb.writeProtectWorkbook(cp, StringUtils.EMPTY);
                     }
@@ -636,7 +640,7 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
                 if (cp != null) {
                     ffile = new File(ffile.getParentFile(), "_" + ret.getName());
                 }
-                try (OutputStream fos = IOHelper.getBufferedOutput(new FileOutputStream(ffile))) {
+                try (OutputStream fos = IOHelper.getOutput(new FileOutputStream(ffile))) {
                     xwb.write(fos);
                 }
                 if (cp != null) {
@@ -661,7 +665,7 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
         String url = MatrixReader.getProperty(wb, Destination.class.getSimpleName());
         if (url != null) {
             if (url.contains(MatrixReader.DATE_TIME)) {
-                url = url.replace(MatrixReader.DATE_TIME, StringUtils.format(7, Time.date()));
+                url = url.replace(MatrixReader.DATE_TIME, StringUtils.format(7, TimeUtils.date()));
             }
             final URL ourl = URL.valueOf(url);
             ourl.setEncode(SystemUtils.UTF8CS);
@@ -827,10 +831,10 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
                 if (si.getComments() == null) {
                     obj = new JsonObject();
                 } else {
-                    obj = (JsonObject) JsonConverter.INSTANCE.apply(si.getComments());
+                    obj = (JsonObject) JsonXmlUtils.INSTANCE.apply(si.getComments());
                 }
-                JSonUtil.setProperty(obj, key, val);
-                si.setComments(JSonUtil.toString(obj));
+                JSonUtils.setProperty(obj, key, val);
+                si.setComments(JSonUtils.toString(obj));
             }
         }
     }
@@ -929,11 +933,11 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
         }
     }
 
-    public static CsvPreference toPreference(final String ext) throws IOException {
+    public static @Nullable CsvPreference toPreference(final String ext) throws IOException {
         return MatrixReader.toPreference(ext, CsvPreference.EXCEL_PREFERENCE);
     }
 
-    public static CsvPreference toPreference(final String ext, final CsvPreference def) throws IOException {
+    public static @Nullable CsvPreference toPreference(final String ext, final CsvPreference def) throws IOException {
         CsvPreference preference = def;
         if (ArrayUtils.contains(MatrixReader.TAB, ext)) {
             preference = CsvPreference.TAB_PREFERENCE;
@@ -946,14 +950,14 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
             String nl = CsvPreference.EXCEL_NORTH_EUROPE_PREFERENCE.getEndOfLineSymbols();
             boolean doFname = false;
             try {
-                final JsonElement el = JSonUtil.toElement(ext);
+                final JsonElement el = JSonUtils.toElement(ext);
                 if (el.isJsonArray()) {
                     final JsonArray ob = (JsonArray) el;
-                    final char sep = String.valueOf(JSonUtil.unwrap(ob.get(0))).charAt(0);
+                    final char sep = String.valueOf(JSonUtils.unwrap(ob.get(0))).charAt(0);
                     if (ob.size() > 1) {
-                        quot = String.valueOf(JSonUtil.unwrap(ob.get(1))).charAt(0);
+                        quot = String.valueOf(JSonUtils.unwrap(ob.get(1))).charAt(0);
                         if (ob.size() > 2) {
-                            nl = String.valueOf(JSonUtil.unwrap(ob.get(2)));
+                            nl = String.valueOf(JSonUtils.unwrap(ob.get(2)));
                         }
                     }
                     preference = new Builder(quot, sep, nl).build();
@@ -979,15 +983,12 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
 
     public static CsvListWriter toWriter(final File trg, final String pass) throws IOException {
         String name = trg.getName();
-        if (name != null) {
-            name = FilenameUtils.getName(name);
-        }
-        final boolean bom = (name == null ? trg.toString() : name).contains(CharIOHelper.BOM_FN);
+        final boolean bom = name.contains(CharIOHelper.BOM_FN);
         if (trg.isDirectory()) {
-            final boolean nameDefined = name != null && name.contains(".");
+            final boolean nameDefined = name.contains(".");
             final AtomicReference<String> sh = new AtomicReference<>(nameDefined ? name : trg.getName());
             final Pair<CsvPreference, Charset> fn = MatrixReader.forNameWithExtension(sh);
-            if (name != null && !name.contains(".")) {
+            if (!name.contains(".")) {
                 final String ext = FilenameUtils.getExtension(sh.get());
                 sh.set(name + "." + ext);
             }
@@ -998,7 +999,7 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
             final Writer w = new OutputStreamWriter(os, fn.getSecond());
             return new CsvListWriter(w, fn.getFirst());
         } else {
-            final Pair<String, Charset> pcs = CharIOHelper.getEncoding(trg.getName());
+            final Pair<String, Charset> pcs = CharIOHelper.tryEncoding(trg.getName());
             final Charset cs = pcs == null ? Charset.defaultCharset() : pcs.getSecond();
             final OutputStream os = IOHelper.openSSL(Cipher.ENCRYPT_MODE, pass, IOHelper.getOutput(trg, null));
             if (bom) {
@@ -1205,8 +1206,7 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
     }
 
     public File getFile(final String f) throws IOException {
-        final File ret = Agent.getFile(f, FileFilterUtils.fileFileFilter());
-        return ret;
+        return Agent.getFile(f, FileFilterUtils.fileFileFilter());
     }
 
     protected int getNumberOfTabs() {
@@ -1394,9 +1394,9 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
             while (!al.isEmpty()) {
                 arg = al.remove(0);
                 try {
-                    final JsonObject o = JSonUtil.toElement(arg);
+                    final JsonObject o = JSonUtils.toElement(arg);
                     for (final Map.Entry<String, JsonElement> e : o.entrySet()) {
-                        final Object av = JSonUtil.unwrap(e.getValue());
+                        final Object av = JSonUtils.unwrap(e.getValue());
                         MatrixReader.setProperty(wb, e.getKey(), av);
                     }
                 } catch (final JsonSyntaxException ex) {
@@ -1678,7 +1678,7 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
         } else {
             if (!this.out.exists() || this.out.isFile()) {
                 if (this.out.isFile() || MatrixReader.isRecognizedExtension(this.out.getName())) {
-                    if (this.out.isFile() && out.getName().contains(IOHelper.APPEND)) {
+                    if (this.out.isFile() && out.getName().contains(hu.detox.io.IOUtils.APPEND)) {
                         if (FilenameUtils.isExtension(this.out.getName(), MatrixReader.POIEXTS)) {
                             this.outObject = wb = MatrixReader.open(CharIOHelper.attempt(out), this.getPassword());
                         } else {
@@ -1766,11 +1766,8 @@ public class MatrixReader extends BasicDynaBean implements Closeable {
                 if (c != null && !(nv instanceof String)) {
                     nv = StringConverter.INSTANCE.convertString(String.class, nv, true);
                 }
-                if (StringUtils.isEmpty(nv)) {
-                    nv = null;
-                    if (!StringUtils.NULL.equals(c)) {
-                        l.set(i, null);
-                    }
+                if (StringUtils.isNull(nv)) {
+                    l.set(i, null);
                 } else if (c instanceof Class) {
                     if (nv instanceof String) {
                         nv = StringUtils.to(c, (String) nv, this);

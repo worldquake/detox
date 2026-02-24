@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import hu.detox.Agent;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;

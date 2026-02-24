@@ -1,6 +1,8 @@
 package hu.detox.utils;
 
 import hu.detox.Main;
+import hu.detox.utils.reflection.ReflectionUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.w3c.tidy.Tidy;
 

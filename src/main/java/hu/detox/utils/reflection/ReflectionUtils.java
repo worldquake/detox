@@ -1,6 +1,7 @@
-package hu.detox.utils;
+package hu.detox.utils.reflection;
 
 import hu.detox.parsers.XmlUtils;
+import hu.detox.utils.strings.StringUtils;
 import kotlin.Pair;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.text.similarity.LevenshteinDetailedDistance;
@@ -639,7 +640,7 @@ public final class ReflectionUtils {
         try {
             final Field f = getAccessibleField(true, parObj, parName);
             if (parValue instanceof String) {
-                parValue = hu.detox.utils.StringUtils.to(f.getType(), (String) parValue, null);
+                parValue = StringUtils.to(f.getType(), (String) parValue, null);
             }
             f.set(parObj, parValue);
         } catch (final IllegalAccessException e) {

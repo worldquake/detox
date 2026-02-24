@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static hu.detox.parsers.JSonUtil.getField;
+import static hu.detox.parsers.JSonUtils.getField;
 
 public class UserPartnerFeedbackPersister extends AbstractPersister {
     private final List<Object[]> feedbackBatch = new ArrayList<>();

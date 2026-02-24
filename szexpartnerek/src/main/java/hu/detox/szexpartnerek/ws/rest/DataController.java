@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import hu.detox.config.ConfigReader;
 import hu.detox.io.poi.MatrixReader;
 import hu.detox.utils.CollectionUtils;
-import hu.detox.utils.Serde;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
@@ -30,6 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static hu.detox.parsers.JSonUtils.OM;
 
 @RestController
 @RequiredArgsConstructor
@@ -69,9 +70,9 @@ public class DataController {
         Object res;
         if (ConfigReader.JSON.equals(ext.getSecond())) {
             repo.getResults(tableCols, id, cm);
-            ObjectNode node = Serde.OM.createObjectNode();
+            ObjectNode node = OM.createObjectNode();
             if (CollectionUtils.isNotEmpty(cm.getValues())) {
-                ObjectNode data = Serde.OM.createObjectNode();
+                ObjectNode data = OM.createObjectNode();
                 List<Object> single = cm.getValues().get(0);
                 int i = 0;
                 for (String h : cm.getHeaders()) {
@@ -82,7 +83,7 @@ public class DataController {
                 }
                 node.set("data", data);
             }
-            res = Serde.OM.writeValueAsString(node);
+            res = OM.writeValueAsString(node);
         } else {
             repo.getResults(tableCols, id, cm);
             res = toSeparatedValues(cm, pcs.getFirst());
@@ -94,7 +95,7 @@ public class DataController {
         if (tableCols == null) return null;
         Pair<String, Charset> res;
         if (ConfigReader.JSON.equals(ext)) {
-            res = new Pair<>(Serde.OM.writeValueAsString(tableCols), Charset.defaultCharset());
+            res = new Pair<>(OM.writeValueAsString(tableCols), Charset.defaultCharset());
         } else {
             var ar = new AtomicReference<>(tableCols.get(TabulatorColumns.F_TABLE).asText());
             Pair<CsvPreference, Charset> pcs = MatrixReader.forNameWithExtension(ar, accept);
@@ -138,10 +139,10 @@ public class DataController {
             }
         } else if (ConfigReader.JSON.equals(ext.getSecond())) {
             content = repo.getResults(tableCols, params, new ColumnMapRowMapper());
-            ObjectNode node = Serde.OM.createObjectNode();
+            ObjectNode node = OM.createObjectNode();
             node.set("pg", buildPagingNode(request, params, content.getFirst()));
-            node.set("data", Serde.OM.valueToTree(content.getSecond()));
-            res = Serde.OM.writeValueAsString(node);
+            node.set("data", OM.valueToTree(content.getSecond()));
+            res = OM.writeValueAsString(node);
         } else {
             CsvListRowMapper m = new CsvListRowMapper();
             content = repo.getResults(tableCols, params, m);
@@ -172,7 +173,7 @@ public class DataController {
     }
 
     private ObjectNode buildPagingNode(HttpServletRequest req, @Valid @ModelAttribute DataRepository.SelectParams params, int total) {
-        ObjectNode paging = Serde.OM.createObjectNode();
+        ObjectNode paging = OM.createObjectNode();
         StringBuffer baseUrl = req.getRequestURL();
         String prev = null, next = null;
         DataRepository.PagingParam pager = params.pg();

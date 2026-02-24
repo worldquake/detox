@@ -1,6 +1,9 @@
 package hu.detox.parsers;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.*;
 import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
@@ -13,7 +16,8 @@ import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import hu.detox.io.CharIOHelper;
-import hu.detox.utils.ReflectionUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
+import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.url.URL;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.ObjectUtils;
@@ -32,7 +36,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class JSonUtil {
+public class JSonUtils {
     private static class DateAdapter<T extends Date> extends TypeAdapter<T> {
         private final DateFormat format;
         private final Class<T> clazz;
@@ -52,7 +56,7 @@ public class JSonUtil {
             if (t.equals(JsonToken.STRING)) {
                 final String d = in.nextString();
                 if (this.format == null) {
-                    return hu.detox.utils.StringUtils.to(this.clazz, d, this);
+                    return StringUtils.to(this.clazz, d, this);
                 } else {
                     try {
                         Date dob = this.format.parse(d);
@@ -61,7 +65,7 @@ public class JSonUtil {
                         }
                         return (T) dob;
                     } catch (final ParseException e) {
-                        return hu.detox.utils.StringUtils.to(this.clazz, d, this);
+                        return StringUtils.to(this.clazz, d, this);
                     }
                 }
             } else if (t.equals(JsonToken.NULL)) {
@@ -84,11 +88,11 @@ public class JSonUtil {
         }
     }
 
-    private static class NUTypeAdapterFactory implements TypeAdapterFactory {
+    private static class DetoxTypeAdapterFactory implements TypeAdapterFactory {
         private TypeAdapterFactory reflective;
         private final DateFormat format;
 
-        private NUTypeAdapterFactory(final DateFormat fmt) {
+        private DetoxTypeAdapterFactory(final DateFormat fmt) {
             this.format = fmt;
         }
 
@@ -124,7 +128,7 @@ public class JSonUtil {
                             return null;
                         } else if (t.equals(JsonToken.STRING)) {
                             final String es = in.nextString();
-                            return hu.detox.utils.StringUtils.to(type.getRawType(), es, this);
+                            return StringUtils.to(type.getRawType(), es, this);
                         } else {
                             return (Enum) type.getRawType().getEnumConstants()[in.nextInt()];
                         }
@@ -156,13 +160,16 @@ public class JSonUtil {
     }
 
     private static final MessageDigest MD5;
+    public static final ObjectMapper OM = new ObjectMapper()
+            .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     public static final Gson GSON;
     public static final Gson GSON_PRETTY;
     public static final JsonParser JSON_PARSER = new JsonParser();
 
     static {
-        GSON = JSonUtil.gson(hu.detox.utils.StringUtils.FORMAT1).create();
-        GSON_PRETTY = JSonUtil.gson(hu.detox.utils.StringUtils.FORMAT1).setPrettyPrinting().create();
+        GSON = JSonUtils.gson(StringUtils.FORMAT1).create();
+        GSON_PRETTY = JSonUtils.gson(StringUtils.FORMAT1).setPrettyPrinting().create();
         try {
             MD5 = MessageDigest.getInstance("MD5");
         } catch (final NoSuchAlgorithmException e) {
@@ -173,8 +180,8 @@ public class JSonUtil {
 
     private static Configuration.Defaults defaults() {
         return new Configuration.Defaults() {
-            private final JsonProvider jsonProvider = new GsonJsonProvider(JSonUtil.GSON);
-            private final MappingProvider mappingProvider = new GsonMappingProvider(JSonUtil.GSON);
+            private final JsonProvider jsonProvider = new GsonJsonProvider(JSonUtils.GSON);
+            private final MappingProvider mappingProvider = new GsonMappingProvider(JSonUtils.GSON);
 
             @Override
             public JsonProvider jsonProvider() {
@@ -194,38 +201,38 @@ public class JSonUtil {
     }
 
     public static boolean expected(final Object el, final Object expected, final Function<Object[], Boolean> failureListener) throws IOException {
-        return JSonUtil.expected(el, expected, failureListener, false, false);
+        return JSonUtils.expected(el, expected, failureListener, false, false);
     }
 
     public static boolean expected(final Object el, final Object expected, final Function<Object[], Boolean> failureListener,
                                    final boolean sameSize, final boolean checkAllowedFields) throws IOException {
-        return JSonUtil.expected(el, expected, failureListener, sameSize, "$", checkAllowedFields);
+        return JSonUtils.expected(el, expected, failureListener, sameSize, "$", checkAllowedFields);
     }
 
     public static boolean expected(final Object eloo, final Object expectedo, final Function<Object[], Boolean> failureListener,
                                    final boolean sameSize, final String pth, final boolean checkNotAllowedFields) throws IOException {
-        final JsonElement el = JSonUtil.toElement(eloo);
-        final JsonElement expected = JSonUtil.toElement(expectedo);
+        final JsonElement el = JSonUtils.toElement(eloo);
+        final JsonElement expected = JSonUtils.toElement(expectedo);
         boolean ret = false;
         boolean hasNotAllowedFields = false;
-        if (hu.detox.utils.StringUtils.isNull(expected)) {
+        if (StringUtils.isNull(expected)) {
             ret = true; // We have no expectation, this field can be there or not, has value or not
         } else if (expected.isJsonPrimitive()) {
             final JsonPrimitive pexp = expected.getAsJsonPrimitive();
             if (pexp.isBoolean()) {
                 // If the expected is a boolean then if true,
                 // then the value can't be null-like
-                if (hu.detox.utils.StringUtils.isNull(el) || !el.isJsonPrimitive() || !((JsonPrimitive) el).isBoolean()) {
-                    final boolean elSet = !hu.detox.utils.StringUtils.isNull(el);
+                if (StringUtils.isNull(el) || !el.isJsonPrimitive() || !((JsonPrimitive) el).isBoolean()) {
+                    final boolean elSet = !StringUtils.isNull(el);
                     ret = pexp.getAsBoolean() && elSet ? true : !pexp.getAsBoolean() && !elSet ? true : false;
                 }
-            } else if (!hu.detox.utils.StringUtils.isNull(el)) {
+            } else if (!StringUtils.isNull(el)) {
                 if (pexp.isString() && (el.isJsonArray() || el.isJsonObject())) {
                     // If the expectation is a string for an object,
                     // then it is the hash of the data that we expect
-                    synchronized (JSonUtil.MD5) {
-                        JSonUtil.MD5.reset();
-                        byte[] digest = JSonUtil.MD5.digest(el.toString().getBytes());
+                    synchronized (JSonUtils.MD5) {
+                        JSonUtils.MD5.reset();
+                        byte[] digest = JSonUtils.MD5.digest(el.toString().getBytes());
                         final String eld = new String(Hex.encodeHex(digest));
                         ret = pexp.getAsString().equalsIgnoreCase(eld);
                     }
@@ -253,14 +260,14 @@ public class JSonUtil {
                             break;
                         }
                         final JsonElement extn = elai.next();
-                        allOk &= JSonUtil.expected(extn, se, failureListener, sameSize, pth + "[" + i++ + "]", checkNotAllowedFields);
+                        allOk &= JSonUtils.expected(extn, se, failureListener, sameSize, pth + "[" + i++ + "]", checkNotAllowedFields);
                         if (!allOk && failureListener == null) {
                             break;
                         }
                     }
                     if (lse != null) {
                         while (elai.hasNext()) {
-                            allOk &= JSonUtil.expected(elai.next(), lse, failureListener, sameSize, pth + "[" + i++ + "]", checkNotAllowedFields);
+                            allOk &= JSonUtils.expected(elai.next(), lse, failureListener, sameSize, pth + "[" + i++ + "]", checkNotAllowedFields);
                             if (!allOk && failureListener == null) {
                                 break;
                             }
@@ -273,7 +280,7 @@ public class JSonUtil {
                 // then the element must match one of the expectation in the array
                 boolean cret;
                 for (final JsonElement iexp : expected.getAsJsonArray()) {
-                    cret = JSonUtil.expected(el, iexp, null);
+                    cret = JSonUtils.expected(el, iexp, null);
                     if (cret) {
                         ret = cret;
                         break;
@@ -294,7 +301,7 @@ public class JSonUtil {
                     JsonElement elsue;
                     for (final Map.Entry<String, JsonElement> sekv : exo.entrySet()) {
                         elsue = elo.get(sekv.getKey());
-                        ret &= JSonUtil.expected(elsue, sekv.getValue(), failureListener, sameSize, pth + "." + sekv.getKey(), checkNotAllowedFields);
+                        ret &= JSonUtils.expected(elsue, sekv.getValue(), failureListener, sameSize, pth + "." + sekv.getKey(), checkNotAllowedFields);
                         if (!ret && failureListener == null) {
                             break;
                         }
@@ -325,22 +332,22 @@ public class JSonUtil {
             return null;
         }
         final JsonElement el = obj.get(key);
-        return JSonUtil.unwrap(el);
+        return JSonUtils.unwrap(el);
     }
 
     public static GsonBuilder gson(final DateFormat fmt) {
         return new GsonBuilder() // We have our own strategy...
-                .registerTypeAdapterFactory(new NUTypeAdapterFactory(fmt)) // Extended type handling
+                .registerTypeAdapterFactory(new DetoxTypeAdapterFactory(fmt)) // Extended type handling
                 ;
     }
 
     public static <T extends JsonElement> List<T> gsonPath(final Object any, final String pth, final EvaluationListener... list) throws IOException {
-        return JSonUtil.gsonPath(any, pth, null, list);
+        return JSonUtils.gsonPath(any, pth, null, list);
     }
 
     public static <T extends JsonElement> List<T> gsonPath(Object any, final String pth, final InheritableThreadLocal<ReadContext> ctxl,
                                                            final EvaluationListener... list) throws IOException {
-        any = JSonUtil.toElement(any);
+        any = JSonUtils.toElement(any);
         final String[] pths = pth.split(",");
         final List<T> ret = new LinkedList<>();
         final ReadContext ctx = JsonPath.parse(any, Configuration.defaultConfiguration())
@@ -366,12 +373,12 @@ public class JSonUtil {
     }
 
     public static <T> T gsonPathObject(final Object any, final String pth, final EvaluationListener... list) throws IOException {
-        final JsonElement el = JSonUtil.gsonPathSingle(any, pth, list);
-        return JSonUtil.unwrap(el);
+        final JsonElement el = JSonUtils.gsonPathSingle(any, pth, list);
+        return JSonUtils.unwrap(el);
     }
 
     public static <T extends JsonElement> T gsonPathSingle(final Object any, final String pth, final EvaluationListener... list) throws IOException {
-        final List<T> lst = JSonUtil.gsonPath(any, pth, list);
+        final List<T> lst = JSonUtils.gsonPath(any, pth, list);
         T ret = CollectionUtils.isEmpty(lst) ? null : lst.get(0);
         if (ret != null && ret.isJsonNull()) {
             ret = null;
@@ -380,15 +387,15 @@ public class JSonUtil {
     }
 
     public static boolean has(final JsonArray arr, final Object obj) {
-        final int idx = JSonUtil.indexOf(arr, obj);
+        final int idx = JSonUtils.indexOf(arr, obj);
         return idx > org.apache.commons.lang3.ArrayUtils.INDEX_NOT_FOUND;
     }
 
     public static int indexOf(final JsonArray arr, final Object obj) {
-        final Object uobj = obj instanceof JsonElement ? JSonUtil.unwrap((JsonElement) obj) : obj;
+        final Object uobj = obj instanceof JsonElement ? JSonUtils.unwrap((JsonElement) obj) : obj;
         int idx = 0;
         for (final JsonElement e : arr) {
-            final Object ue = JSonUtil.unwrap(e);
+            final Object ue = JSonUtils.unwrap(e);
             if (ObjectUtils.equals(ue, uobj)) {
                 return idx;
             }
@@ -398,7 +405,7 @@ public class JSonUtil {
     }
 
     public static <T> T iterator(final Object any) throws IOException {
-        final JsonElement el = JSonUtil.toElement(any);
+        final JsonElement el = JSonUtils.toElement(any);
         if (el.isJsonPrimitive() || el.isJsonNull()) {
             return (T) org.apache.commons.collections4.IteratorUtils.singletonIterator(el);
         } else if (el.isJsonObject()) {
@@ -420,7 +427,7 @@ public class JSonUtil {
             if (o instanceof Date && dates != null) {
                 o = dates.format(o);
             }
-            JSonUtil.setProperty(ret, lab, o);
+            JSonUtils.setProperty(ret, lab, o);
         }
         return ret;
     }
@@ -441,26 +448,26 @@ public class JSonUtil {
 
     public static <T extends JsonElement> T toElement(Object any) throws IOException {
         CharIOHelper cio = CharIOHelper.attempt(any);
-        if (cio != null) return (T) JSonUtil.JSON_PARSER.parse(cio.toText());
+        if (cio != null) return (T) JSonUtils.JSON_PARSER.parse(cio.toText());
         else if (any instanceof JsonElement) return (T) any;
-        else return (T) JSonUtil.GSON.toJsonTree(any);
+        else return (T) JSonUtils.GSON.toJsonTree(any);
     }
 
     public static <T> T toObject(final Object any, final Class<T> clz) throws IOException {
-        final JsonElement el = JSonUtil.toElement(any);
+        final JsonElement el = JSonUtils.toElement(any);
         if (JsonElement.class.isAssignableFrom(clz) || clz == null) {
             return (T) el;
         }
-        return JSonUtil.GSON.fromJson(el, clz);
+        return JSonUtils.GSON.fromJson(el, clz);
     }
 
     public static String toString(final Object any) {
         if (any instanceof CharSequence) {
             return String.valueOf(any);
         } else if (any instanceof JsonElement) {
-            return JSonUtil.GSON.toJson((JsonElement) any);
+            return JSonUtils.GSON.toJson((JsonElement) any);
         }
-        return JSonUtil.GSON.toJson(any);
+        return JSonUtils.GSON.toJson(any);
     }
 
     public static <T> T unwrap(final JsonElement el) {

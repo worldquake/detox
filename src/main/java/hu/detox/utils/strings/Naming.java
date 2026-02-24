@@ -1,4 +1,4 @@
-package hu.detox.utils;
+package hu.detox.utils.strings;
 
 import java.util.regex.Pattern;
 

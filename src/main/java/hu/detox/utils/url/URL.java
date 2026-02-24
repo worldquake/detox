@@ -1,8 +1,8 @@
 package hu.detox.utils.url;
 
-import hu.detox.utils.ReflectionUtils;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.SystemUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.hc.core5.http.HttpHeaders;
@@ -224,7 +224,7 @@ public final class URL implements Cloneable, Serializable {
     }
 
     public static URL valueOf(String parUrl) {
-        parUrl = hu.detox.utils.StringUtils.trimToNull(parUrl.trim());
+        parUrl = StringUtils.trimToNull(parUrl.trim());
         if (parUrl == null) return null;
         URL t = new URL();
         t.setPort(URL.NO_PORT);
@@ -707,7 +707,7 @@ public final class URL implements Cloneable, Serializable {
         boolean ret = true;
         for (final Map.Entry<String, Object> e : this.getParameters()) {
             final Object p = curr.getParameter(e.getKey());
-            if (hu.detox.utils.StringUtils.isNull(e.getValue()) && curr.hasParameter(e.getKey())) {
+            if (StringUtils.isNull(e.getValue()) && curr.hasParameter(e.getKey())) {
                 continue;
             } else if (e.getValue() instanceof String) {
                 final String pv = String.valueOf(p);

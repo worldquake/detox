@@ -1,7 +1,7 @@
 package hu.detox.io.poi;
 
-import hu.detox.utils.ReflectionUtils;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;

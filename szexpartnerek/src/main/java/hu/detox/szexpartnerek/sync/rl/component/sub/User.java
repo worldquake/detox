@@ -11,7 +11,7 @@ import hu.detox.szexpartnerek.sync.rl.Http;
 import hu.detox.szexpartnerek.sync.rl.component.New;
 import hu.detox.szexpartnerek.sync.rl.component.UserPartnerFeedback;
 import hu.detox.szexpartnerek.sync.rl.persister.UserPersister;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;

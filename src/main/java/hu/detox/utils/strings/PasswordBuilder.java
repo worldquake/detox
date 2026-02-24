@@ -1,11 +1,11 @@
-package hu.detox.utils;
+package hu.detox.utils.strings;
 
 import java.util.Random;
 import java.util.regex.Pattern;
 
 public class PasswordBuilder {
-    public final static Random RANDOM = new Random();
     public static final String PASSWORD_STRING = "password";
+    public final static Random RANDOM = new Random();
     // we keep our data in lists. Arrays would suffice as data never changes though.
     private final static char[] LOWER_CAPS, UPPER_CAPS, DIGITS, SPECIALS;
     private final static Pattern P_SPECIALS;

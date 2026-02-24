@@ -8,7 +8,6 @@ import java.io.*;
 
 @SuppressWarnings("unchecked")
 public class SerializationUtil {
-    public static final String EXPIRE = "expire";
     public static final String SER = ".ser";
     private static final String EXT = ".ext";
 

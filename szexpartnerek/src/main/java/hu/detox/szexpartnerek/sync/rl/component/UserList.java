@@ -7,8 +7,7 @@ import hu.detox.szexpartnerek.sync.IPersister;
 import hu.detox.szexpartnerek.sync.ITrafoEngine;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
 import hu.detox.szexpartnerek.sync.rl.component.sub.User;
-import hu.detox.utils.Serde;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -19,6 +18,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
+
+import static hu.detox.parsers.JSonUtils.OM;
 
 @Component
 public class UserList extends AbstractTrafoEngine {
@@ -75,7 +76,7 @@ public class UserList extends AbstractTrafoEngine {
 
     @Override
     public ArrayNode apply(String s) {
-        ArrayNode res = Serde.OM.createArrayNode();
+        ArrayNode res = OM.createArrayNode();
         for (Element e : Jsoup.parse(s).select("a[href*='user-data']")) {
             Matcher m = Partner.IDP.matcher(e.attr("href"));
             if (m.find()) res.add(m.group(2));

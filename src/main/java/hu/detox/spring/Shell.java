@@ -2,7 +2,7 @@ package hu.detox.spring;
 
 import hu.detox.Agent;
 import hu.detox.Main;
-import hu.detox.utils.ReflectionUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;

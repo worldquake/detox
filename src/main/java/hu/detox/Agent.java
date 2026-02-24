@@ -1,7 +1,7 @@
 package hu.detox;
 
 import hu.detox.config.ConfigReader;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;

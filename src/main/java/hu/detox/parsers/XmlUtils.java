@@ -2,8 +2,8 @@ package hu.detox.parsers;
 
 import com.google.gson.JsonElement;
 import hu.detox.io.FileUtils;
-import hu.detox.utils.ReflectionUtils;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.CharSequenceReader;
 import org.apache.commons.lang3.ArrayUtils;
@@ -457,7 +457,7 @@ public class XmlUtils {
     }
 
     public JsonElement toJson() {
-        return (JsonElement) JsonConverter.INSTANCE.apply(this.node);
+        return (JsonElement) JsonXmlUtils.INSTANCE.apply(this.node);
     }
 
     public Document trafo(final StreamSource ss) throws TransformerException {

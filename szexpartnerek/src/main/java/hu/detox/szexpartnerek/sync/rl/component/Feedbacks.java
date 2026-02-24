@@ -9,7 +9,7 @@ import hu.detox.szexpartnerek.sync.ITrafoEngine;
 import hu.detox.szexpartnerek.sync.rl.Entry;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
 import hu.detox.szexpartnerek.sync.rl.component.sub.User;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;

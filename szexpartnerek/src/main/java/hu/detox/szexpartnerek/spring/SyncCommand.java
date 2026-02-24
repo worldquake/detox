@@ -5,7 +5,7 @@ import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.sync.AbstractTrafoEngine;
 import hu.detox.szexpartnerek.sync.Args;
 import hu.detox.szexpartnerek.sync.Sync;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.jsoup.internal.StringUtil;

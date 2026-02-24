@@ -1,5 +1,6 @@
 package hu.detox.utils;
 
+import lombok.Getter;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.DefaultRedirectStrategy;
@@ -10,6 +11,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClient.Builder;
 
+@Getter
 public class Http {
     private static final HttpComponentsClientHttpRequestFactory REQ_FACTORY;
     private static final BasicCookieStore COOKIE_STORE;

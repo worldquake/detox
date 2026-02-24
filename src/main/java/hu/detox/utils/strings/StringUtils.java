@@ -14,12 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package hu.detox.utils;
+package hu.detox.utils.strings;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import hu.detox.Main;
 import hu.detox.io.FileUtils;
+import hu.detox.utils.SystemUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import kotlin.Pair;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.io.output.StringBuilderWriter;

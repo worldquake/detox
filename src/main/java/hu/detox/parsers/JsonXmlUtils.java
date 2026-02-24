@@ -1,8 +1,8 @@
 package hu.detox.parsers;
 
 import com.google.gson.*;
-import hu.detox.utils.ReflectionUtils;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -18,14 +18,14 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class JsonConverter implements Function<Object, Object> {
+public class JsonXmlUtils implements Function<Object, Object> {
     private static final String PELEMENT = "e";
     private static final Pattern NUMERIC = Pattern.compile("^[0-9]");
     public static final String ATYPE = "t";
     public static final String APREFX = "p";
-    public static final JsonConverter INSTANCE = new JsonConverter();
+    public static final JsonXmlUtils INSTANCE = new JsonXmlUtils();
 
-    private JsonConverter() {
+    private JsonXmlUtils() {
         // Singleton
     }
 
@@ -58,8 +58,8 @@ public class JsonConverter implements Function<Object, Object> {
     }
 
     private String getName(final Element e) {
-        final String pfx = e.attributeValue(JsonConverter.APREFX);
-        String ret = e.attributeValue(JsonConverter.PELEMENT);
+        final String pfx = e.attributeValue(JsonXmlUtils.APREFX);
+        String ret = e.attributeValue(JsonXmlUtils.PELEMENT);
         if (ret == null) {
             ret = e.getName();
         }
@@ -70,10 +70,10 @@ public class JsonConverter implements Function<Object, Object> {
     }
 
     private void setName(final Element e, String nam) {
-        final Matcher m = JsonConverter.NUMERIC.matcher(nam);
+        final Matcher m = JsonXmlUtils.NUMERIC.matcher(nam);
         if (m.find()) {
-            nam = JsonConverter.PELEMENT + nam;
-            e.addAttribute(JsonConverter.APREFX, JsonConverter.PELEMENT);
+            nam = JsonXmlUtils.PELEMENT + nam;
+            e.addAttribute(JsonXmlUtils.APREFX, JsonXmlUtils.PELEMENT);
         }
         e.setName(nam);
     }
@@ -85,7 +85,7 @@ public class JsonConverter implements Function<Object, Object> {
         if (!node.hasContent()) {
             return JsonNull.INSTANCE;
         }
-        String at = node.attributeValue(JsonConverter.ATYPE);
+        String at = node.attributeValue(JsonXmlUtils.ATYPE);
         final String nam = this.getName(node);
         Class<?> el = JsonPrimitive.class;
         Class<?> act = null;
@@ -156,7 +156,7 @@ public class JsonConverter implements Function<Object, Object> {
             final JsonPrimitive pri = (JsonPrimitive) el;
             xel = DocumentHelper.createElement("Primitive");
             tattr = pri.isBoolean() ? Boolean.class.getSimpleName() : pri.isNumber() ? Number.class.getSimpleName() : org.apache.commons.lang3.StringUtils.EMPTY;
-            xel.addAttribute(JsonConverter.ATYPE, tattr);
+            xel.addAttribute(JsonXmlUtils.ATYPE, tattr);
             xel.setText(pri.getAsString());
         } else if (el instanceof JsonArray) {
             final JsonArray arr = (JsonArray) el;
@@ -172,9 +172,9 @@ public class JsonConverter implements Function<Object, Object> {
             Element sn;
             for (final Map.Entry<String, JsonElement> sel : obj.entrySet()) {
                 sn = this.toXmlElement(sel.getValue());
-                tattr = sn.attributeValue(JsonConverter.ATYPE);
+                tattr = sn.attributeValue(JsonXmlUtils.ATYPE);
                 if (tattr == null) {
-                    sn.addAttribute(JsonConverter.ATYPE, sn.getName());
+                    sn.addAttribute(JsonXmlUtils.ATYPE, sn.getName());
                 }
                 this.setName(sn, sel.getKey());
                 xel.add(sn);
@@ -192,7 +192,7 @@ public class JsonConverter implements Function<Object, Object> {
         } else if (input instanceof CharSequence) {
             final JsonElement el;
             try {
-                el = JSonUtil.toElement(input);
+                el = JSonUtils.toElement(input);
                 return this.toXmlElement(el);
             } catch (IOException e) {
                 throw new IllegalArgumentException(e);

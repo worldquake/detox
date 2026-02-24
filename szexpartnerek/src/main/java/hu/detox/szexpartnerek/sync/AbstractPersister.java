@@ -2,9 +2,9 @@ package hu.detox.szexpartnerek.sync;
 
 import hu.detox.ifaces.ID;
 import hu.detox.szexpartnerek.Main;
-import hu.detox.utils.Naming;
-import hu.detox.utils.PasswordBuilder;
-import hu.detox.utils.Time;
+import hu.detox.utils.strings.Naming;
+import hu.detox.utils.strings.PasswordBuilder;
+import hu.detox.utils.TimeUtils;
 import org.springframework.dao.DataAccessException;
 
 import java.sql.Timestamp;
@@ -26,7 +26,7 @@ public abstract class AbstractPersister implements IPersister, ID<String> {
         HashSet<Integer> canProcess = new HashSet<>();
         List<Integer> eligible = new ArrayList<>();
         String untouchedSql = "SELECT id, ts FROM " + getId() + " WHERE del = false ORDER BY ts ASC";
-        Instant oneDayAgo = Time.instant().minus(Duration.ofDays(1));
+        Instant oneDayAgo = TimeUtils.instant().minus(Duration.ofDays(1));
 
         Main.jdbc().query(untouchedSql, rs -> {
             while (rs.next()) {

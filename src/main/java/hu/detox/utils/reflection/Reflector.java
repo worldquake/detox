@@ -1,4 +1,4 @@
-package hu.detox.utils;
+package hu.detox.utils.reflection;
 
 import kotlin.Pair;
 import org.slf4j.Logger;

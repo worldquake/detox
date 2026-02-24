@@ -1,6 +1,6 @@
 package hu.detox.utils.url;
 
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import lombok.Data;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;

@@ -7,7 +7,6 @@ import hu.detox.szexpartnerek.sync.IPersister;
 import hu.detox.szexpartnerek.sync.ITrafoEngine;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
 import hu.detox.szexpartnerek.sync.rl.component.sub.User;
-import hu.detox.utils.Serde;
 import okhttp3.HttpUrl;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
@@ -16,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Iterator;
 import java.util.function.Function;
+
+import static hu.detox.parsers.JSonUtils.OM;
 
 @Component
 public class New implements ITrafoEngine {
@@ -67,9 +68,9 @@ public class New implements ITrafoEngine {
 
     @Override
     public ObjectNode apply(String s) {
-        ObjectNode on = Serde.OM.createObjectNode();
-        on.put(PARTNERS, Serde.OM.createArrayNode());
-        on.put(USERS, Serde.OM.createArrayNode());
+        ObjectNode on = OM.createObjectNode();
+        on.put(PARTNERS, OM.createArrayNode());
+        on.put(USERS, OM.createArrayNode());
         for (Element e : Jsoup.parse(s).select("a")) {
             var url = HttpUrl.get("http://" + e.attr("href"));
             Integer id = Integer.valueOf(url.queryParameter("id").replaceAll("[^0-9]+", ""));

@@ -1,10 +1,8 @@
-package hu.detox.utils;
+package hu.detox.io;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import hu.detox.io.CharIOHelper;
+import lombok.Getter;
+import lombok.Setter;
 import org.jsoup.internal.StringUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -16,10 +14,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
+import static hu.detox.parsers.JSonUtils.OM;
+
 public class Serde implements Closeable, Flushable {
-    public static final ObjectMapper OM = new ObjectMapper()
-            .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     public enum Mode {
         TXT, // ID based input, URL will be created
@@ -41,7 +38,11 @@ public class Serde implements Closeable, Flushable {
     private static final Function<String, Object> TOSTR = responseBody -> responseBody;
     private PrintStream out;
     private BufferedReader reader;
+    @Getter
+    @Setter
     private Mode inMode;
+    @Getter
+    @Setter
     private Mode outMode;
 
     public Serde(File out, CharIOHelper in) throws IOException {
@@ -55,15 +56,7 @@ public class Serde implements Closeable, Flushable {
         }
     }
 
-    public Mode inMode() {
-        return inMode;
-    }
-
-    public Mode outMode() {
-        return outMode;
-    }
-
-    public JsonNode serialize(ResponseEntity<?> response, String url, Function<String, ?> trafo) throws IOException {
+    public JsonNode serialize(ResponseEntity<?> response, String url, Function<String, ?> trafo) {
         if (trafo == null) {
             trafo = TOSTR;
         }
@@ -96,12 +89,12 @@ public class Serde implements Closeable, Flushable {
         return bodyNode;
     }
 
-    public String nextStr() throws IOException {
+    public String next() throws IOException {
         String ln = null;
-        var resp = next();
-        if (inMode().equals(Serde.Mode.TXT)) {
+        var resp = nextObject();
+        if (inMode.equals(Serde.Mode.TXT)) {
             ln = (String) resp;
-        } else if (inMode().equals(Serde.Mode.JSONL)) {
+        } else if (inMode.equals(Serde.Mode.JSONL)) {
             ln = resp == null ? null : resp.toString();
         } else if (resp != null) {
             var r = (ResponseEntity) resp;
@@ -111,11 +104,11 @@ public class Serde implements Closeable, Flushable {
         return ln;
     }
 
-    public Object next() throws IOException {
+    private Object nextObject() throws IOException {
         String statusLine = reader.readLine();
         if (StringUtil.isBlank(statusLine)) return null;
         if (inMode.equals(Mode.TXT)) return statusLine;
-        if (inMode.equals(Mode.JSONL)) return Serde.OM.readTree(statusLine);
+        if (inMode.equals(Mode.JSONL)) return OM.readTree(statusLine);
         int[] contentLengths = new int[2]; // Headers count, and body strlen
         String[] hl = statusLine.split(" ");
         contentLengths[0] = Integer.parseInt(hl[0]);

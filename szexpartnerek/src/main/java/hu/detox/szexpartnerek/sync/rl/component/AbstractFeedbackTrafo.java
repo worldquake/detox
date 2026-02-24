@@ -10,7 +10,6 @@ import hu.detox.szexpartnerek.sync.ITrafoEngine;
 import hu.detox.szexpartnerek.sync.rl.component.sub.User;
 import hu.detox.szexpartnerek.sync.rl.persister.UserPartnerFeedbackPersister;
 import hu.detox.utils.Progress;
-import hu.detox.utils.Serde;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
@@ -28,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
+import static hu.detox.parsers.JSonUtils.OM;
 import static hu.detox.szexpartnerek.spring.SyncCommand.normalize;
 import static hu.detox.szexpartnerek.spring.SyncCommand.text;
 
@@ -58,7 +58,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
             try {
                 JsonNode n = node.get(IPager.PAGER);
                 if (n == null) return false;
-                max = Serde.OM.treeToValue(n, int[].class);
+                max = OM.treeToValue(n, int[].class);
                 meter.setTotal(Arrays.stream(max).sum());
                 curr = new int[max.length];
             } catch (JsonProcessingException e) {
@@ -189,8 +189,8 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
                 .filter(i -> chds.get(i).hasClass("bHTabAct"))
                 .findFirst()
                 .orElse(-1);
-        ObjectNode res = Serde.OM.createObjectNode();
-        ArrayNode pg = Serde.OM.createArrayNode();
+        ObjectNode res = OM.createObjectNode();
+        ArrayNode pg = OM.createArrayNode();
         while (m.find()) {
             pg.add(Integer.parseInt(m.group(2)));
         }
@@ -198,7 +198,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
         String okey = addProp(null, FBTYPE, null, null, Feedbacks.SMODES[key]).toString();
         ArrayNode an = (ArrayNode) res.get(okey);
         if (an == null) {
-            an = Serde.OM.createArrayNode();
+            an = OM.createArrayNode();
         }
         res.put("cont", true);
         for (Element iel : soup.select(sels[0])) {
@@ -214,7 +214,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
     }
 
     protected ObjectNode readSingle(String[] sel, Document soup, Element elem) {
-        var ret = Serde.OM.createObjectNode();
+        var ret = OM.createObjectNode();
         Matcher m;
         Element dateDiv = elem.selectFirst("div[id^=dateDiv]");
         if (dateDiv == null) return null;
@@ -281,7 +281,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
                 }
                 ratesArr[idx] = rate;
             }
-            ret.put("rates", Serde.OM.valueToTree(ratesArr));
+            ret.put("rates", OM.valueToTree(ratesArr));
         }
 
         // "good" and "bad" arrays

@@ -1,7 +1,7 @@
 package hu.detox.io;
 
-import hu.detox.utils.ReflectionUtils;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
 import javolution.io.CharSequenceReader;
 import kotlin.Pair;
 import lombok.Getter;
@@ -13,6 +13,7 @@ import org.apache.commons.io.input.ReaderInputStream;
 import org.mozilla.universalchardet.UniversalDetector;
 import org.springframework.core.io.support.EncodedResource;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -39,19 +40,19 @@ public class CharIOHelper extends IOHelper {
         }
     }
 
-    public static CharIOHelper attempt(Object any) throws IOException {
+    public static @Nullable CharIOHelper attempt(Object any) throws IOException {
         return attempt(any, null);
     }
 
-    public static CharIOHelper attempt(Object any, String name) throws IOException {
+    public static @Nullable CharIOHelper attempt(Object any, String name) throws IOException {
         return attempt(any, name, null);
     }
 
-    public static CharIOHelper attempt(Object any, String name, Charset cs) throws IOException {
+    public static @Nullable CharIOHelper attempt(Object any, String name, Charset cs) throws IOException {
         return attempt(any, name, null, cs);
     }
 
-    public static CharIOHelper attempt(Object any, String name, Number buf, Charset cs) throws IOException {
+    public static @Nullable CharIOHelper attempt(Object any, String name, Number buf, Charset cs) throws IOException {
         CharIOHelper cio;
         if (any instanceof CharIOHelper) {
             cio = (CharIOHelper) any;
@@ -72,19 +73,19 @@ public class CharIOHelper extends IOHelper {
         return cio;
     }
 
-    public static BufferedReader tryBufferedReader(final Object parIs) throws IOException {
+    public static @Nullable BufferedReader tryBufferedReader(final Object parIs) throws IOException {
         return CharIOHelper.tryBufferedReader(parIs, (Number) null);
     }
 
-    public static BufferedReader tryBufferedReader(final Object parIs, Charset enc) throws IOException {
+    public static @Nullable BufferedReader tryBufferedReader(final Object parIs, Charset enc) throws IOException {
         return tryBufferedReader(parIs, null, enc);
     }
 
-    public static BufferedReader tryBufferedReader(Object parIs, final Number parBuf) throws IOException {
+    public static @Nullable BufferedReader tryBufferedReader(Object parIs, final Number parBuf) throws IOException {
         return tryBufferedReader(parIs, parBuf, null);
     }
 
-    public static BufferedReader tryBufferedReader(Object parIs, final Number parBuf, Charset enc) throws IOException {
+    public static @Nullable BufferedReader tryBufferedReader(Object parIs, final Number parBuf, Charset enc) throws IOException {
         if (enc == null) enc = Charset.defaultCharset();
         Reader ret = null;
         try {
@@ -143,7 +144,7 @@ public class CharIOHelper extends IOHelper {
         return (BufferedWriter) ret;
     }
 
-    public static Pair<String, Charset> getEncoding(String name) {
+    public static @Nullable Pair<String, Charset> tryEncoding(String name) {
         Pair<String, Charset> ret = null;
         final int li = name.lastIndexOf('.');
         if (li > 0) {
@@ -165,7 +166,7 @@ public class CharIOHelper extends IOHelper {
 
     private static Writer toFileWriter(final File parF, Boolean addBom, Boolean append) throws IOException {
         if (addBom == null) addBom = parF.getName().contains(CharIOHelper.BOM_FN);
-        final Pair<String, Charset> pcs = CharIOHelper.getEncoding(parF.getName());
+        final Pair<String, Charset> pcs = CharIOHelper.tryEncoding(parF.getName());
         final Charset cs = pcs == null ? Charset.defaultCharset() : pcs.getSecond();
         final long len = parF.length();
         if (append == null) append = parF.getName().contains(APPEND);
@@ -177,7 +178,7 @@ public class CharIOHelper extends IOHelper {
     }
 
     public static Pair<String, Charset> toEncoding(final String name) {
-        Pair<String, Charset> ret = CharIOHelper.getEncoding(name);
+        Pair<String, Charset> ret = CharIOHelper.tryEncoding(name);
         if (ret == null) {
             ret = new Pair<>(name, Charset.defaultCharset());
         }
@@ -217,28 +218,31 @@ public class CharIOHelper extends IOHelper {
         closeSilently(this.reader);
     }
 
-    public Writer copyChars(final File parF) throws IOException {
-        final FileOutputStream bw = new FileOutputStream(parF);
-        try {
-            return this.copyChars(bw);
-        } finally {
-            bw.close();
+    @SuppressWarnings("unchecked")
+    @Override
+    public Writer copy(final File parF) throws IOException {
+        try (final FileOutputStream bw = new FileOutputStream(parF)) {
+            return this.copy(bw);
         }
     }
 
-    public Writer copyChars(final java.net.URL parUrl) throws IOException {
+    @SuppressWarnings("unchecked")
+    @Override
+    public Writer copy(final java.net.URL parUrl) throws IOException {
         final URLConnection uc = parUrl.openConnection();
         uc.setDoOutput(true);
-        return this.copyChars(uc.getOutputStream());
+        return this.copy(uc.getOutputStream());
     }
 
-    public Writer copyChars(final OutputStream parStr) throws IOException {
+    @SuppressWarnings("unchecked")
+    @Override
+    public Writer copy(final OutputStream parStr) throws IOException {
         final Writer bw = new OutputStreamWriter(parStr, this.charset);
-        this.copyChars(bw);
+        this.copy(bw);
         return bw;
     }
 
-    public Writer copyChars(final Writer parWriter) throws IOException {
+    public Writer copy(final Writer parWriter) throws IOException {
         final Writer bw = CharIOHelper.toBufferedWriter(parWriter, this.buffer);
         try {
             IOUtils.copy(this.reader, parWriter);
@@ -259,7 +263,7 @@ public class CharIOHelper extends IOHelper {
         final ByteOrderMark bom = bis.getBOM();
         if (bom == null) {
             if (name != null) {
-                final Pair<String, Charset> enc = CharIOHelper.getEncoding(name);
+                final Pair<String, Charset> enc = CharIOHelper.tryEncoding(name);
                 if (enc != null) {
                     cs = enc.getSecond();
                     name = enc.getFirst();
@@ -319,7 +323,7 @@ public class CharIOHelper extends IOHelper {
 
     public String toText() throws IOException {
         final StringWriter sw = new StringWriter(this.buffer);
-        this.copyChars(sw);
+        this.copy(sw);
         return sw.toString();
     }
 

@@ -12,8 +12,7 @@ import hu.detox.szexpartnerek.sync.rl.Entry;
 import hu.detox.szexpartnerek.sync.rl.component.New;
 import hu.detox.szexpartnerek.sync.rl.component.PartnerFeedback;
 import hu.detox.szexpartnerek.sync.rl.persister.PartnerPersister;
-import hu.detox.utils.Serde;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import okhttp3.HttpUrl;
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
@@ -35,6 +34,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static hu.detox.parsers.JSonUtils.OM;
 import static hu.detox.szexpartnerek.spring.SyncCommand.normalize;
 import static hu.detox.szexpartnerek.spring.SyncCommand.text;
 
@@ -170,7 +170,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
     }
 
     private void secondData(Element dataCol, ArrayNode propsArr, ArrayNode massageArr, ObjectNode result) {
-        ArrayNode openArr = Serde.OM.createArrayNode();
+        ArrayNode openArr = OM.createArrayNode();
         Elements rows = dataCol.select("table.dataUpperRightTable tr");
         Map<String, Integer> dayMap = Map.of(
                 "hétfő", 0, "kedd", 1, "szerda", 2, "csütörtök", 3, "péntek", 4, "szombat", 5, "vasárnap", 6
@@ -187,7 +187,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         for (String oh : openHours) openArr.add(oh);
         result.set("openHours", openArr);
 
-        ArrayNode langsArr = Serde.OM.createArrayNode();
+        ArrayNode langsArr = OM.createArrayNode();
         for (Element img : dataCol.select("img[src*=flags]")) {
             String src = img.attr("src");
             Matcher m = Pattern.compile("flags/(\\w+)\\.").matcher(src);
@@ -199,7 +199,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         if (msgStat != null) {
             Matcher m = READING.matcher(msgStat.text());
             if (m.find()) {
-                ArrayNode msgsArr = Serde.OM.createArrayNode();
+                ArrayNode msgsArr = OM.createArrayNode();
                 msgsArr.add(Integer.parseInt(m.group(1)));
                 msgsArr.add(Integer.parseInt(m.group(2)));
                 result.set("msgs", msgsArr);
@@ -233,7 +233,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         int idx2 = txt.indexOf("⚠️");
         ArrayNode loc = null;
         if (!txt.contains("Nincs személyes találkozás")) {
-            loc = Serde.OM.createArrayNode();
+            loc = OM.createArrayNode();
             int idx = txt.indexOf("⚠️"); // Remove the location
             loc.add(normalize(txt.substring(0, idx)));
             idx2 = txt.indexOf("⚠️", idx + 1);
@@ -251,9 +251,9 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
 
     @NotNull
     private void parseOutMyInfo(ObjectNode result, ArrayNode propsArr, String txt) {
-        var arr = Serde.OM.createArrayNode();
+        var arr = OM.createArrayNode();
         Properties props = null;
-        var answerMap = Serde.OM.createObjectNode();
+        var answerMap = OM.createObjectNode();
         String enumOfQ = null;
         for (String val : txt.split("⚠️")) {
             if (val.contains("💕")) {
@@ -273,7 +273,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
                 if (find && val.contains("év")) {
                     Integer from = Integer.valueOf(am.group(1));
                     Integer to;
-                    ArrayNode ara = Serde.OM.createArrayNode();
+                    ArrayNode ara = OM.createArrayNode();
                     if (StringUtil.isNumeric(am.group(3))) {
                         to = Integer.valueOf(am.group(3));
                         if (from < to) {
@@ -312,7 +312,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
 
     @NotNull
     private String parseOutMeasures(ObjectNode result, String txt) {
-        ObjectNode measures = Serde.OM.createObjectNode();
+        ObjectNode measures = OM.createObjectNode();
         Matcher all = MEASUERS.matcher(txt);
         StringBuilder sb = new StringBuilder();
         while (all.find()) {
@@ -348,7 +348,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
     public ObjectNode apply(String html) {
         extra.setLength(0);
         Document doc = Jsoup.parse(html);
-        ObjectNode result = Serde.OM.createObjectNode();
+        ObjectNode result = OM.createObjectNode();
 
         Element leftContainer = doc.selectFirst("div#girlMainLeftContainer");
         Element err = doc.selectFirst(".mainError");
@@ -363,8 +363,8 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
             }
             return result;
         }
-        ArrayNode propsArr = Serde.OM.createArrayNode();
-        ArrayNode massageArr = Serde.OM.createArrayNode();
+        ArrayNode propsArr = OM.createArrayNode();
+        ArrayNode massageArr = OM.createArrayNode();
 
         String name = text(doc.selectFirst(".mainDataRow a.datasheetColorLink,div#memberReportingMain p.title"));
         result.put("name", name.replace(" - Jelentés", ""));
@@ -387,7 +387,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         if (intro != null && (intro.startsWith(name) || intro.endsWith(".hu"))) intro = null;
         result.put("pass", intro);
 
-        ArrayNode phoneArr = Serde.OM.createArrayNode();
+        ArrayNode phoneArr = OM.createArrayNode();
         Elements phoneLinks = doc.select("a.phone-number");
         for (Element link : phoneLinks) {
             String txt = link.text().replaceAll("[^\\d+]", "");
@@ -438,7 +438,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
 
         Element logContainer = leftContainer.selectFirst("div#logContainer");
         if (logContainer != null) {
-            ObjectNode activity = Serde.OM.createObjectNode();
+            ObjectNode activity = OM.createObjectNode();
             for (Element font : logContainer.select("font.leftLikes2")) {
                 String txt = font.text().trim();
                 String[] parts = txt.split(" ", 2);
@@ -449,7 +449,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
 
         Element imagesDiv = leftContainer.selectFirst("div#imagesDiv");
         if (imagesDiv != null) {
-            ArrayNode imgsArr = Serde.OM.createArrayNode();
+            ArrayNode imgsArr = OM.createArrayNode();
             for (Element imgCont : imagesDiv.select("div.imageEmelemntContainer")) {
                 Element img = imgCont.selectFirst("img");
                 if (img != null) {
@@ -457,7 +457,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
                     String title = img.attr("title");
                     m = Pattern.compile("Feltöltve: (" + DATEP + ")").matcher(title);
                     String date = m.find() ? m.group(1) : "";
-                    ArrayNode imgData = Serde.OM.createArrayNode();
+                    ArrayNode imgData = OM.createArrayNode();
                     imgData.add(normalize(date));
                     imgData.add(src);
                     imgsArr.add(imgData);
@@ -475,10 +475,10 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
 
         Element likesDiv = leftContainer.selectFirst("div#dsLeftLikeContainer");
         if (likesDiv != null) {
-            ObjectNode possibilitiesObj = Serde.OM.createObjectNode();
-            ArrayNode yesArr = Serde.OM.createArrayNode();
-            ArrayNode askArr = Serde.OM.createArrayNode();
-            ArrayNode noArr = Serde.OM.createArrayNode();
+            ObjectNode possibilitiesObj = OM.createObjectNode();
+            ArrayNode yesArr = OM.createArrayNode();
+            ArrayNode askArr = OM.createArrayNode();
+            ArrayNode noArr = OM.createArrayNode();
             for (Element font : likesDiv.select("font")) {
                 String txt = font.text().replaceAll("\\s*\\(ha megkérsz\\)", "");
                 if (txt.contains(":")) {

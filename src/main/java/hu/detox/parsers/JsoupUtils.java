@@ -1,6 +1,6 @@
 package hu.detox.parsers;
 
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.supercsv.io.CsvListWriter;

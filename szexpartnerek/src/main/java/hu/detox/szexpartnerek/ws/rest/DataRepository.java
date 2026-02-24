@@ -3,7 +3,7 @@ package hu.detox.szexpartnerek.ws.rest;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import hu.detox.szexpartnerek.Main;
 import hu.detox.utils.Database;
-import hu.detox.utils.StringUtils;
+import hu.detox.utils.strings.StringUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
