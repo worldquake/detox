@@ -19,6 +19,10 @@ public class WebEndpointToggler {
     private final RequestMappingHandlerMapping requestMappingHandlerMapping;
     private Map<RequestMappingInfo, HandlerMethod> lastRemoved;
 
+    void init() {
+        requestMappingHandlerMapping.afterPropertiesSet();
+    }
+
     @SneakyThrows
     public void remove(String pck) {
         lastRemoved = new HashMap<>();

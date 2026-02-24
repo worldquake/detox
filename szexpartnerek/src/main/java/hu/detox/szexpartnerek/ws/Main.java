@@ -39,6 +39,7 @@ public class Main implements Function<String, Boolean>, ApplicationListener<Cont
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         toggler = hu.detox.Main.ctx().getBean(WebEndpointToggler.class);
+        toggler.init();
     }
 }
 
