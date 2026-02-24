@@ -21,7 +21,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.shell.command.CommandRegistration;
-import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.jline.PromptProvider;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
@@ -29,9 +28,9 @@ import org.springframework.shell.standard.commands.Quit;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 
 @SpringBootApplication(scanBasePackages = "hu.detox.spring")
-@Command(group = "DeToX base commands")
 @ShellComponent
 @Primary
 public class Main implements ApplicationContextAware, BeanPostProcessor, Quit.Command, PromptProvider {
@@ -42,6 +41,7 @@ public class Main implements ApplicationContextAware, BeanPostProcessor, Quit.Co
     private static ConversionService converter;
 
     public static CommandRegistration.Builder cr(String cmd) {
+        AtomicReference<String> rCmd = new AtomicReference<>(cmd);
         Class<?> ref = ReflectionUtils.getCaller(null, els -> {
             StackTraceElement ret = null;
             boolean isCr;
@@ -49,13 +49,21 @@ public class Main implements ApplicationContextAware, BeanPostProcessor, Quit.Co
                 isCr = el.getMethodName().equals("cr");
                 if (isCr) ret = el;
                 else if (ret != null) {
-                    if (cmd == null || cmd.startsWith(StringUtils.NULL_UNI)) ret = el;
+                    boolean nu = cmd != null && cmd.startsWith(StringUtils.NULL_UNI);
+                    if (cmd == null || nu) {
+                        if (nu) {
+                            if (cmd.length() == 1) rCmd.set(el.getMethodName());
+                            else rCmd.set(cmd.substring(1));
+                        }
+                        ret = el;
+                    }
                     break;
                 }
             }
             return ret;
         }).getOn();
-        String fcmd = hu.detox.Main.toCommand(ref) + (StringUtils.isBlank(cmd) ? "" : " " + cmd.replace(StringUtils.NULL_UNI, ""));
+        String fcmd = rCmd.get();
+        fcmd = hu.detox.Main.toCommand(ref) + (StringUtils.isBlank(fcmd) ? "" : " " + fcmd);
         return CommandRegistration.builder().group("DeToX").command(fcmd.trim());
     }
 
@@ -65,11 +73,16 @@ public class Main implements ApplicationContextAware, BeanPostProcessor, Quit.Co
         return toCommand(pkg);
     }
 
-    public static String toCommand(String pkg) {
-        pkg = pkg.replace(Main.class.getPackageName() + ".", "");
-        String rc = System.getProperty("root").replace(Main.class.getPackageName() + ".", "");
-        return pkg.replace(rc, "")
-                .replaceFirst("^\\.", "")
+    private static String toCommand(String pkg) {
+        String[] pkga = StringUtils.split(pkg, '.');
+        String[] ra = StringUtils.split(System.getProperty("root"), '.');
+        int from = 0;
+        for (int i = 0; i < pkga.length && i < ra.length; i++) {
+            if (pkga[i].equals(ra[i])) from = i;
+            else break;
+        }
+        pkg = StringUtils.join(pkga, '.', from + 1, pkga.length);
+        return pkg.replaceFirst("^\\.", "")
                 .replaceAll("\\.", " ");
     }
 

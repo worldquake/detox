@@ -1,6 +1,7 @@
 package hu.detox.szexpartnerek.ws;
 
 import hu.detox.spring.Shell;
+import hu.detox.utils.strings.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
@@ -18,16 +19,16 @@ import java.util.function.Function;
 public class Command implements Function<CommandContext, Boolean> {
     private final hu.detox.szexpartnerek.ws.Main main;
 
-    @Bean
-    public CommandRegistration szexpartnerekWSStart() {
-        return hu.detox.szexpartnerek.Main.cr("start")
+    @Bean("szexpartnerekWSStart")
+    public CommandRegistration start() {
+        return hu.detox.szexpartnerek.Main.cr(StringUtils.NULL_UNI)
                 .description("Starts the webservice if not started yet.")
                 .withTarget().function(this::apply).and().build();
     }
 
-    @Bean
-    public CommandRegistration szexpartnerekWSStop() {
-        return hu.detox.szexpartnerek.Main.cr("stop")
+    @Bean("szexpartnerekWSStop")
+    public CommandRegistration stop() {
+        return hu.detox.szexpartnerek.Main.cr(StringUtils.NULL_UNI)
                 .description("Stops the webservice if started.")
                 .withTarget().function(this::apply).and().build();
     }
