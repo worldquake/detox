@@ -72,7 +72,7 @@ public class PartnerFeedback extends AbstractFeedbackTrafo {
             Integer pid = Integer.parseInt(m.group(2));
             now = super.tsIfToProcess(ret, c, ts);
             Timestamp last = processableIds != null && processableIds.contains(pid) ? null : persister.maxLogTime(null, pid);
-            if (!hu.detox.szexpartnerek.sync.Main.ARGS.get().isFull() && last != null && now.before(last)) now = null;
+            if (!hu.detox.szexpartnerek.sync.Main.args().isFull() && last != null && now.before(last)) now = null;
             ret.put(Partner.IDR, pid);
         }
         return now;

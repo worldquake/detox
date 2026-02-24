@@ -9,6 +9,7 @@ import javax.measure.quantity.Duration;
 import javax.measure.unit.SI;
 import java.io.InterruptedIOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +32,14 @@ public class ThreadUtils implements UncaughtExceptionHandler {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedIOException("Thread " + Thread.currentThread() + " interrupted" + (msg == null ? "" : ": " + msg));
         }
+    }
+
+    public static StackTraceElement[] getStacktrace() {
+        return Arrays.stream(Thread.currentThread().getStackTrace())
+                .filter(se -> !(
+                        se.getClassName().startsWith("com.intellij.rt.debugger") ||
+                                se.getModuleName() != null || se.getClassName().contains("CGLIB$")))
+                .toArray(StackTraceElement[]::new);
     }
 
     public static Exceptions exception(final Throwable e) {

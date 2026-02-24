@@ -82,7 +82,7 @@ public class UserPartnerFeedback extends AbstractFeedbackTrafo {
         Timestamp now = super.tsIfToProcess(ret, c, ts);
         Integer uid = ret.get(User.IDR).asInt();
         Timestamp last = processableIds != null && processableIds.contains(uid) ? null : persister.maxLogTime(uid, null);
-        if (!hu.detox.szexpartnerek.sync.Main.ARGS.get().isFull() && last != null && now.before(last)) now = null;
+        if (!hu.detox.szexpartnerek.sync.Main.args().isFull() && last != null && now.before(last)) now = null;
         return now;
     }
 

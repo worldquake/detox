@@ -1,7 +1,6 @@
 package hu.detox.szexpartnerek.spring;
 
 import hu.detox.spring.Shell;
-import hu.detox.szexpartnerek.Main;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -14,7 +13,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnExpression("'${root}' == 'hu.detox.szexpartnerek'")
+@ConditionalOnExpression("'hu.detox.szexpartnerek'.startsWith('${root}')")
 public class WSCommand {
     @SneakyThrows
     public Boolean ws(CommandContext ctx) {
@@ -26,7 +25,7 @@ public class WSCommand {
 
     @Bean
     public CommandRegistration szexpartnerekWs() {
-        return Main.cr("ws")
+        return hu.detox.szexpartnerek.Main.cr("ws")
                 .description("Manages the webservice.").withTarget()
                 .function(this::ws).and().build();
     }

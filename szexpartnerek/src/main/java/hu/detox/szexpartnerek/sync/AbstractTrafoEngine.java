@@ -90,7 +90,7 @@ public abstract class AbstractTrafoEngine implements ITrafoEngine.Filters, ITraf
         untouchableIds = new HashSet<>(10000);
         processableIds = findProcessableIds();
         if (processableIds != null && untouchableIds != null) {
-            if (hu.detox.szexpartnerek.sync.Main.ARGS.get().isFull()) untouchableIds.clear();
+            if (hu.detox.szexpartnerek.sync.Main.args().isFull()) untouchableIds.clear();
             System.err.println("Found " + processableIds.size() + " processable ids (Not touchable " + untouchableIds.size() + ") for " + getId());
         }
     }

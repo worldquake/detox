@@ -1,6 +1,7 @@
 package hu.detox.utils.reflection;
 
 import hu.detox.parsers.XmlUtils;
+import hu.detox.utils.ThreadUtils;
 import hu.detox.utils.strings.StringUtils;
 import kotlin.Pair;
 import org.apache.commons.lang3.ArrayUtils;
@@ -12,6 +13,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.*;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Function;
 
 //CHOFF TODO simplify this later
 public final class ReflectionUtils {
@@ -127,15 +129,15 @@ public final class ReflectionUtils {
         return ret;
     }
 
-    public static final Reflector getCaller(final Object me) {
-        return ReflectionUtils.getCaller(me, 4);
+    public static Reflector getCaller(final Object me) {
+        return ReflectionUtils.getCaller(me, els -> els[4]);
     }
 
-    public static final Reflector getCaller(final Object me, final int stack) {
+    public static Reflector getCaller(final Object me, final Function<StackTraceElement[], StackTraceElement> stack) {
         try {
             Class<?> key = ReflectionUtils.get(me);
             if (key == null) {
-                key = Class.forName(Thread.currentThread().getStackTrace()[stack].getClassName());
+                key = Class.forName(stack.apply(ThreadUtils.getStacktrace()).getClassName());
             }
             //System.out.println(ReflectionUtils.class.getClassLoader() + " - " + Reflector.class.getClassLoader());
             Reflector refutil = ReflectionUtils.CACHE.get(key);

@@ -183,7 +183,7 @@ public class Sync implements AutoCloseable {
                         } else {
                             ln = serde.next();
                         }
-                        if (!hu.detox.szexpartnerek.sync.Main.ARGS.get().isFull() && ln != null &&
+                        if (!hu.detox.szexpartnerek.sync.Main.args().isFull() && ln != null &&
                                 engine instanceof ITrafoEngine.Filters tf && tf.skips(ln)) {
                             skip++;
                             continue;

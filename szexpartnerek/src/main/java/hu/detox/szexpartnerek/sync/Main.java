@@ -22,9 +22,16 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, ApplicationListener<ContextRefreshedEvent> {
     private static AttributedString PROMPT = new AttributedString("SyncSzex> ");
-    public static final ThreadLocal<Args> ARGS = new ThreadLocal<>();
+    private static final Args DEF_ARGS = new Args(false, 0, null);
+    private static final ThreadLocal<Args> ARGS = new ThreadLocal<>();
 
     private final List<Sync.Entry> syncs;
+
+    public static Args args() {
+        Args ret = ARGS.get();
+        if (ret == null) ret = DEF_ARGS;
+        return ret;
+    }
 
     public static void main(String[] args) throws Exception {
         Shell shell = hu.detox.Main.main(Main.class, args).getBean(Shell.class);
@@ -33,13 +40,14 @@ public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, Ap
 
     @SneakyThrows
     public List<Sync.Entry> apply(Args args) {
-        ARGS.set(args);
         List<String> doOnly = args.getIds();
+        if (doOnly == null) return null;
+        ARGS.set(args);
         List<Sync.Entry> entries = syncs.stream().filter(entry -> doOnly == null || doOnly.remove(entry.getId())).toList();
         FKOff fkOff = new FKOff();
         try {
             for (Sync.Entry s : entries) {
-                int skp = s.syncGetSkipped(doOnly, true);
+                int skp = s.syncGetSkipped(doOnly.isEmpty() ? null : doOnly, true);
                 System.err.println("Skipped " + skp + " on " + s.getId());
             }
             execute("1_stats.sql", "2_mod.sql", "3_materialize.sql");

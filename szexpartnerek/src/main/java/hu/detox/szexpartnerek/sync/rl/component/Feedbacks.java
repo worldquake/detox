@@ -105,7 +105,7 @@ public class Feedbacks extends AbstractFeedbackTrafo implements ApplicationListe
     @Override
     protected Timestamp tsIfToProcess(ObjectNode ret, Comment c, String ts) {
         Timestamp now = super.tsIfToProcess(ret, c, ts);
-        if (!hu.detox.szexpartnerek.sync.Main.ARGS.get().isFull() && last != null && now.before(last)) return null;
+        if (!hu.detox.szexpartnerek.sync.Main.args().isFull() && last != null && now.before(last)) return null;
         return now;
     }
 

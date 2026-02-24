@@ -1,7 +1,6 @@
 package hu.detox.szexpartnerek.spring;
 
 import hu.detox.spring.Shell;
-import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.sync.Args;
 import hu.detox.szexpartnerek.sync.Sync;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnExpression("'${root}' == 'hu.detox.szexpartnerek'")
+@ConditionalOnExpression("'hu.detox.szexpartnerek'.startsWith('${root}')")
 public class SyncCommand {
     public static String text(Element el, String... attrs) {
         if (el == null) return null;
@@ -51,7 +50,7 @@ public class SyncCommand {
 
     @Bean
     public CommandRegistration szexpartnerekSync() {
-        return Main.cr("sync")
+        return hu.detox.szexpartnerek.Main.cr("sync")
                 .description("Synchronizes data from the specified sources.").withOption()
                 .longNames("batch").shortNames('b').arity(1, 1).type(int.class).defaultValue("0").description("Maximum batch size after flush must happen.")
                 .and().withOption()

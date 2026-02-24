@@ -15,6 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.shell.command.CommandCatalog;
+import org.springframework.shell.command.CommandContext;
 import org.springframework.shell.command.CommandRegistration;
 import org.springframework.shell.jline.InteractiveShellRunner;
 import org.springframework.shell.jline.NonInteractiveShellRunner;
@@ -31,8 +32,9 @@ public class Shell implements BeanPostProcessor, ApplicationListener<Application
     private final NonInteractiveShellRunner runner;
     private final InteractiveShellRunner intRunner;
 
-    public static CommandRegistration.Builder cr() {
-        return CommandRegistration.builder().group("DeToX");
+    public static String getCmd(CommandContext cmd) {
+        String[] cmdStr = cmd.getCommandRegistration().getCommand().split(" ");
+        return cmdStr[cmdStr.length - 1];
     }
 
     private static boolean addPackage(String pkg) {
@@ -85,9 +87,7 @@ public class Shell implements BeanPostProcessor, ApplicationListener<Application
     public void execute(String... args) throws Exception {
         Class<?> ref = ReflectionUtils.getCaller(this).getOn();
         loadBean(ref);
-        String pkg = ref.getPackage().getName().substring(Main.class.getPackage().getName().length() + 1);
-        String[] cmd = pkg.split("\\.");
-        if (!Main.isDirectCaller(Main.class)) cmd = ArrayUtils.remove(cmd, 0);
+        String[] cmd = Main.toCommand(ref).split(" ");
         args = ArrayUtils.addAll(cmd, args);
         runner.run(args);
     }
@@ -99,4 +99,5 @@ public class Shell implements BeanPostProcessor, ApplicationListener<Application
             intRunner.run((String[]) null);
         }
     }
+
 }

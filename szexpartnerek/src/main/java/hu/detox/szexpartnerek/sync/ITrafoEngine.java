@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import hu.detox.Agent;
 import hu.detox.ifaces.ID;
 import hu.detox.io.CharIOHelper;
+import hu.detox.szexpartnerek.sync.rl.Entry;
 
 import java.io.File;
 import java.io.Flushable;
@@ -44,7 +45,7 @@ public interface ITrafoEngine extends ID<String>, Function<String, Object>, Flus
         CharIOHelper cio = null;
         for (Object fp : in()) {
             if (fp instanceof String) {
-                fp = hu.detox.szexpartnerek.sync.rl.Entry.toName((String) fp);
+                fp = Entry.toName((String) fp);
                 fp = Agent.resource((String) fp);
             }
             cio = CharIOHelper.attempt(fp);

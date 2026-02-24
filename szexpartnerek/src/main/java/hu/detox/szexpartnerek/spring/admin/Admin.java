@@ -1,4 +1,4 @@
-package hu.detox.szexpartnerek.admin;
+package hu.detox.szexpartnerek.spring.admin;
 
 import hu.detox.ifaces.ID;
 

@@ -2,9 +2,9 @@ package hu.detox.szexpartnerek.sync;
 
 import hu.detox.ifaces.ID;
 import hu.detox.szexpartnerek.Main;
+import hu.detox.utils.TimeUtils;
 import hu.detox.utils.strings.Naming;
 import hu.detox.utils.strings.PasswordBuilder;
-import hu.detox.utils.TimeUtils;
 import org.springframework.dao.DataAccessException;
 
 import java.sql.Timestamp;
@@ -17,7 +17,7 @@ public abstract class AbstractPersister implements IPersister, ID<String> {
 
     @Override
     public void incBatch() {
-        if (++batch >= hu.detox.szexpartnerek.sync.Main.ARGS.get().getMaxBatch()) {
+        if (++batch >= hu.detox.szexpartnerek.sync.Main.args().getMaxBatch()) {
             flush();
         }
     }
@@ -63,7 +63,7 @@ public abstract class AbstractPersister implements IPersister, ID<String> {
     }
 
     protected boolean notBigEnoughBatch() {
-        return batch < hu.detox.szexpartnerek.sync.Main.ARGS.get().getMaxBatch();
+        return batch < hu.detox.szexpartnerek.sync.Main.args().getMaxBatch();
     }
 
     @Override

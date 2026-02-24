@@ -3,6 +3,7 @@ package hu.detox;
 import hu.detox.io.IOUtils;
 import hu.detox.parsers.AmountCalculator;
 import hu.detox.utils.reflection.ReflectionUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.jline.utils.AttributedString;
 import org.jscience.physics.amount.Amount;
 import org.jspecify.annotations.Nullable;
@@ -19,6 +20,7 @@ import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.shell.command.CommandRegistration;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.jline.PromptProvider;
 import org.springframework.shell.standard.ShellComponent;
@@ -39,13 +41,36 @@ public class Main implements ApplicationContextAware, BeanPostProcessor, Quit.Co
     private static PropertyResolver resolver;
     private static ConversionService converter;
 
-    public static boolean isDirectCaller(Class<?> caller) {
-        return isDirectCaller(caller.getPackage().getName());
+    public static CommandRegistration.Builder cr(String cmd) {
+        Class<?> ref = ReflectionUtils.getCaller(null, els -> {
+            StackTraceElement ret = null;
+            boolean isCr;
+            for (StackTraceElement el : els) {
+                isCr = el.getMethodName().equals("cr");
+                if (isCr) ret = el;
+                else if (ret != null) {
+                    if (cmd == null || cmd.startsWith(StringUtils.NULL_UNI)) ret = el;
+                    break;
+                }
+            }
+            return ret;
+        }).getOn();
+        String fcmd = hu.detox.Main.toCommand(ref) + (StringUtils.isBlank(cmd) ? "" : " " + cmd.replace(StringUtils.NULL_UNI, ""));
+        return CommandRegistration.builder().group("DeToX").command(fcmd.trim());
     }
 
-    public static boolean isDirectCaller(String pkg) {
-        String rc = System.getProperty("root");
-        return pkg.equals(rc);
+    public static String toCommand(Class<?> caller) {
+        String pkg = caller.getPackage().getName()
+                .replace(".spring", "");
+        return toCommand(pkg);
+    }
+
+    public static String toCommand(String pkg) {
+        pkg = pkg.replace(Main.class.getPackageName() + ".", "");
+        String rc = System.getProperty("root").replace(Main.class.getPackageName() + ".", "");
+        return pkg.replace(rc, "")
+                .replaceFirst("^\\.", "")
+                .replaceAll("\\.", " ");
     }
 
     public static Amount<?> toAmount(String expr) {

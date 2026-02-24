@@ -1,6 +1,7 @@
 package hu.detox.szexpartnerek;
 
 import hu.detox.config.Cfg2PropertySourceFactory;
+import hu.detox.szexpartnerek.spring.admin.AdminCommand;
 import lombok.RequiredArgsConstructor;
 import org.jline.utils.AttributedString;
 import org.jspecify.annotations.Nullable;
@@ -20,7 +21,7 @@ import java.text.Normalizer;
 import static hu.detox.szexpartnerek.spring.SyncCommand.normalize;
 
 @SpringBootApplication(scanBasePackages = "hu.detox.szexpartnerek.spring")
-@Import({hu.detox.Main.class})
+@Import({hu.detox.Main.class, AdminCommand.class})
 @Component("szexpartnerek")
 @PropertySource(value = "classpath:szexpartnerek.yaml", factory = Cfg2PropertySourceFactory.class)
 @RequiredArgsConstructor
@@ -29,9 +30,7 @@ public class Main implements BeanPostProcessor {
     private static JdbcTemplate jdbc;
 
     public static CommandRegistration.Builder cr(String cmd) {
-        if (hu.detox.Main.isDirectCaller(hu.detox.Main.class)) cmd = "szexpartnerek " + cmd;
-        return CommandRegistration.builder()
-                .group("Szexpartnerek").command(cmd);
+        return hu.detox.Main.cr(cmd).group("Szexpartnerek");
     }
 
     @Autowired
