@@ -36,7 +36,8 @@ public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, Ap
         ARGS.set(args);
         List<String> doOnly = args.getIds();
         List<Sync.Entry> entries = syncs.stream().filter(entry -> doOnly == null || doOnly.remove(entry.getId())).toList();
-        try (FKOff fkOff = new FKOff()) {
+        FKOff fkOff = new FKOff();
+        try {
             for (Sync.Entry s : entries) {
                 int skp = s.syncGetSkipped(doOnly, true);
                 System.err.println("Skipped " + skp + " on " + s.getId());
@@ -44,6 +45,7 @@ public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, Ap
             execute("1_stats.sql", "2_mod.sql", "3_materialize.sql");
         } finally {
             close();
+            fkOff.close(); // Must be last!
         }
         return entries;
     }
