@@ -1,11 +1,15 @@
 package hu.detox.spring;
 
+import hu.detox.Agent;
 import hu.detox.Main;
 import hu.detox.utils.reflection.ReflectionUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -24,7 +28,7 @@ import static hu.detox.spring.DetoxConfig.ctx;
 
 @Component("detoxShell")
 @RequiredArgsConstructor
-public class Shell {
+public class Shell implements ApplicationListener<ApplicationReadyEvent> {
     private static final Map<String, ConfigurableApplicationContext> PCKS = new HashMap<>();
     private final NonInteractiveShellRunner runner;
     private final InteractiveShellRunner intRunner;
@@ -89,4 +93,10 @@ public class Shell {
         runner.run(args);
     }
 
+    @SneakyThrows
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        if (Agent.IDE || System.console() != null)
+            intRunner.run((String[]) null);
+    }
 }

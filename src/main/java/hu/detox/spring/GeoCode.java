@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class GeoCode {
     private final static String BASE = "https://api.geoapify.com/v1/geocode";
     private final Http search;
-    private final long[] sleepLastRun = new long[]{300, 0};
+    private final long[] sleepLastRun = new long[]{50, 0};
 
     public GeoCode(@Value("${detox.geoapify}") String apiKey) {
         search = new Http(BASE + "/search?lang=" + Locale.getDefault().getLanguage() + "&format=json&apiKey=" + apiKey);

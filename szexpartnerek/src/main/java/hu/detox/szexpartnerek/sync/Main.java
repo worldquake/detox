@@ -3,6 +3,7 @@ package hu.detox.szexpartnerek.sync;
 import hu.detox.Agent;
 import hu.detox.spring.Shell;
 import hu.detox.szexpartnerek.spring.SzexConfig;
+import hu.detox.szexpartnerek.spring.admin.GeoCode;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.jline.utils.AttributedString;
@@ -30,6 +31,7 @@ public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, Ap
     private static final ThreadLocal<Args> ARGS = new ThreadLocal<>();
 
     private final List<Sync.Entry> syncs;
+    private final GeoCode geoCode;
 
     public static Args args() {
         Args ret = ARGS.get();
@@ -59,6 +61,7 @@ public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, Ap
             close();
             fkOff.close(); // Must be last!
         }
+        geoCode.run();
         return entries;
     }
 
