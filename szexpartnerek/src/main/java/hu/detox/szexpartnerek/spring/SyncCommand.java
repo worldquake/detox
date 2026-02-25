@@ -34,7 +34,11 @@ public class SyncCommand {
 
     public static String normalize(String data) {
         if (data == null) return data;
-        data = data.trim();
+        data = data.trim().replaceAll("([.,!])(\\S)", "$1 $2")
+                .replaceAll("\\s+", " ")
+                .replace(" , ", ", ")
+                .replace(".,", ",")
+                .replace(" .,", ",");
         if (StringUtil.isBlank(data) || data.equals("-") || data.equalsIgnoreCase("null")) data = null;
         return data;
     }

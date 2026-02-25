@@ -41,6 +41,7 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
                         "title": "ID",
                         "field": "rowid",
                         "sorter": "number",
+                        "formatter": "rownum",
                         "hozAlign": "left",
                         "width": 100
                     }""", ObjectNode.class);

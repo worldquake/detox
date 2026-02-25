@@ -1,19 +1,52 @@
 const url = new URL(location.href);
 const table = url.searchParams.get('t') || "partner";
+const prj = url.searchParams.get('p') || "*";
+const q = "p=" + encodeURIComponent(prj) + "&t=" + encodeURIComponent(table);
 var rootUrl = "/api/szexpartnerek/" + table;
-var colsUrl = rootUrl + "?pg.size=0";
+var colsUrl = rootUrl + "?" + q + "&pg.size=0";
 if (window.location.protocol === "file:") {
     rootUrl = rootUrl.split("/");
     rootUrl = "../" + rootUrl[rootUrl.length - 1] + ".csv";
     colsUrl = rootUrl + ".json";
 }
 
+function setField(columns, what) {
+    columns.forEach(function (col) {
+        // If this column uses the datetime formatter
+        if (col.formatter === what) {
+            var params = window.stuff[what];
+            col.formatterParams = Object.assign({}, col.formatterParams, params);
+            col.sorter = what;
+        }
+        var fs = window.stuff["fmt_" + col.field];
+        if (fs) col.formatter = fs;
+        // If this column has subcolumns (nested columns)
+        if (col.columns) {
+            setDatetimeFormatterParams(col.columns, what);
+        }
+    });
+}
+
+window.stuff = {
+    datetime: {
+        inputFormat: "yyyy-MM-dd HH:mm:ss",
+        outputFormat: "yyyy-MM-dd HH:mm:ss",
+        timezone: "Europe/Budapest"
+    },
+    fmt_call_number: function (cell, formatterParams, onRendered) {
+        //cell - the cell component
+        //formatterParams - parameters set for the column
+        //onRendered - function to call when the formatter has been rendered
+        return "<a href=\"callto:" + cell.getValue() + "\">" + cell.getValue() + "</a>";
+    },
+};
 jQuery.get({
     url: colsUrl,
     dataType: 'json',
     success: function (def) {
         // Prepare columns and initialSort
         var columns = def.cols || [];
+        setField(columns, "datetime");
         var initialSort = def.sort || [];
 
         // Convert sort array to Tabulator format if present
@@ -55,8 +88,7 @@ jQuery.get({
                 if (params.page) query.push(`pg=${params.page}/${params.size}`);
                 if (params.sort && params.sort.length > 0) query.push("o=" + encodeURIComponent(JSON.stringify(params.sort)));
                 if (params.filter && params.filter.length > 0) query.push("w=" + encodeURIComponent(JSON.stringify(params.filter)));
-                query.push("t=" + encodeURIComponent(table));
-                return url + (query.length ? '?' + query.join('&') : '');
+                return url + '?' + q + (query.length ? "&" + query.join('&') : '');
             },
             ajaxRequestFunc: function (url, config, params) {
                 url = window.table.options.ajaxURLGenerator(url, config, params);

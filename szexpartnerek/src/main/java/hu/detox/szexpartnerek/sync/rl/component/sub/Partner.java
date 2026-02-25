@@ -469,7 +469,8 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         Element aboutDiv = leftContainer.selectFirst("div#bemutatkozasContainer");
         if (aboutDiv != null) {
             aboutDiv.select("div,span").remove();
-            String introHtml = aboutDiv.html().replaceAll("\\s+", " ").replaceAll(">\\s+<", "><").trim();
+            String introHtml = normalize(aboutDiv.html())
+                    .replaceAll(">\\s+<", "><").trim();
             result.put("about", introHtml);
         }
 

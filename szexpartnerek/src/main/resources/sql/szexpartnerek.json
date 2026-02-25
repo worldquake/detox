@@ -114,7 +114,7 @@
       {
         "title": "Timestamp",
         "field": "ts",
-        "sorter": "datetime",
+        "formatter": "datetime",
         "hozAlign": "center",
         "width": 140
       },
@@ -526,7 +526,7 @@
       {
         "title": "TS",
         "field": "ts",
-        "sorter": "datetime",
+        "formatter": "datetime",
         "hozAlign": "center",
         "width": 180
       },
@@ -651,14 +651,14 @@
       {
         "title": "On Date",
         "field": "log",
-        "sorter": "datetime",
+        "formatter": "datetime",
         "hozAlign": "center",
         "width": 180
       },
       {
         "title": "Timestamp",
         "field": "ts",
-        "sorter": "datetime",
+        "formatter": "datetime",
         "hozAlign": "center",
         "width": 180
       }
@@ -770,8 +770,7 @@
             "field": "details",
             "sorter": "string",
             "headerFilter": "input",
-            "minWidth": 320,
-            "formatter": "textarea"
+            "minWidth": 120
           }
         ]
       }

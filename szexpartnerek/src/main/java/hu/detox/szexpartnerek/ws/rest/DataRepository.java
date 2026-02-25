@@ -52,6 +52,7 @@ public class DataRepository {
         private final PlainSelect q;
         boolean onlyHeader;
 
+        @SneakyThrows
         private static List<OrderByElement> toOrder(JsonNode o) {
             List<OrderByElement> orderByElements = new ArrayList<>();
             if (o == null) return orderByElements;
@@ -137,12 +138,13 @@ public class DataRepository {
         SelectParams(
                 @PathVariable String table,
                 @Valid DataRepository.PagingParam pg,
-                @Valid PlainSelect q, JsonNode w, JsonNode o
+                @Valid PlainSelect q, JsonNode w, JsonNode o, String p
         ) {
             if (q == null) {
-                q = StringUtils.to(PlainSelect.class, "* FROM " + table
-                        + (w == null ? "" : " WHERE " + toWhere(w))
-                        + (o == null ? "" : " ORDER BY " + toOrder(o)), null);
+                q = StringUtils.to(PlainSelect.class,
+                        (StringUtils.isEmpty(p) ? "*" : p) + " FROM " + table
+                                + (w == null ? "" : " WHERE " + toWhere(w))
+                                + (o == null ? "" : " ORDER BY " + toOrder(o)), null);
             }
             if (pg == null) pg = new PagingParam(1, 25);
             else if (pg.size() == 0) onlyHeader = true;
