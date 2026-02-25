@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import hu.detox.config.Cfg2PropertySourceFactory;
 import hu.detox.spring.DetoxConfig;
+import org.apache.commons.lang3.ArrayUtils;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.jspecify.annotations.Nullable;
@@ -30,8 +31,9 @@ public class SzexConfig {
         return jdbc.query(sql, rse);
     }
 
-    public static void exec(String sql) throws DataAccessException {
-        jdbc.execute(sql);
+    public static void exec(String sql, Object... objs) throws DataAccessException {
+        if (ArrayUtils.isEmpty(objs)) jdbc.execute(sql);
+        else jdbc.update(sql, objs);
     }
 
     public static JdbcTemplate jdbc() {

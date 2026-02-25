@@ -18,6 +18,7 @@ import org.supercsv.io.CsvListReader;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -27,7 +28,7 @@ public class GeoCode {
     private final long[] sleepLastRun = new long[]{300, 0};
 
     public GeoCode(@Value("${detox.geoapify}") String apiKey) {
-        search = new Http(BASE + "/search?format=json&apiKey=" + apiKey);
+        search = new Http(BASE + "/search?lang=" + Locale.getDefault().getLanguage() + "&format=json&apiKey=" + apiKey);
     }
 
     private void makeStandard(JsonObject o) {
@@ -50,6 +51,14 @@ public class GeoCode {
             o.remove("lon");
             o.remove("lat");
             o.remove("rank");
+            var on = (JsonObject) o.remove("other_names");
+            if (on != null) {
+                var ds = on.getAsJsonPrimitive("name:hu");
+                if (ds == null) on.getAsJsonPrimitive("short_name");
+                if (ds != null) o.add("name", ds);
+            }
+            o.remove("NUTS_2");
+            o.remove("NUTS_3");
             o.remove("address_line1");
             o.remove("address_line2");
             o.remove("plus_code");
