@@ -160,12 +160,21 @@ SELECT p.id as rowid,
           AND e.type = 'looking'
           AND (e.name LIKE '%_ORARA' OR e.name = 'TOBB_NAPRA')) AS lengths,
        -- francia: join FRANCIA_* in likes, remove prefix
-       (SELECT GROUP_CONCAT(REPLACE(CONCAT(iif(pl.option='ask','?',''),e.name), 'FRANCIA_', ''), ', ')
-        FROM partner_like pl
-                 JOIN int_enum e ON pl.enum_id = e.id
-        WHERE pl.partner_id = p.id
-          AND e.type = 'likes'
-          AND e.name LIKE 'FRANCIA_%' AND pl.option != 'no')                          AS french,
+        (SELECT GROUP_CONCAT(item, ', ')  FROM ( SELECT REPLACE(
+            CONCAT(IIF(pl.option IS NULL, '', IIF(pl.option = 'yes', '!',IIF(pl.option = 'no', '-',IIF(pl.option = 'ask', '?', '')))),e.name),
+            'FRANCIA_', '') AS item
+         FROM partner_like pl
+                  JOIN int_enum e ON pl.enum_id = e.id
+         WHERE pl.partner_id = p.id
+           AND e.type = 'likes'
+           AND e.name LIKE 'FRANCIA_%'
+         ORDER BY CASE pl.option
+                      WHEN 'yes' THEN 1
+                      WHEN 'ask' THEN 2
+                      WHEN 'no' THEN 3
+                      ELSE 4
+                      END
+        )) AS french,
        -- client_type logic
        COALESCE(
            -- 1. If any of TOBBEST, NOT, FERFIT, PART in looking, use those
@@ -254,7 +263,7 @@ SELECT p.id as rowid,
                    END
        )                                                        AS client_type,
        p.ts
-FROM partner p where p.id > 0 AND p.active_info='true' AND p.del = false;
+FROM partner p where p.id > 0 AND p.del = false;
 
 CREATE VIEW partner_ext_view AS
 SELECT p.rowid, ROUND(tpr.r, 1) as rating,
@@ -284,13 +293,22 @@ SELECT p.rowid, ROUND(tpr.r, 1) as rating,
                 OR name IN ('CSAK_NALAD', 'CSAK_NALAM', 'NALAM_NALAD', 'ESCORT_KISERET_IS'))
         WHERE pp.partner_id = p.rowid)                                                    AS properties,
        -- Likes (flt out FRANCIA_* and handled keys)
-       (SELECT GROUP_CONCAT(CONCAT(IIF(pl.option IS NULL,'',IIF(pl.option='yes', '!', IIF(pl.option='no','-','?'))), e.name), ', ')
-        FROM partner_like pl
-                 JOIN int_enum e ON pl.enum_id = e.id
-            AND e.type = 'likes'
-        WHERE pl.partner_id = p.rowid
-          AND NOT (e.name LIKE 'FRANCIA_%'
-            OR e.name LIKE '%WEBCAM%'))                                                AS likes,
+       (SELECT GROUP_CONCAT(item, ', ')
+        FROM (
+                 SELECT
+                     CONCAT(IIF(pl.option IS NULL, '', IIF(pl.option = 'yes', '!',IIF(pl.option = 'no', '-',IIF(pl.option = 'ask', '?', '')))),e.name) AS item
+                 FROM partner_like pl
+                          JOIN int_enum e ON pl.enum_id = e.id AND e.type = 'likes'
+                 WHERE pl.partner_id = p.rowid
+                   AND NOT (e.name LIKE 'FRANCIA_%' OR e.name LIKE '%WEBCAM%')
+                 ORDER BY
+                     CASE pl.option
+                         WHEN 'yes' THEN 1
+                         WHEN 'ask' THEN 2
+                         WHEN 'no' THEN 3
+                         ELSE 4
+                         END
+             )) AS likes,
        -- Massages
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM partner_massage pm
@@ -347,14 +365,11 @@ FROM user_like ul
 GROUP BY user_id;
 
 CREATE VIEW user_view AS
-SELECT u.id as rowid, u.name,u.age,u.height,u.weight,u.size,u.gender,u.regd,u.ts,u.del,
+SELECT u.id as rowid, u.name,
+       u.age,u.height,u.weight,u.size,u.gender,
        ulv.likes,
-       (SELECT upfv.location
-        FROM user_partner_feedback_view upfv
-        WHERE upfv.user_id = u.id
-          AND upfv.location IS NOT NULL
-        ORDER BY upfv.ts DESC
-        LIMIT 1) AS location -- assumed location
+       u.regd,u.ts,
+       u.del
 FROM user u
          LEFT JOIN user_like_view ulv ON u.id = ulv.user_id
 WHERE u.id > 0;
