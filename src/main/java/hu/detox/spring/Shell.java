@@ -1,16 +1,11 @@
 package hu.detox.spring;
 
-import hu.detox.Agent;
 import hu.detox.Main;
 import hu.detox.utils.reflection.ReflectionUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -25,9 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static hu.detox.spring.DetoxConfig.ctx;
+
 @Component("detoxShell")
 @RequiredArgsConstructor
-public class Shell implements BeanPostProcessor, ApplicationListener<ApplicationReadyEvent> {
+public class Shell {
     private static final Map<String, ConfigurableApplicationContext> PCKS = new HashMap<>();
     private final NonInteractiveShellRunner runner;
     private final InteractiveShellRunner intRunner;
@@ -40,7 +37,7 @@ public class Shell implements BeanPostProcessor, ApplicationListener<Application
     private static boolean addPackage(String pkg) {
         if (PCKS.containsKey(pkg)) return false;
         AnnotationConfigApplicationContext childContext = new AnnotationConfigApplicationContext();
-        ConfigurableApplicationContext cac = (ConfigurableApplicationContext) Main.ctx();
+        ConfigurableApplicationContext cac = (ConfigurableApplicationContext) ctx();
         childContext.setParent(cac);
         childContext.scan(pkg);
         PCKS.put(pkg, childContext);
@@ -62,11 +59,11 @@ public class Shell implements BeanPostProcessor, ApplicationListener<Application
     public <T> T loadBean(Class<T> clz) {
         T ret;
         try {
-            ret = Main.ctx().getBean(clz);
+            ret = ctx().getBean(clz);
         } catch (NoSuchBeanDefinitionException ex) {
             String pkg = clz.getPackage().getName();
             addPackage(pkg);
-            ret = Main.ctx().getBean(clz);
+            ret = ctx().getBean(clz);
         }
         return ret;
     }
@@ -90,14 +87,6 @@ public class Shell implements BeanPostProcessor, ApplicationListener<Application
         String[] cmd = Main.toCommand(ref).split(" ");
         args = ArrayUtils.addAll(cmd, args);
         runner.run(args);
-    }
-
-    @SneakyThrows
-    @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (System.console() != null || Agent.IDE) {
-            intRunner.run((String[]) null);
-        }
     }
 
 }

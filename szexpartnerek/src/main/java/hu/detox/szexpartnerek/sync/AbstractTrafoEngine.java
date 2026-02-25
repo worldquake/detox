@@ -18,6 +18,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static hu.detox.szexpartnerek.spring.SzexConfig.query;
+
 public abstract class AbstractTrafoEngine implements ITrafoEngine.Filters, ITrafoEngine {
     private static final Set<AbstractTrafoEngine> FLUSHING = new HashSet<>();
     private static final Set<AbstractTrafoEngine> CLOSING = new HashSet<>();
@@ -62,7 +64,7 @@ public abstract class AbstractTrafoEngine implements ITrafoEngine.Filters, ITraf
 
     public static void initEnums() {
         if (!PROPS.isEmpty()) return;
-        Main.query("SELECT id, type, name FROM int_enum", rs -> {
+        query("SELECT id, type, name FROM int_enum", rs -> {
             while (rs.next()) {
                 int id = rs.getInt(1);
                 String enumType = rs.getString(2);

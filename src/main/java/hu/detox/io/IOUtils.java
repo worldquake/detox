@@ -2,10 +2,9 @@ package hu.detox.io;
 
 import com.google.common.io.ByteStreams;
 import hu.detox.Agent;
-import hu.detox.Main;
 import hu.detox.config.ConfigReader;
-import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.ThreadUtils;
+import hu.detox.utils.strings.StringUtils;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.ssl.OpenSSL;
 
@@ -20,6 +19,9 @@ import java.security.Key;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+
+import static hu.detox.spring.DetoxConfig.prop;
+import static hu.detox.spring.DetoxConfig.toAmount;
 
 public class IOUtils extends org.apache.commons.io.IOUtils {
     public static final String APPEND = "-append";
@@ -54,8 +56,8 @@ public class IOUtils extends org.apache.commons.io.IOUtils {
     }
 
     public static void initStatic() {
-        String dbs = Main.prop("default_buffer_size", DEFUALT_BUFFER_SIZE + "B");
-        DEFUALT_BUFFER_SIZE = (int) Main.toAmount(dbs).to(NonSI.BYTE).getMaximumValue();
+        String dbs = prop("default_buffer_size", DEFUALT_BUFFER_SIZE + "B");
+        DEFUALT_BUFFER_SIZE = (int) toAmount(dbs).to(NonSI.BYTE).getMaximumValue();
         OPENSSLCONFIG = ConfigReader.INSTANCE.toCfg(null, Agent.resource("config/javaSSL.kv"));
     }
 

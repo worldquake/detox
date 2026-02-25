@@ -1,7 +1,6 @@
 package hu.detox.szexpartnerek.sync.rl.persister;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.sync.AbstractPersister;
 import hu.detox.szexpartnerek.sync.IPersister;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
@@ -10,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
 
 public class PartnerPersister extends AbstractPersister {
     private final List<Object[]> partnerDelBatch = new ArrayList<>();
@@ -171,7 +172,7 @@ public class PartnerPersister extends AbstractPersister {
                 "    looking_age_min = excluded.looking_age_min,\n" +
                 "    looking_age_max = excluded.looking_age_max,\n" +
                 "    del=false";
-        Main.jdbc().batchUpdate(partnerSql, partnerBatch);
+        jdbc().batchUpdate(partnerSql, partnerBatch);
         List<Object[]> delBatch = partnerBatch.stream().map(objects -> new Object[]{objects[0]}).toList();
         partnerBatch.clear();
         Object[][] tableNameOps = {
@@ -187,19 +188,19 @@ public class PartnerPersister extends AbstractPersister {
         };
         for (Object[] arr : tableNameOps) {
             String sql = "DELETE FROM " + arr[0] + " WHERE " + Partner.IDR + " = ?";
-            Main.jdbc().batchUpdate(sql, delBatch);
+            jdbc().batchUpdate(sql, delBatch);
         }
         for (Object[] arr : tableNameOps) {
             List<Object[]> batch = (List) arr[2];
             if (batch.isEmpty()) continue;
             String sql = "INSERT OR IGNORE INTO " + arr[0] + arr[1];
-            Main.jdbc().batchUpdate(sql, batch);
+            jdbc().batchUpdate(sql, batch);
             batch.clear();
         }
         String activitySql = "INSERT OR IGNORE INTO " + getId() + "_activity (" + Partner.IDR + ", ondate, description) VALUES (?, ?, ?)";
         String partnerDelSql = "UPDATE " + getId() + " SET del = true WHERE id = ?";
-        Main.jdbc().batchUpdate(activitySql, activityBatch);
-        Main.jdbc().batchUpdate(partnerDelSql, partnerDelBatch);
+        jdbc().batchUpdate(activitySql, activityBatch);
+        jdbc().batchUpdate(partnerDelSql, partnerDelBatch);
 
         activityBatch.clear();
         partnerDelBatch.clear();

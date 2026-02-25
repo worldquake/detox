@@ -1,16 +1,18 @@
 package hu.detox.szexpartnerek.ws;
 
 import hu.detox.spring.Shell;
+import hu.detox.szexpartnerek.spring.SzexConfig;
 import org.jline.utils.AttributedString;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
 
 import java.util.function.Function;
 
-@SpringBootApplication
-@Import({hu.detox.szexpartnerek.Main.class})
+@SpringBootApplication(
+        scanBasePackages = "hu.detox.szexpartnerek.ws",
+        scanBasePackageClasses = SzexConfig.class
+)
 public class Main implements Function<String, Boolean>, ApplicationListener<ContextRefreshedEvent> {
     private static AttributedString PROMPT = new AttributedString("SexWS> ");
     private WebEndpointToggler toggler;
@@ -20,26 +22,26 @@ public class Main implements Function<String, Boolean>, ApplicationListener<Cont
         shell.execute(args);
     }
 
-    public void stop() {
-        toggler.remove(this.getClass().getPackageName());
+    public boolean stop() {
+        return toggler.remove(this.getClass().getPackageName());
     }
 
-    public void start() {
-        toggler.register();
+    public boolean start() {
+        return toggler.register();
     }
 
     @Override
     public Boolean apply(String cmdStr) {
-        boolean start = "start".equals(cmdStr);
-        if (start) start();
-        else stop();
+        Boolean start = "start".equals(cmdStr);
+        if (start) start = start() ? true : null;
+        else start = stop() ? false : null;
         return start;
     }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        toggler = hu.detox.Main.ctx().getBean(WebEndpointToggler.class);
-        toggler.init();
+        if (toggler == null) toggler = event.getApplicationContext().getBean(WebEndpointToggler.class);
+        toggler.initByPackage(Main.class.getPackageName());
     }
 }
 

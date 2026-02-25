@@ -18,7 +18,6 @@ package hu.detox.utils.strings;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
-import hu.detox.Main;
 import hu.detox.io.FileUtils;
 import hu.detox.utils.SystemUtils;
 import hu.detox.utils.reflection.ReflectionUtils;
@@ -38,6 +37,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static hu.detox.spring.DetoxConfig.prop;
 
 //CHOFF This is a class copied from the Internet without change
 public class StringUtils extends org.apache.commons.lang3.StringUtils {
@@ -193,7 +194,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
             mnf = org.apache.commons.lang3.StringUtils.join(patt, StringUtils.SUBTRANSCRIPTCHR, 1, patt.length);
             num = patt[0];
         } else {
-            mnf = Main.prop(any + "." + curr);
+            mnf = prop(any + "." + curr);
         }
         return new Pair<>(num, mnf);
     }

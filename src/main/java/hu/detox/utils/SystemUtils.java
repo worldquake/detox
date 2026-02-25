@@ -1,6 +1,5 @@
 package hu.detox.utils;
 
-import hu.detox.Main;
 import hu.detox.utils.reflection.ReflectionUtils;
 import hu.detox.utils.strings.StringUtils;
 import org.apache.commons.io.IOUtils;
@@ -20,6 +19,9 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
+
+import static hu.detox.spring.DetoxConfig.async;
+import static hu.detox.spring.DetoxConfig.prop;
 
 public class SystemUtils extends org.apache.commons.lang3.SystemUtils {
     public static final Tidy HTML_TIDY = new Tidy();
@@ -79,21 +81,21 @@ public class SystemUtils extends org.apache.commons.lang3.SystemUtils {
         final OutputStream errf = err;
         final PrintStream errfp = new PrintStream(errf);
         final OutputStream outf = out;
-        cmdarray[0] = Main.prop("command." + cmdarray[0], cmdarray[0]);
+        cmdarray[0] = prop("command." + cmdarray[0], cmdarray[0]);
         final Process ret;
         try {
             ret = Runtime.getRuntime().exec(cmdarray, envp, dir);
         } catch (final RuntimeException re) {
             throw ReflectionUtils.extendMessage(re, "cmd=" + Arrays.toString(cmdarray) + ", dir=" + dir);
         }
-        Main.async(() -> {
+        async(() -> {
             try {
                 IOUtils.copy(ret.getInputStream(), outf);
             } catch (final IOException e) {
                 e.printStackTrace(errfp);
             }
         });
-        Main.async(() -> {
+        async(() -> {
             try {
                 IOUtils.copy(ret.getErrorStream(), errf);
             } catch (final IOException e) {

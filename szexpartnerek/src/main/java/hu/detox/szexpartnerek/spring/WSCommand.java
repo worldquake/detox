@@ -11,13 +11,15 @@ import org.springframework.shell.command.CommandRegistration;
 
 import java.util.List;
 
+import static hu.detox.spring.DetoxConfig.ctx;
+
 @Configuration
 @RequiredArgsConstructor
 @ConditionalOnExpression("'hu.detox.szexpartnerek'.startsWith('${root}')")
 public class WSCommand {
     @SneakyThrows
     public Boolean ws(CommandContext ctx) {
-        var ws = hu.detox.Main.ctx().getBean(Shell.class)
+        var ws = ctx().getBean(Shell.class)
                 .loadBean(hu.detox.szexpartnerek.ws.Main.class);
         List<String> args = ctx.getParserResults().positional();
         return ws.apply(args.isEmpty() ? "start" : args.getFirst());

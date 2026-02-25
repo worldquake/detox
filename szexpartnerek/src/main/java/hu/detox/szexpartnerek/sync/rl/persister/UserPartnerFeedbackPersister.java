@@ -2,7 +2,6 @@ package hu.detox.szexpartnerek.sync.rl.persister;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.sync.AbstractPersister;
 import hu.detox.szexpartnerek.sync.IPersister;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static hu.detox.parsers.JSonUtils.getField;
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
 
 public class UserPartnerFeedbackPersister extends AbstractPersister {
     private final List<Object[]> feedbackBatch = new ArrayList<>();
@@ -81,7 +81,7 @@ public class UserPartnerFeedbackPersister extends AbstractPersister {
             if (uid == null) maxDateSql += Partner.IDR + " = " + pid;
             else maxDateSql += User.IDR + " = " + uid;
         }
-        return Main.jdbc().queryForObject(maxDateSql, Timestamp.class);
+        return jdbc().queryForObject(maxDateSql, Timestamp.class);
     }
 
     @Override
@@ -89,15 +89,15 @@ public class UserPartnerFeedbackPersister extends AbstractPersister {
         if (notBigEnoughBatch()) return;
         String feedbackSql = "INSERT INTO " + getId() + " (id, " + User.IDR + ", " + Partner.IDR + ", " + IPersister.ENUM_IDR + ", name, after_name, useful, age, log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON CONFLICT(id) DO UPDATE SET " + User.IDR + " = COALESCE(" + getId() + "." + User.IDR + ", excluded." + User.IDR + "), " + Partner.IDR + " = COALESCE(" + getId() + "." + Partner.IDR + ", excluded." + Partner.IDR + "), " + IPersister.ENUM_IDR + " = COALESCE(" + getId() + "." + IPersister.ENUM_IDR + ", excluded." + IPersister.ENUM_IDR + "), name = excluded.name, after_name = excluded.after_name, useful = COALESCE(" + getId() + ".useful, excluded.useful), age = COALESCE(" + getId() + ".age, excluded.age), log = COALESCE(" + getId() + ".log, excluded.log)";
-        Main.jdbc().batchUpdate(feedbackSql, feedbackBatch);
+        jdbc().batchUpdate(feedbackSql, feedbackBatch);
         String ratingSql = "INSERT INTO " + getId() + "_rating (fbid, " + IPersister.ENUM_IDR + ", val) VALUES (?, ?, ?) ON CONFLICT(fbid, " + IPersister.ENUM_IDR + ") DO UPDATE SET val=excluded.val";
-        Main.jdbc().batchUpdate(ratingSql, ratingBatch);
+        jdbc().batchUpdate(ratingSql, ratingBatch);
         String goodSql = "INSERT INTO " + getId() + "_good (fbid, " + IPersister.ENUM_IDR + ") VALUES (?, ?) ON CONFLICT(fbid, " + IPersister.ENUM_IDR + ") DO NOTHING";
-        Main.jdbc().batchUpdate(goodSql, goodBatch);
+        jdbc().batchUpdate(goodSql, goodBatch);
         String badSql = "INSERT INTO " + getId() + "_bad (fbid, " + IPersister.ENUM_IDR + ") VALUES (?, ?) ON CONFLICT(fbid, " + IPersister.ENUM_IDR + ") DO NOTHING";
-        Main.jdbc().batchUpdate(badSql, badBatch);
+        jdbc().batchUpdate(badSql, badBatch);
         String detailsSql = "INSERT INTO " + getId() + "_details (fbid, " + IPersister.ENUM_IDR + ", val) VALUES (?, ?, ?) ON CONFLICT(fbid, " + IPersister.ENUM_IDR + ") DO UPDATE SET val=excluded.val";
-        Main.jdbc().batchUpdate(detailsSql, detailsBatch);
+        jdbc().batchUpdate(detailsSql, detailsBatch);
         feedbackBatch.clear();
         ratingBatch.clear();
         goodBatch.clear();

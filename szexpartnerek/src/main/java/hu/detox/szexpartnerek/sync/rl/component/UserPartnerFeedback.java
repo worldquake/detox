@@ -3,7 +3,6 @@ package hu.detox.szexpartnerek.sync.rl.component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hu.detox.Main;
 import hu.detox.szexpartnerek.sync.AbstractTrafoEngine;
 import hu.detox.szexpartnerek.sync.ITrafoEngine;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
@@ -17,6 +16,9 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
+
+import static hu.detox.spring.DetoxConfig.ctx;
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
 
 @Component
 public class UserPartnerFeedback extends AbstractFeedbackTrafo {
@@ -66,14 +68,14 @@ public class UserPartnerFeedback extends AbstractFeedbackTrafo {
                 "WHERE partner_id IS NULL " +
                 "AND log > DATETIME('now', '-1 year') AND ts < DATETIME('now', '-10 day') " +
                 "AND (user_id NOT IN (SELECT id FROM user WHERE del = true))";
-        Collection<Integer> extra = hu.detox.szexpartnerek.Main.jdbc().query(missingFullReview, AbstractTrafoEngine::asInt);
+        Collection<Integer> extra = jdbc().query(missingFullReview, AbstractTrafoEngine::asInt);
         return new HashSet<>(extra);
     }
 
     @Override
     public ITrafoEngine[] preTrafos() {
         // Because of circular dependencies
-        if (pre == null) pre = new ITrafoEngine[]{Main.ctx().getBean(Partner.class)};
+        if (pre == null) pre = new ITrafoEngine[]{ctx().getBean(Partner.class)};
         return pre;
     }
 

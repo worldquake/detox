@@ -16,6 +16,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
+
 @Component
 public class PartnerFeedback extends AbstractFeedbackTrafo {
     private static final String[] SELS = new String[]{".beszamoloMainContent .beszOuter"};
@@ -60,7 +62,7 @@ public class PartnerFeedback extends AbstractFeedbackTrafo {
                 "   AND log > DATETIME('now', '-1 year') AND ts < DATETIME('now', '-10 day')\n" +
                 "   AND (user_id IS NULL OR user_id IN (SELECT id FROM user WHERE del = true))\n" +
                 "   AND (partner_id NOT IN (SELECT id FROM partner WHERE del = true))\n";
-        Collection<Integer> extra = hu.detox.szexpartnerek.Main.jdbc().query(missingFullReview, AbstractTrafoEngine::asInt);
+        Collection<Integer> extra = jdbc().query(missingFullReview, AbstractTrafoEngine::asInt);
         return new HashSet<>(extra);
     }
 

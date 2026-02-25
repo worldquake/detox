@@ -15,6 +15,8 @@ import org.springframework.shell.command.CommandRegistration;
 
 import java.util.List;
 
+import static hu.detox.spring.DetoxConfig.ctx;
+
 @Configuration
 @RequiredArgsConstructor
 @ConditionalOnExpression("'hu.detox.szexpartnerek'.startsWith('${root}')")
@@ -43,7 +45,7 @@ public class SyncCommand {
         boolean full = ctx.getOptionValue("full");
         List<String> what = ctx.getParserResults().positional();
         var args = new Args(full, maxBatch, what);
-        var sync = hu.detox.Main.ctx().getBean(Shell.class)
+        var sync = ctx().getBean(Shell.class)
                 .loadBean(hu.detox.szexpartnerek.sync.Main.class);
         return sync.apply(args);
     }

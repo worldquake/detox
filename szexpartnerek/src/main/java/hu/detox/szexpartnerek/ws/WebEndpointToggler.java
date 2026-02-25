@@ -17,15 +17,42 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WebEndpointToggler {
     private final RequestMappingHandlerMapping requestMappingHandlerMapping;
+    private final RequestMappingHandlerMapping controllerEndpointHandlerMapping;
     private Map<RequestMappingInfo, HandlerMethod> lastRemoved;
+    private boolean alreadyInit;
 
-    void init() {
-        requestMappingHandlerMapping.afterPropertiesSet();
+    @SneakyThrows
+    void initByPackage(String pck) {
+        if (alreadyInit) return;
+        initRemoved(pck);
+        if (lastRemoved.isEmpty()) {
+            requestMappingHandlerMapping.afterPropertiesSet();
+            initRemoved(pck);
+        }
     }
 
     @SneakyThrows
-    public void remove(String pck) {
+    private void initRemoved(String pck) {
         lastRemoved = new HashMap<>();
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> e : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
+            RequestMappingInfo info = e.getKey();
+            HandlerMethod handlerMethod = e.getValue();
+            Class<?> beanType = (Class<?>) handlerMethod.getClass().getMethod("getBeanType").invoke(handlerMethod);
+            if (beanType.getName().startsWith(pck + ".")) {
+                lastRemoved.put(info, handlerMethod);
+            }
+        }
+        if (lastRemoved.isEmpty())
+            requestMappingHandlerMapping.afterPropertiesSet();
+        else {
+            alreadyInit = true; // If ever this happens it means the classes are loaded
+            lastRemoved.clear();
+        }
+    }
+
+    @SneakyThrows
+    public boolean remove(String pck) {
+        if (!lastRemoved.isEmpty()) return false;
         for (Map.Entry<RequestMappingInfo, HandlerMethod> e : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
             RequestMappingInfo info = e.getKey();
             HandlerMethod handlerMethod = e.getValue();
@@ -35,15 +62,17 @@ public class WebEndpointToggler {
                 lastRemoved.put(info, handlerMethod);
             }
         }
+        return true;
     }
 
     @SneakyThrows
-    public void register() {
-        if (lastRemoved == null) return;
+    public boolean register() {
+        if (lastRemoved.isEmpty()) return false;
         for (var info : lastRemoved.entrySet()) {
             HandlerMethod m = info.getValue();
             requestMappingHandlerMapping.registerMapping(info.getKey(), m.getBean(), m.getMethod());
         }
         lastRemoved.clear();
+        return true;
     }
 }

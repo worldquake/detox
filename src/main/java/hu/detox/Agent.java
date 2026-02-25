@@ -1,6 +1,7 @@
 package hu.detox;
 
 import hu.detox.config.ConfigReader;
+import hu.detox.spring.DetoxConfig;
 import hu.detox.utils.strings.StringUtils;
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.io.FilenameUtils;
@@ -252,7 +253,7 @@ public class Agent {
     public static Resource resource(final String f, final FileFilter filter) {
         File res = filter == null ? null : getFile(f, filter);
         if (res != null) return new FileSystemResource(res);
-        return Main.resource(ResourceLoader.CLASSPATH_URL_PREFIX + f);
+        return DetoxConfig.resource(ResourceLoader.CLASSPATH_URL_PREFIX + f);
     }
 
     public static File getFile(final String f, final FileFilter filter) {

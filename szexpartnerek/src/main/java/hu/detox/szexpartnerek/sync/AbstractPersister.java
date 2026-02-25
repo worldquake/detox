@@ -1,7 +1,6 @@
 package hu.detox.szexpartnerek.sync;
 
 import hu.detox.ifaces.ID;
-import hu.detox.szexpartnerek.Main;
 import hu.detox.utils.TimeUtils;
 import hu.detox.utils.strings.Naming;
 import hu.detox.utils.strings.PasswordBuilder;
@@ -11,6 +10,8 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
 
 public abstract class AbstractPersister implements IPersister, ID<String> {
     private int batch;
@@ -28,7 +29,7 @@ public abstract class AbstractPersister implements IPersister, ID<String> {
         String untouchedSql = "SELECT id, ts FROM " + getId() + " WHERE del = false ORDER BY ts ASC";
         Instant oneDayAgo = TimeUtils.instant().minus(Duration.ofDays(1));
 
-        Main.jdbc().query(untouchedSql, rs -> {
+        jdbc().query(untouchedSql, rs -> {
             while (rs.next()) {
                 int id = rs.getInt("id");
                 Timestamp ts = rs.getTimestamp("ts");

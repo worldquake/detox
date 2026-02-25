@@ -2,7 +2,6 @@ package hu.detox.utils;
 
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
-import hu.detox.Main;
 import hu.detox.parsers.AmountCalculator;
 import hu.detox.utils.strings.StringConverter;
 import hu.detox.utils.strings.StringUtils;
@@ -19,6 +18,8 @@ import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+
+import static hu.detox.spring.DetoxConfig.prop;
 
 public class TimeUtils {
     public static final Timestamp DETOX_EPOCH = Timestamp.valueOf("1900-10-05 00:00:00");
@@ -399,7 +400,7 @@ public class TimeUtils {
 
     public static long whatIsOldTime(String to) {
         if (StringUtils.isEmpty(to)) {
-            to = Main.prop("cache_old");
+            to = prop("cache_old");
         }
         return TimeUtils.time() - toMillis(to);
     }

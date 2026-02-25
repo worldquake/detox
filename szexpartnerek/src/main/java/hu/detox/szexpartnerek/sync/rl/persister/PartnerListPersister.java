@@ -1,7 +1,6 @@
 package hu.detox.szexpartnerek.sync.rl.persister;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.sync.AbstractPersister;
 import hu.detox.szexpartnerek.sync.AbstractTrafoEngine;
 import hu.detox.szexpartnerek.sync.IPersister;
@@ -10,13 +9,16 @@ import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
 import java.util.ArrayList;
 import java.util.List;
 
+import static hu.detox.szexpartnerek.spring.SzexConfig.exec;
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
+
 public class PartnerListPersister extends AbstractPersister {
     private final List<Object[]> partnerListBatch = new ArrayList<>();
 
     public void init() {
         // Delete from partner_prop for dynamic lists
-        Main.exec("DELETE FROM " + getId());
-        Main.exec(
+        exec("DELETE FROM " + getId());
+        exec(
                 "DELETE FROM partner_prop " +
                         "WHERE " + IPersister.ENUM_IDR + " IN (SELECT id FROM int_enum WHERE type = 'properties' AND name IN ('AJANLOTT', 'BARATNOVEL'))"
         );
@@ -41,7 +43,7 @@ public class PartnerListPersister extends AbstractPersister {
     public void flush() {
         if (notBigEnoughBatch()) return;
         String partnerListSql = "INSERT OR IGNORE INTO " + getId() + " (tag, partner_id, name, age, image) VALUES (?, ?, ?, ?, ?)";
-        Main.jdbc().batchUpdate(partnerListSql, partnerListBatch);
+        jdbc().batchUpdate(partnerListSql, partnerListBatch);
         partnerListBatch.clear();
         super.flush();
     }
@@ -50,7 +52,7 @@ public class PartnerListPersister extends AbstractPersister {
     public void close() {
         super.close();
         // Insert or ignore into partner_prop based on lists
-        Main.jdbc().update(
+        jdbc().update(
                 "INSERT OR IGNORE INTO partner_prop (" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") " +
                         "SELECT pl." + Partner.IDR + ", ie.id " +
                         "FROM " + getId() + " pl " +

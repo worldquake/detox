@@ -8,20 +8,28 @@ import hu.detox.Main;
 import hu.detox.utils.strings.StringUtils;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
+import org.jline.utils.AttributedString;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.shell.command.CommandContext;
 import org.springframework.shell.command.CommandRegistration;
+import org.springframework.shell.jline.PromptProvider;
+import org.springframework.shell.standard.ShellComponent;
+import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.commands.Quit;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Configuration
-@ConditionalOnExpression("'hu.detox'.startsWith('${root}')")
-public class RunCommand {
+@ShellComponent
+@Component
+public class Commands implements Quit.Command, PromptProvider {
 
     @Bean
+    @ConditionalOnExpression("'hu.detox'.startsWith('${root}')")
     public CommandRegistration run() {
         return Main.cr("run")
                 .command("run").description("Runs the basic setup, and positional arguments").withOption()
@@ -41,9 +49,19 @@ public class RunCommand {
             Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
             rootLogger.setLevel(Level.toLevel(log, Level.INFO));
         }
-        Shell sh = Main.ctx().getBean(Shell.class);
+        Shell sh = DetoxConfig.ctx().getBean(Shell.class);
         sh.execute(positional);
         return CollectionUtils.isEmpty(positional) ? null : positional.get(0);
+    }
+
+    @ShellMethod(value = "Exit the JVM.", key = {"quit", "exit"})
+    void quit() {
+        System.exit(0);
+    }
+
+    @Override
+    public AttributedString getPrompt() {
+        return Main.PROMPT;
     }
 
 }

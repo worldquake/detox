@@ -7,26 +7,32 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import hu.detox.Agent;
 import hu.detox.io.CharIOHelper;
+import jakarta.validation.ValidationException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static hu.detox.parsers.JSonUtils.OM;
 
 @Component
 @RequiredArgsConstructor
-public class TabulatorColumns {
+public class TabulatorColumns implements ApplicationListener<ContextRefreshedEvent> {
     public static final String F_TABLE = "tbl";
     public static final String F_COLUMNS = "cols";
     public static final String F_SORT = "srt";
     private static final String F_SUB = "sub";
     private final static ObjectNode ROWID;
-    private final ObjectNode root;
+    private ObjectNode root;
 
     static {
         try {
@@ -43,26 +49,21 @@ public class TabulatorColumns {
         }
     }
 
-    TabulatorColumns() throws IOException {
-        Resource rs = Agent.resource("sql/tables.json");
-        try (CharIOHelper cio = CharIOHelper.attempt(rs)) {
-            root = (ObjectNode) OM.readTree(cio.getReader());
-        }
-    }
-
-    public ObjectNode generateTabulatorColumns(String tableViewName, Collection<String> prj) {
+    public @NotNull ObjectNode generateTabulatorColumns(PlainSelect q) {
+        String name = Converters.valueOf(q.getFromItem());
         StringBuilder sb = new StringBuilder();
         ArrayNode an = OM.createArrayNode();
         ArrayNode sort = OM.createArrayNode();
-        findAndBuildColumns(root, prj, an, sort, tableViewName, sb);
-        if (tableViewName.contentEquals(sb)) {
+        Collection<String> cLst = q.getSelectItems().stream().map(Converters::valueOf).collect(Collectors.toUnmodifiableSet());
+        findAndBuildColumns(root, cLst, an, sort, name, sb);
+        if (name.contentEquals(sb)) {
             ObjectNode ret = OM.createObjectNode();
             ret.set(F_SORT, sort);
             ret.set(F_COLUMNS, an);
-            ret.put(F_TABLE, tableViewName);
+            ret.put(F_TABLE, name);
             return ret;
         }
-        return null;
+        throw new ValidationException("No such table: " + name);
     }
 
     private static void findAndBuildColumns(ObjectNode node, Collection<String> prj, ArrayNode cols, ArrayNode sort, String finalName, StringBuilder sb) {
@@ -80,8 +81,9 @@ public class TabulatorColumns {
         node = (ObjectNode) node.get(longest.get());
         if (cols.isEmpty()) cols.add(ROWID);
         currCols = node.get(F_COLUMNS);
+        boolean prjAll = prj == null || prj.contains("*");
         if (currCols instanceof ArrayNode) currCols.forEach(c -> {
-            if (prj == null || prj.contains(c.get("field").asText())) cols.add(c);
+            if (prjAll || prj.contains(c.get("field").asText())) cols.add(c);
         });
         JsonNode minus = node.get("minus");
         if (minus instanceof ArrayNode) {
@@ -114,6 +116,15 @@ public class TabulatorColumns {
             if (node.asText().equals(cols.get(i).get("field").asText())) {
                 cols.remove(i);
             }
+        }
+    }
+
+    @SneakyThrows
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        Resource rs = Agent.resource("sql/tables.json");
+        try (CharIOHelper cio = CharIOHelper.attempt(rs)) {
+            root = (ObjectNode) OM.readTree(cio.getReader());
         }
     }
 }

@@ -2,12 +2,12 @@ package hu.detox.szexpartnerek.sync;
 
 import hu.detox.Agent;
 import hu.detox.spring.Shell;
+import hu.detox.szexpartnerek.spring.SzexConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.jline.utils.AttributedString;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -16,8 +16,12 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.function.Function;
 
-@SpringBootApplication
-@Import({hu.detox.szexpartnerek.Main.class})
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
+
+@SpringBootApplication(
+        scanBasePackages = "hu.detox.szexpartnerek.sync",
+        scanBasePackageClasses = SzexConfig.class
+)
 @Component("szexpartnerekSyncMain")
 @RequiredArgsConstructor
 public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, ApplicationListener<ContextRefreshedEvent> {
@@ -63,7 +67,7 @@ public class Main implements Function<Args, List<Sync.Entry>>, AutoCloseable, Ap
         for (String sql : sqls) {
             populator.addScript(Agent.resource("sql/szexpartnerek/" + sql));
         }
-        populator.execute(hu.detox.szexpartnerek.Main.jdbc().getDataSource());
+        populator.execute(jdbc().getDataSource());
     }
 
     @Override

@@ -12,13 +12,15 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import static hu.detox.spring.DetoxConfig.ctx;
+
 @Configuration
 @RequiredArgsConstructor
 public class AdminCommand {
 
     @SneakyThrows
     public Object admin(CommandContext ctx) {
-        Collection<Admin> admins = hu.detox.Main.ctx().getBeansOfType(Admin.class).values();
+        Collection<Admin> admins = ctx().getBeansOfType(Admin.class).values();
         List<String> what = ctx.getParserResults().positional();
         if (CollectionUtils.isEmpty(what)) {
             for (Admin a : admins) {

@@ -30,3 +30,7 @@ spring:
       enabled: true
     interactive:
       enabled: true
+  web:
+    error:
+      whitelabel:
+        enabled: false

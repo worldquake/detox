@@ -1,6 +1,5 @@
 package hu.detox.utils.strings;
 
-import hu.detox.Main;
 import hu.detox.parsers.AmountCalculator;
 import hu.detox.utils.SystemUtils;
 import hu.detox.utils.reflection.ReflectionUtils;
@@ -23,6 +22,8 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import static hu.detox.spring.DetoxConfig.converter;
 
 public class StringConverter {
     public static class Stringer<T> {
@@ -265,7 +266,7 @@ public class StringConverter {
         }
         RuntimeException ex = null;
         try {
-            ret = Main.converter().convert(parObj, parClz);
+            ret = converter().convert(parObj, parClz);
         } catch (final IllegalArgumentException | ConversionException ce) {
             ex = ce;
         }

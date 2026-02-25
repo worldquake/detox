@@ -1,7 +1,6 @@
 package hu.detox.szexpartnerek.sync.rl.persister;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import hu.detox.szexpartnerek.Main;
 import hu.detox.szexpartnerek.sync.AbstractPersister;
 import hu.detox.szexpartnerek.sync.rl.component.sub.User;
 
@@ -9,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static hu.detox.parsers.JSonUtils.getField;
+import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
 
 public class UserPersister extends AbstractPersister {
     private final List<Object[]> userBatch = new ArrayList<>();
@@ -57,7 +57,7 @@ public class UserPersister extends AbstractPersister {
     @Override
     public void flush() {
         if (notBigEnoughBatch()) return;
-        Main.jdbc().batchUpdate("INSERT INTO " + getId() + " (id, name, age, height, weight, gender, regd, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+        jdbc().batchUpdate("INSERT INTO " + getId() + " (id, name, age, height, weight, gender, regd, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON CONFLICT(id) DO UPDATE SET " +
                 "name = excluded.name, " +
                 "age = COALESCE(excluded.age, " + getId() + ".age), " +
@@ -67,10 +67,10 @@ public class UserPersister extends AbstractPersister {
                 "regd = COALESCE(excluded.regd, " + getId() + ".regd), " +
                 "size = COALESCE(excluded.size, " + getId() + ".size), " +
                 "del = false", userBatch);
-        Main.jdbc().batchUpdate("DELETE FROM tmp_user_like WHERE " + User.IDR + " = ?", userLikesDeleteBatch);
-        Main.jdbc().batchUpdate("INSERT INTO tmp_user_like (" + User.IDR + ", like) VALUES (?, ?) " +
+        jdbc().batchUpdate("DELETE FROM tmp_user_like WHERE " + User.IDR + " = ?", userLikesDeleteBatch);
+        jdbc().batchUpdate("INSERT INTO tmp_user_like (" + User.IDR + ", like) VALUES (?, ?) " +
                 "ON CONFLICT(" + User.IDR + ", like) DO NOTHING", userLikesBatch);
-        Main.jdbc().batchUpdate("UPDATE user SET del=true WHERE id=?", userDeleteBatch);
+        jdbc().batchUpdate("UPDATE user SET del=true WHERE id=?", userDeleteBatch);
         userBatch.clear();
         userLikesBatch.clear();
         userLikesDeleteBatch.clear();

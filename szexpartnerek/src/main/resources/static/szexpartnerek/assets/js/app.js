@@ -53,18 +53,9 @@ jQuery.get({
             ajaxURLGenerator: function (url, config, params) {
                 const query = [];
                 if (params.page) query.push(`pg=${params.page}/${params.size}`);
-                if (params.sort && params.sort.length > 0) {
-                    const sortStr = params.sort
-                        .map(s => `srt=${encodeURIComponent(s.field)}%20${encodeURIComponent(s.dir)}`)
-                        .join(',');
-                    query.push(`${sortStr}`);
-                }
-                if (params.filter && params.filter.length > 0) {
-                    const filterStr = params.filter
-                        .map(f => `flt=${encodeURIComponent(f.field)}%20${encodeURIComponent(f.type)}%20${encodeURIComponent(f.value)}`)
-                        .join('&');
-                    query.push(filterStr);
-                }
+                if (params.sort && params.sort.length > 0) query.push("o=" + encodeURIComponent(JSON.stringify(params.sort)));
+                if (params.filter && params.filter.length > 0) query.push("w=" + encodeURIComponent(JSON.stringify(params.filter)));
+                query.push("t=" + encodeURIComponent(table));
                 return url + (query.length ? '?' + query.join('&') : '');
             },
             ajaxRequestFunc: function (url, config, params) {

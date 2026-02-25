@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
+import static hu.detox.spring.DetoxConfig.ctx;
+
 @Component
 public class Feedbacks extends AbstractFeedbackTrafo implements ApplicationListener<ContextRefreshedEvent> {
     private final List<String> datas;
@@ -68,8 +70,8 @@ public class Feedbacks extends AbstractFeedbackTrafo implements ApplicationListe
 
     public ITrafoEngine[] preTrafos() {
         // Because of circular dependencies
-        if (pre == null) pre = new ITrafoEngine[]{hu.detox.Main.ctx().getBean(Partner.class),
-                hu.detox.Main.ctx().getBean(User.class)};
+        if (pre == null) pre = new ITrafoEngine[]{ctx().getBean(Partner.class),
+                ctx().getBean(User.class)};
         return pre;
     }
 
