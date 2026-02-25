@@ -14,6 +14,7 @@ import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
 
 public class PartnerPersister extends AbstractPersister {
     private final List<Object[]> partnerDelBatch = new ArrayList<>();
+    private final List<Object[]> addressBatch = new ArrayList<>();
     private final List<Object[]> partnerBatch = new ArrayList<>();
     private final List<Object[]> phonePropBatch = new ArrayList<>();
     private final List<Object[]> partnerPropBatch = new ArrayList<>();
@@ -59,33 +60,27 @@ public class PartnerPersister extends AbstractPersister {
             partnerParams[12] = msrs.has("hips") && !msrs.get("hips").isNull() ? msrs.get("hips").asInt() : null;
         }
 
-        JsonNode loc = root.get("location");
-        if (loc == null) {
-            Arrays.fill(partnerParams, 13, 17, null);
-        } else {
-            partnerParams[13] = loc.get(0).asText();
-            partnerParams[14] = loc.get(1).isNull() ? null : loc.get(1).asText();
-            String[] coords = null;
-            if (loc.size() > 2) coords = loc.get(2).asText().split(",");
-            if (coords != null && coords.length == 2) {
-                partnerParams[15] = Double.parseDouble(coords[0]);
-                partnerParams[16] = Double.parseDouble(coords[1]);
-            } else {
-                partnerParams[15] = null;
-                partnerParams[16] = null;
-            }
-        }
-
         JsonNode la = root.get("looking_age");
         if (la != null) {
-            partnerParams[17] = la.get(0).asInt();
-            partnerParams[18] = la.size() == 1 ? null : la.get(1).asInt();
+            partnerParams[13] = la.get(0).asInt();
+            partnerParams[14] = la.size() == 1 ? null : la.get(1).asInt();
         } else {
-            partnerParams[17] = null;
-            partnerParams[18] = null;
+            partnerParams[13] = null;
+            partnerParams[14] = null;
         }
 
         partnerBatch.add(partnerParams);
+
+        JsonNode loc = root.get("location");
+        if (loc != null) {
+            String[] coords = null;
+            if (loc.size() > 2) coords = loc.get(2).asText().split(",");
+            boolean hasCoords = coords != null && coords.length == 2;
+            addressBatch.add(new Object[]{partnerId,
+                    loc.get(0).asText(),
+                    loc.hasNonNull(1) ? loc.get(1).asText() : "",
+                    hasCoords ? coords[0] : null, hasCoords ? coords[1] : null});
+        }
 
         if (phn != null) {
             for (int i = 1; i < phn.size(); i++) {
@@ -150,8 +145,8 @@ public class PartnerPersister extends AbstractPersister {
         if (notBigEnoughBatch()) return;
         // SQL strings as local variables
         String partnerSql = "INSERT INTO " + getId() + " (" +
-                "    id, call_number, name, pass, about, active_info, expect, age, height, weight, breast, waist, hips, location, location_extra, latitude, longitude, looking_age_min, looking_age_max\n" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n" +
+                "    id, call_number, name, pass, about, active_info, expect, age, height, weight, breast, waist, hips, looking_age_min, looking_age_max\n" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n" +
                 "ON CONFLICT(id) DO UPDATE SET\n" +
                 "    call_number = COALESCE(excluded.call_number, " + getId() + ".call_number),\n" +
                 "    about = COALESCE(excluded.about, " + getId() + ".about),\n" +
@@ -165,10 +160,6 @@ public class PartnerPersister extends AbstractPersister {
                 "    breast = excluded.breast,\n" +
                 "    waist = excluded.waist,\n" +
                 "    hips = excluded.hips,\n" +
-                "    location = COALESCE(excluded.location, " + getId() + ".location),\n" +
-                "    location_extra = COALESCE(excluded.location_extra, " + getId() + ".location_extra),\n" +
-                "    latitude = excluded.latitude,\n" +
-                "    longitude = excluded.longitude,\n" +
                 "    looking_age_min = excluded.looking_age_min,\n" +
                 "    looking_age_max = excluded.looking_age_max,\n" +
                 "    del=false";
@@ -176,6 +167,7 @@ public class PartnerPersister extends AbstractPersister {
         List<Object[]> delBatch = partnerBatch.stream().map(objects -> new Object[]{objects[0]}).toList();
         partnerBatch.clear();
         Object[][] tableNameOps = {
+                new Object[]{getId() + "_address", "(" + Partner.IDR + ", json, location, location_extra, lat, lon) VALUES (?, null, ?, ?, ?, ?)", addressBatch},
                 new Object[]{getId() + "_phone_prop", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", phonePropBatch},
                 new Object[]{getId() + "_prop", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", partnerPropBatch},
                 new Object[]{getId() + "_open_hour", "(" + Partner.IDR + ", onday, hours) VALUES (?, ?, ?)", openHourBatch},

@@ -1,9 +1,13 @@
-create table partner_address (
-     partner_id integer REFERENCES partner(id) PRIMARY KEY,
-     json text,
-     location text,
-     location_extra text,
-     lat real, lon real
+CREATE TABLE partner_address (
+     partner_id     INTEGER
+         PRIMARY KEY
+         REFERENCES partner,
+     json           TEXT,
+     location       TEXT NOT NULL,
+     location_extra TEXT NOT NULL,
+     lat            REAL,
+     lon            REAL,
+     UNIQUE (partner_id, location, location_extra)
 );
 
 insert into partner_address
