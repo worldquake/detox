@@ -31,6 +31,12 @@ SELECT rowid
     OR ( location NOT LIKE 'Budapest%'  AND json NOT LIKE '%' || location || '%' ))
 );
 
+UPDATE partner SET hips=null WHERE hips<80;
+UPDATE partner SET waist=null WHERE waist<50;
+UPDATE partner SET breast=null WHERE breast<60;
+UPDATE partner SET height=null WHERE height<120;
+UPDATE partner SET weight=null WHERE weight<35;
+
 UPDATE partner_address AS ma
 SET json = json_set(
     (SELECT su.json

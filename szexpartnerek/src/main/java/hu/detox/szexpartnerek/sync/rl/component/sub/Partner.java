@@ -332,6 +332,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
             if (mode != null) {
                 try {
                     Integer mi = Integer.parseInt(val);
+                    if (mi < 10) mi = null;
                     measures.put(mode, mi);
                 } catch (NumberFormatException nfe) {
                     measures.put(mode, val);

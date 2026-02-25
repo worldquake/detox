@@ -58,14 +58,25 @@
       {
         "title": "Age",
         "field": "age",
+        "headerFilter": "range",
+        "headerFilterFunc": "<=",
+        "headerFilterParams": {
+          "min": 18,
+          "max": 70
+        },
         "sorter": "string",
-        "headerFilter": "input",
         "width": 50
       },
       {
         "title": "Height",
         "field": "height",
         "sorter": "number",
+        "headerFilter": "range",
+        "headerFilterFunc": "<=",
+        "headerFilterParams": {
+          "min": 120,
+          "max": 200
+        },
         "hozAlign": "right",
         "width": 60
       },
@@ -73,6 +84,12 @@
         "title": "Weight",
         "field": "weight",
         "sorter": "number",
+        "headerFilter": "range",
+        "headerFilterFunc": "<=",
+        "headerFilterParams": {
+          "min": 35,
+          "max": 150
+        },
         "hozAlign": "right",
         "width": 60
       },
@@ -80,6 +97,12 @@
         "title": "Breast",
         "field": "breast",
         "sorter": "number",
+        "headerFilter": "range",
+        "headerFilterFunc": ">=",
+        "headerFilterParams": {
+          "min": 60,
+          "max": 150
+        },
         "hozAlign": "right",
         "width": 60
       },
@@ -87,6 +110,12 @@
         "title": "Waist",
         "field": "waist",
         "sorter": "number",
+        "headerFilter": "range",
+        "headerFilterFunc": "<=",
+        "headerFilterParams": {
+          "min": 60,
+          "max": 150
+        },
         "hozAlign": "right",
         "width": 60
       },
@@ -94,6 +123,12 @@
         "title": "Hips",
         "field": "hips",
         "sorter": "number",
+        "headerFilter": "range",
+        "headerFilterFunc": "<=",
+        "headerFilterParams": {
+          "min": 80,
+          "max": 150
+        },
         "hozAlign": "right",
         "width": 60
       },
