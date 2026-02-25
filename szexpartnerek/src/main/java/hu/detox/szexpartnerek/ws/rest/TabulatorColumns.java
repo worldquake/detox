@@ -122,7 +122,7 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
     @SneakyThrows
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        Resource rs = Agent.resource("sql/tables.json");
+        Resource rs = Agent.resource("sql/szexpartnerek.json");
         try (CharIOHelper cio = CharIOHelper.attempt(rs)) {
             root = (ObjectNode) OM.readTree(cio.getReader());
         }

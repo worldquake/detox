@@ -105,27 +105,6 @@
         "width": 160
       },
       {
-        "title": "Location Extra",
-        "field": "location_extra",
-        "sorter": "string",
-        "headerFilter": "input",
-        "minWidth": 200
-      },
-      {
-        "title": "Latitude",
-        "field": "latitude",
-        "sorter": "number",
-        "hozAlign": "right",
-        "width": 120
-      },
-      {
-        "title": "Longitude",
-        "field": "longitude",
-        "sorter": "number",
-        "hozAlign": "right",
-        "width": 120
-      },
-      {
         "title": "Looking Age Min",
         "field": "looking_age_min",
         "sorter": "number",
@@ -156,15 +135,16 @@
       }
     ],
     "sub": {
+      "minus": "*",
+      "cols": {
+        "title": "Partner ID",
+        "field": "partner_id",
+        "sorter": "number",
+        "hozAlign": "right",
+        "width": 120
+      },
       "_activity": {
         "cols": [
-          {
-            "title": "Partner ID",
-            "field": "partner_id",
-            "sorter": "number",
-            "hozAlign": "right",
-            "width": 120
-          },
           {
             "title": "On Date",
             "field": "ondate",
@@ -184,13 +164,6 @@
       "_answer": {
         "cols": [
           {
-            "title": "Partner ID",
-            "field": "partner_id",
-            "sorter": "number",
-            "hozAlign": "right",
-            "width": 120
-          },
-          {
             "title": "Question ID",
             "field": "enum_id",
             "sorter": "number",
@@ -208,13 +181,6 @@
       },
       "_img": {
         "cols": [
-          {
-            "title": "Partner ID",
-            "field": "partner_id",
-            "sorter": "number",
-            "hozAlign": "right",
-            "width": 120
-          },
           {
             "title": "On Date",
             "field": "ondate",
@@ -234,13 +200,6 @@
       "_lang": {
         "cols": [
           {
-            "title": "Partner ID",
-            "field": "partner_id",
-            "sorter": "number",
-            "hozAlign": "right",
-            "width": 120
-          },
-          {
             "title": "Language",
             "field": "lang",
             "sorter": "string",
@@ -251,13 +210,6 @@
       },
       "_like": {
         "cols": [
-          {
-            "title": "Partner ID",
-            "field": "partner_id",
-            "sorter": "number",
-            "hozAlign": "right",
-            "width": 120
-          },
           {
             "title": "Like ID",
             "field": "enum_id",
@@ -283,13 +235,6 @@
       },
       "_open_hour": {
         "cols": [
-          {
-            "title": "Partner ID",
-            "field": "partner_id",
-            "sorter": "number",
-            "hozAlign": "right",
-            "width": 120
-          },
           {
             "title": "Day",
             "field": "onday",
@@ -836,13 +781,6 @@
             "headerFilter": "input",
             "minWidth": 320,
             "formatter": "textarea"
-          },
-          {
-            "title": "Location",
-            "field": "location",
-            "sorter": "string",
-            "headerFilter": "input",
-            "width": 160
           }
         ]
       }

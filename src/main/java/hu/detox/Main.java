@@ -5,7 +5,6 @@ import hu.detox.utils.reflection.ReflectionUtils;
 import hu.detox.utils.strings.StringUtils;
 import org.jline.utils.AttributedString;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Primary;
@@ -71,11 +70,11 @@ public class Main implements BeanPostProcessor {
     }
 
     public static ApplicationContext main(Class<?> any, String[] args) throws Exception {
-        System.setProperty("root", any.getPackageName());
-        PROMPT = ReflectionUtils.getProperty(any, "PROMPT");
-        Agent.init();
-        SpringApplication application = new SpringApplication(any);
-        if (Agent.IDE) application.setAdditionalProfiles("dev");
-        return application.run(args);
+        try {
+            PROMPT = ReflectionUtils.getProperty(any, "PROMPT");
+        } catch (IllegalArgumentException ia) {
+            // No worries
+        }
+        return hu.Main.main(any, args);
     }
 }

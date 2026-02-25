@@ -28,6 +28,8 @@ dependencyManagement {
 }
 
 dependencies {
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai-sdk'
+
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.shell:spring-shell-starter'
 

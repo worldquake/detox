@@ -8,7 +8,10 @@ SELECT p.id as rowid,
        p.call_number,p.name,p.pass,p.about,p.expect,
        p.age,CONCAT(COALESCE(p.looking_age_min,18),'-',COALESCE(p.looking_age_max,999)) as ages,
        p.height,p.weight,p.breast,p.waist,p.hips,
-       p.location,p.location_extra,IIF(p.latitude IS NOT NULL AND p.longitude IS NOT NULL,CONCAT(p.latitude,',',p.longitude), NULL) as geoloc,
+       (SELECT COALESCE(json,
+                        IIF(lat IS NULL, NULL, CONCAT(lat,',',lon)),
+                        CONCAT(location, IIF(location_extra IS NULL, NULL, CONCAT('; ',location_extra))))
+        FROM partner_address pa WHERE pa.partner_id=p.id) AS location,
        -- place: combine (CSAK_)WEBCAM_SZEX, CSAK_NALAD, CSAK_NALAM, NALAM_NALAD from props and AUTOS_KALAND, BULIBA, BUCSUBA, CSAK_WEBCAM_SZEX from looking
        (SELECT GROUP_CONCAT(placeval, ', ')
         FROM (SELECT max(replace(e.name, 'CSAK_', '')) AS placeval

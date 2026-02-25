@@ -45,8 +45,8 @@ public class Http {
         this.client = builder.build();
     }
 
-    public ResponseEntity<String> get(String uri) {
-        return client.get().uri(uri)
+    public ResponseEntity<String> get(String uri, Object... vars) {
+        return client.get().uri(uri, vars)
                 .retrieve().toEntity(String.class);
     }
 

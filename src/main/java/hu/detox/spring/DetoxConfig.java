@@ -1,7 +1,10 @@
 package hu.detox.spring;
 
+import hu.detox.Agent;
+import hu.detox.config.Cfg2PropertySourceFactory;
 import hu.detox.io.IOUtils;
 import hu.detox.parsers.AmountCalculator;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.jscience.physics.amount.Amount;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
@@ -9,19 +12,23 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertyResolver;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 
+import java.io.File;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 @Configuration
-@Import({Shell.class, Commands.class})
+@ComponentScan
+//@Import({Shell.class, Commands.class})
 public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
     private static ApplicationContext context;
     private static AsyncTaskExecutor executor;
@@ -49,6 +56,12 @@ public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
     public void setApplicationContext(ApplicationContext ctx) throws BeansException {
         context = ctx;
         resolver = context.getBean(PropertyResolver.class);
+        File my = Agent.getFile("application.yaml", FileFilterUtils.fileFileFilter());
+        if (my != null) {
+            FileSystemResource propertySource = new FileSystemResource(my);
+            ctx.getBean(ConfigurableEnvironment.class).getPropertySources()
+                    .addFirst(Cfg2PropertySourceFactory.make(propertySource, null));
+        }
         IOUtils.initStatic();
     }
 
