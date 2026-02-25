@@ -8,6 +8,14 @@ SET partner_id = 0
 WHERE (UPPER(name) GLOB 'DEL_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_[0-9][0-9]_[0-9][0-9]' OR name = 'Törölt_Adatlap')
   AND partner_id IS NULL;
 
+DELETE FROM partner_address
+WHERE partner_id IN (
+    SELECT partner_id
+    FROM partner_address
+    GROUP BY partner_id
+    HAVING COUNT(*) > 1
+) AND ts < datetime('now', '-1 year');
+
 UPDATE user_partner_feedback
 SET user_id = 0
 WHERE user_id not in (SELECT id FROM user);

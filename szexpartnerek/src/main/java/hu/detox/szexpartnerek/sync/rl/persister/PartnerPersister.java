@@ -36,7 +36,7 @@ public class PartnerPersister extends AbstractPersister {
             partnerDelBatch.add(new Object[]{partnerId});
             return;
         }
-        Object[] partnerParams = new Object[19];
+        Object[] partnerParams = new Object[15];
         partnerParams[0] = partnerId;
         JsonNode phn = root.get("phone");
         boolean active = phn != null && !phn.isEmpty();
@@ -145,7 +145,8 @@ public class PartnerPersister extends AbstractPersister {
         if (notBigEnoughBatch()) return;
         // SQL strings as local variables
         String partnerSql = "INSERT INTO " + getId() + " (" +
-                "    id, call_number, name, pass, about, active_info, expect, age, height, weight, breast, waist, hips, looking_age_min, looking_age_max\n" +
+                "  id, call_number, name, pass, about, active_info, expect, age, height, weight," +
+                "  breast, waist, hips, looking_age_min, looking_age_max\n" +
                 ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n" +
                 "ON CONFLICT(id) DO UPDATE SET\n" +
                 "    call_number = COALESCE(excluded.call_number, " + getId() + ".call_number),\n" +
@@ -166,26 +167,34 @@ public class PartnerPersister extends AbstractPersister {
         jdbc().batchUpdate(partnerSql, partnerBatch);
         List<Object[]> delBatch = partnerBatch.stream().map(objects -> new Object[]{objects[0]}).toList();
         partnerBatch.clear();
+        String addDel = Partner.IDR + ", location, location_extra";
+        String addrDelConflict = "(" + addDel + ") DO UPDATE SET lat=excluded.lat, lon=excluded.lon";
         Object[][] tableNameOps = {
-                new Object[]{getId() + "_address", "(" + Partner.IDR + ", json, location, location_extra, lat, lon) VALUES (?, null, ?, ?, ?, ?)", addressBatch},
-                new Object[]{getId() + "_phone_prop", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", phonePropBatch},
-                new Object[]{getId() + "_prop", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", partnerPropBatch},
-                new Object[]{getId() + "_open_hour", "(" + Partner.IDR + ", onday, hours) VALUES (?, ?, ?)", openHourBatch},
-                new Object[]{getId() + "_lang", "(" + Partner.IDR + ", lang) VALUES (?, ?)", langBatch},
-                new Object[]{getId() + "_answer", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ", answer) VALUES (?, ?, ?)", answerBatch},
-                new Object[]{getId() + "_looking", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", lookingBatch},
-                new Object[]{getId() + "_massage", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", massageBatch},
-                new Object[]{getId() + "_like", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ", option) VALUES (?, ?, ?)", likeBatch},
-                new Object[]{getId() + "_img", "(" + Partner.IDR + ", ondate, path) VALUES (?, ?, ?)", imgBatch}
+                new Object[]{addrDelConflict, getId() + "_address", "(" + addDel + ", lat, lon) VALUES (?, ?, ?, ?, ?)", addressBatch},
+                new Object[]{null, getId() + "_phone_prop", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", phonePropBatch},
+                new Object[]{null, getId() + "_prop", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", partnerPropBatch},
+                new Object[]{null, getId() + "_open_hour", "(" + Partner.IDR + ", onday, hours) VALUES (?, ?, ?)", openHourBatch},
+                new Object[]{null, getId() + "_lang", "(" + Partner.IDR + ", lang) VALUES (?, ?)", langBatch},
+                new Object[]{null, getId() + "_answer", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ", answer) VALUES (?, ?, ?)", answerBatch},
+                new Object[]{null, getId() + "_looking", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", lookingBatch},
+                new Object[]{null, getId() + "_massage", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", massageBatch},
+                new Object[]{null, getId() + "_like", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ", option) VALUES (?, ?, ?)", likeBatch},
+                new Object[]{null, getId() + "_img", "(" + Partner.IDR + ", ondate, path) VALUES (?, ?, ?)", imgBatch}
         };
+        String del;
         for (Object[] arr : tableNameOps) {
-            String sql = "DELETE FROM " + arr[0] + " WHERE " + Partner.IDR + " = ?";
+            del = (String) arr[0];
+            if (del != null || delBatch.isEmpty()) continue;
+            String sql = "DELETE FROM " + arr[1] + " WHERE " + Partner.IDR + " = ?";
             jdbc().batchUpdate(sql, delBatch);
         }
         for (Object[] arr : tableNameOps) {
-            List<Object[]> batch = (List) arr[2];
+            List<Object[]> batch = (List) arr[3];
             if (batch.isEmpty()) continue;
-            String sql = "INSERT OR IGNORE INTO " + arr[0] + arr[1];
+            del = (String) arr[0];
+            String sql = "INSERT" + (del == null ? " OR IGNORE" : "") + " INTO "
+                    + arr[1] + arr[2]
+                    + (del == null ? "" : " ON CONFLICT" + del);
             jdbc().batchUpdate(sql, batch);
             batch.clear();
         }

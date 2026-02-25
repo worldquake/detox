@@ -1,17 +1,25 @@
 CREATE TABLE partner_address (
-     partner_id     INTEGER
-         PRIMARY KEY
-         REFERENCES partner,
-     json           TEXT,
-     location       TEXT NOT NULL,
-     location_extra TEXT NOT NULL,
-     lat            REAL,
-     lon            REAL,
-     UNIQUE (partner_id, location, location_extra)
+    partner_id     INTEGER REFERENCES partner,
+    json           TEXT,
+    location       TEXT NOT NULL,
+    location_extra TEXT NOT NULL,
+    lat            REAL,
+    lon            REAL,
+    ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (partner_id, location, location_extra)
 );
 
+CREATE TRIGGER partner_address_tsupdate
+    AFTER UPDATE
+    ON partner_address
+    FOR EACH ROW
+BEGIN
+    UPDATE partner_address SET ts = CURRENT_TIMESTAMP WHERE rowid = NEW.rowid;
+END;
+
+
 insert into partner_address
-select id, null, location, location_extra, latitude, longitude
+select id, null, location, location_extra, latitude, longitude, ts
 from partner
 WHERE latitude IS NOT NULL OR location IS NOT NULL;
 

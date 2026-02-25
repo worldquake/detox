@@ -11,7 +11,7 @@ SELECT p.id as rowid,
        (SELECT COALESCE(json,
                         IIF(lat IS NULL, NULL, CONCAT(lat,',',lon)),
                         CONCAT(location, IIF(location_extra IS NULL, NULL, CONCAT('; ',location_extra))))
-        FROM partner_address pa WHERE pa.partner_id=p.id) AS location,
+        FROM partner_address pa WHERE pa.partner_id=p.id ORDER BY ts DESC LIMIT 1) AS location,
        -- place: combine (CSAK_)WEBCAM_SZEX, CSAK_NALAD, CSAK_NALAM, NALAM_NALAD from props and AUTOS_KALAND, BULIBA, BUCSUBA, CSAK_WEBCAM_SZEX from looking
        (SELECT GROUP_CONCAT(placeval, ', ')
         FROM (SELECT max(replace(e.name, 'CSAK_', '')) AS placeval
