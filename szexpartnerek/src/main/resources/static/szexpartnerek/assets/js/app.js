@@ -1,5 +1,5 @@
 const url = new URL(location.href);
-const table = url.searchParams.get('table') || "partner";
+const table = url.searchParams.get('t') || "partner";
 var rootUrl = "/api/szexpartnerek/" + table;
 var colsUrl = rootUrl + "?pg.size=0";
 if (window.location.protocol === "file:") {

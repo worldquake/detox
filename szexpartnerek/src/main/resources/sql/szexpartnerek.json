@@ -98,13 +98,6 @@
         "width": 60
       },
       {
-        "title": "Location",
-        "field": "location",
-        "sorter": "string",
-        "headerFilter": "input",
-        "width": 160
-      },
-      {
         "title": "Looking Age Min",
         "field": "looking_age_min",
         "sorter": "number",
@@ -257,9 +250,7 @@
         "minus": [
           "looking_age_max",
           "looking_age_min",
-          "del",
-          "latitude",
-          "longitude"
+          "del"
         ],
         "cols": [
           {
@@ -268,13 +259,6 @@
             "sorter": "string",
             "hozAlign": "left",
             "width": 50
-          },
-          {
-            "title": "Geolocation",
-            "field": "geoloc",
-            "sorter": "string",
-            "hozAlign": "left",
-            "width": 100
           },
           {
             "title": "Hair",
@@ -373,6 +357,13 @@
             "sorter": "string",
             "headerFilter": "input",
             "width": 120
+          },
+          {
+            "title": "Location",
+            "field": "location",
+            "sorter": "string",
+            "headerFilter": "input",
+            "width": 100
           },
           {
             "title": "Client Type",

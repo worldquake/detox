@@ -10,7 +10,7 @@ SELECT p.id as rowid,
        p.height,p.weight,p.breast,p.waist,p.hips,
        (SELECT COALESCE(json,
                         IIF(lat IS NULL, NULL, CONCAT(lat,',',lon)),
-                        CONCAT(location, IIF(location_extra IS NULL, NULL, CONCAT('; ',location_extra))))
+                        CONCAT(location, IIF(location_extra='', '', CONCAT('; ',location_extra))))
         FROM partner_address pa WHERE pa.partner_id=p.id ORDER BY ts DESC LIMIT 1) AS location,
        -- place: combine (CSAK_)WEBCAM_SZEX, CSAK_NALAD, CSAK_NALAM, NALAM_NALAD from props and AUTOS_KALAND, BULIBA, BUCSUBA, CSAK_WEBCAM_SZEX from looking
        (SELECT GROUP_CONCAT(placeval, ', ')
@@ -262,7 +262,7 @@ SELECT p.rowid, ROUND(tpr.r, 1) as rating,
        p.active_info,
        p.call_number, p.name, p.pass, p.about,
        p.expect, p.age, p.ages, p.height, p.weight, p.breast, p.waist, p.hips,
-       p.location, p.location_extra, p.geoloc, p.place,
+       p.location, p.place,
        p.hair, p.eyes, p.breasts, p.body, p.intim,
        p.orientation, p.gender,
        p.act,
