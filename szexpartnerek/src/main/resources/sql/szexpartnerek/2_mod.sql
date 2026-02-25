@@ -31,22 +31,14 @@ SELECT rowid
     OR ( location NOT LIKE 'Budapest%'  AND json NOT LIKE '%' || location || '%' ))
 );
 
-
 UPDATE partner_address AS ma
 SET json = json_set(
-    (
-    SELECT su.json
+    (SELECT su.json
     FROM partner_address AS su
     WHERE ma.location = su.location
-    AND su.location_extra = ''
-    ),
+    AND su.location_extra = ''),
     '$.extra', ma.location_extra
-    )
-WHERE json_extract(ma.json, '$.name') = ma.location || '; ' || ma.location_extra;
-
-UPDATE partner_address
-SET json=json_set(json, '$.extra', location_extra)
-WHERE json IS NOT NULL AND json_extract(json, '$.extra') IS NULL AND location_extra<>'';
+) WHERE json_extract(ma.json, '$.name') = ma.location || '; ' || ma.location_extra;
 
 UPDATE user_partner_feedback
 SET user_id = 0
@@ -54,6 +46,23 @@ WHERE user_id not in (SELECT id FROM user);
 
 UPDATE partner_like SET option = NULL WHERE option IS NOT NULL AND enum_id=14; -- HA_TOBBRE_VAGY_KIVANCSI_HIVJ_FEL
 UPDATE user_partner_feedback SET after_name=NULL, name=null, age=null WHERE partner_id IS NOT NULL;
+
+UPDATE partner_address
+SET lat = CASE
+              WHEN json_extract(json, '$.bbox.lat2') IS NULL
+                  THEN json_extract(json, '$.bbox.lat1')
+              ELSE (json_extract(json, '$.bbox.lat1') + json_extract(json, '$.bbox.lat2')) / 2
+    END,
+    lon = CASE
+              WHEN json_extract(json, '$.bbox.lon2') IS NULL
+                  THEN json_extract(json, '$.bbox.lon1')
+              ELSE (json_extract(json, '$.bbox.lon1') + json_extract(json, '$.bbox.lon2')) / 2
+        END
+WHERE lat IS NULL
+  AND lon IS NULL
+  AND json IS NOT NULL
+  AND json_type(json, '$.bbox.lat1') IS NOT NULL
+  AND json_type(json, '$.bbox.lon1') IS NOT NULL;
 
 -- Make the NALAM/NALAD consistent
 INSERT OR IGNORE INTO partner_prop (partner_id, enum_id)
