@@ -16,6 +16,21 @@ WHERE partner_id IN (
     HAVING COUNT(*) > 1
 ) AND ts < datetime('now', '-1 year');
 
+UPDATE partner_address SET json = CONCAT('{"name": "',location,'; ',location_extra,'"}')  WHERE rowid IN (
+SELECT rowid
+    FROM partner_address
+    WHERE json IS NOT NULL AND location_extra <> ''
+    AND ((
+        location LIKE 'Budapest%'
+        AND (
+        json NOT LIKE '%Budapest%'
+            OR (INSTR(location, 'kerület') >0 AND
+                json NOT LIKE '%' || TRIM(SUBSTR(location, INSTR(location, 'Budapest') + LENGTH('Budapest'), LENGTH(location))) || '%')
+      )
+    )
+    OR ( location NOT LIKE 'Budapest%'  AND json NOT LIKE '%' || location || '%' ))
+);
+
 UPDATE user_partner_feedback
 SET user_id = 0
 WHERE user_id not in (SELECT id FROM user);
