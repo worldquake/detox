@@ -3,6 +3,7 @@ package hu.detox.spring;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import hu.detox.io.CharIOHelper;
 import hu.detox.io.poi.MatrixReader;
 import hu.detox.parsers.JSonUtils;
@@ -31,17 +32,40 @@ public class GeoCode {
         search = new Http(BASE + "/search?lang=" + Locale.getDefault().getLanguage() + "&format=json&apiKey=" + apiKey);
     }
 
-    private void makeStandard(JsonObject o) {
-        JsonObject bbox = new JsonObject();
-        JsonElement late = o.remove("lat");
-        if (late != null) {
-            JsonElement lat = late.getAsJsonPrimitive();
-            JsonElement lon = o.remove("lon").getAsJsonPrimitive();
-            bbox.add("lon1", lon);
-            bbox.add("lon2", lon);
-            bbox.add("lat1", lat);
-            bbox.add("lat2", lat);
-            o.add("bbox", bbox);
+    public void makeStandard(JsonObject o, double[] latLon) {
+        JsonPrimitive[] latLonJ = latLon == null ? null : new JsonPrimitive[]{
+                new JsonPrimitive(latLon[0]), new JsonPrimitive(latLon[1])
+        };
+        makeStandard(o, latLonJ);
+    }
+
+    private void makeStandard(JsonObject o, JsonPrimitive[] latLon) {
+        var bbx = o.getAsJsonObject("bbox");
+        JsonPrimitive lat, lon;
+        if (latLon == null) latLon = new JsonPrimitive[]{null, null};
+        if (bbx == null) {
+            lat = (JsonPrimitive) o.remove("lat");
+            if (latLon[0] == null) latLon[0] = lat;
+            if (latLon[0] != null) {
+                lon = o.remove("lon").getAsJsonPrimitive();
+                if (latLon[1] == null) latLon[1] = lon;
+                bbx = new JsonObject();
+                bbx.add("lon1", latLon[1]);
+                bbx.add("lat1", latLon[0]);
+                o.add("bbox", bbx);
+            }
+        } else {
+            lat = bbx.get("lat1").getAsJsonPrimitive();
+            boolean hasLat = latLon[0] != null, hasLon = latLon[1] != null;
+            if (!hasLat) latLon[0] = lat;
+            lon = bbx.get("lon1").getAsJsonPrimitive();
+            if (!hasLon) latLon[1] = lon;
+            if (lon.equals(bbx.get("lon2")) && lat.equals(bbx.get("lat2"))) {
+                bbx.remove("lon2");
+                bbx.remove("lat2");
+            }
+            if (hasLat) bbx.add("lat1", latLon[0]);
+            if (hasLon) bbx.add("lon1", latLon[1]);
         }
         //o.remove("formatted");
         JsonElement tz = o.remove("timezone");
@@ -88,7 +112,7 @@ public class GeoCode {
                     if (StringUtils.isBlank(v) || h.startsWith("attribution") || h.startsWith("confidence")) continue;
                     o.addProperty(hd[i], v);
                 }
-                makeStandard(o);
+                makeStandard(o, (double[]) null);
                 if (filter != null && filter.invoke(ln, o)) continue;
                 ret.add(o);
             }
@@ -97,7 +121,7 @@ public class GeoCode {
     }
 
     @SneakyThrows
-    public JsonObject getLocation(String q) {
+    public JsonObject getLocation(String q, double[] latLon) {
         long lr = TimeUtils.time();
         if (lr - sleepLastRun[1] < sleepLastRun[0])
             ThreadUtils.sleep(sleepLastRun[0], TimeUnit.MILLISECONDS);
@@ -106,7 +130,7 @@ public class GeoCode {
                 .getAsJsonObject().get("results").getAsJsonArray();
         if (arr.isEmpty()) return null;
         JsonObject o = arr.get(0).getAsJsonObject();
-        makeStandard(o);
+        makeStandard(o, latLon);
         return o;
     }
 }

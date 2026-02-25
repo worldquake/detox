@@ -31,6 +31,23 @@ SELECT rowid
     OR ( location NOT LIKE 'Budapest%'  AND json NOT LIKE '%' || location || '%' ))
 );
 
+
+UPDATE partner_address AS ma
+SET json = json_set(
+    (
+    SELECT su.json
+    FROM partner_address AS su
+    WHERE ma.location = su.location
+    AND su.location_extra = ''
+    ),
+    '$.extra', ma.location_extra
+    )
+WHERE json_extract(ma.json, '$.name') = ma.location || '; ' || ma.location_extra;
+
+UPDATE partner_address
+SET json=json_set(json, '$.extra', location_extra)
+WHERE json IS NOT NULL AND json_extract(json, '$.extra') IS NULL AND location_extra<>'';
+
 UPDATE user_partner_feedback
 SET user_id = 0
 WHERE user_id not in (SELECT id FROM user);

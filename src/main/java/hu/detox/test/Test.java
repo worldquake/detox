@@ -32,7 +32,7 @@ public class Test {
         lr.getHeader(true);
         List<String> ln;
         while ((ln = lr.read()) != null) {
-            var n = code.getLocation(ln.get(1));
+            var n = code.getLocation(ln.get(1), null);
             System.err.println(ln.get(0) + "\t" + n);
         }
     }
