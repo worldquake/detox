@@ -5,9 +5,14 @@ const q = "p=" + encodeURIComponent(prj) + "&t=" + encodeURIComponent(table);
 var rootUrl = "/api/szexpartnerek/" + table;
 var colsUrl = rootUrl + "?" + q + "&pg.size=0";
 if (window.location.protocol === "file:") {
-    rootUrl = rootUrl.split("/");
-    rootUrl = "../" + rootUrl[rootUrl.length - 1] + ".csv";
-    colsUrl = rootUrl + ".json";
+    const baseFile = "example/" + table;
+    rootUrl = baseFile + ".csv";
+    colsUrl = baseFile + ".json";
+}
+
+function tableDone(x) {
+    const t = window.table;
+    t.hideColumn("name");
 }
 
 function setField(columns, what) {
@@ -18,7 +23,7 @@ function setField(columns, what) {
             col.formatterParams = Object.assign({}, col.formatterParams, params);
             col.sorter = what;
         }
-        var fs = window.stuff["fmt_" + col.field];
+        var fs = window.stuff["fmt_" + table + "_" + col.field] || window.stuff["fmt_" + col.field];
         if (fs) col.formatter = fs;
         // If this column has subcolumns (nested columns)
         if (col.columns) {
@@ -33,13 +38,46 @@ window.stuff = {
         outputFormat: "yyyy-MM-dd HH:mm:ss",
         timezone: "Europe/Budapest"
     },
+    //cell - the cell component
+    //formatterParams - parameters set for the column
+    //onRendered - function to call when the formatter has been rendered
+    fmt_path: function (cell, formatterParams, onRendered) {
+        var path = formatterParams.urlPrefix + cell.getValue();
+        var data = cell.getData();
+        return `<a target="img_${data.rowid}" href="${path.replace("_thumb", "")}"><img src="${path}"/></a>`;
+    },
+    fmt_partner_rowid: function (cell, formatterParams, onRendered) {
+        var id = cell.getValue();
+        var data = cell.getData();
+        return `<a target="p_${id}" href="https://rosszlanyok.hu/rosszlanyok.php?pid=szexpartner-data&id=${id}">${data.name} (${id})</a>`;
+    },
+    fmt_location: function (cell, formatterParams, onRendered) {
+        var cells = cell.getData();
+        var data = JSON.parse(cell.getValue());
+        var mapslink = "";
+        if (data.bbox && data.bbox.lat1 && data.bbox.lon1) {
+            if (data.bbox.lat2 && data.bbox.lon2) {
+                var lat = (data.bbox.lat1 + data.bbox.lat2) / 2;
+                var lon = (data.bbox.lon1 + data.bbox.lon2) / 2;
+            } else {
+                lat = data.bbox.lat1;
+                lon = data.bbox.lon1;
+            }
+            mapslink = `https://www.google.com/maps/@${lat},${lon},14z`;
+        } else if (data.formatted) {
+            mapslink = `https://www.google.com/maps?q=${encodeURIComponent(data.formatted)}`;
+        } else {
+            return data.formatted;
+        }
+
+        return `<a target="map_${cells.partner_id}" href="${mapslink}">${data.formatted}</a>`;
+    },
     fmt_call_number: function (cell, formatterParams, onRendered) {
-        //cell - the cell component
-        //formatterParams - parameters set for the column
-        //onRendered - function to call when the formatter has been rendered
         return "<a href=\"callto:" + cell.getValue() + "\">" + cell.getValue() + "</a>";
     },
 };
+window.stuff.fmt_partner_ext_rowid = window.stuff.fmt_partner_rowid;
+window.stuff.fmt_partner_ext_view_rowid = window.stuff.fmt_partner_rowid;
 jQuery.get({
     url: colsUrl,
     dataType: 'json',
@@ -115,5 +153,6 @@ jQuery.get({
                     });
             }
         });
+        window.table.on("tableBuilt", tableDone);
     }
 });

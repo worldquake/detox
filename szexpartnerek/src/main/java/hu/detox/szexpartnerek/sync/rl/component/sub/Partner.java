@@ -46,7 +46,10 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
     private static final String EMAILP = "mailto:";
     private static final String DATEP = "\\d{4}-\\d{2}-\\d{2}";
     private static final Pattern DATEF = Pattern.compile(DATEP);
-    private static final Pattern LOOKING_AGE = Pattern.compile("(\\d+)\\D*(felett)?\\D*(\\d+)?\\D*(alatt)?");
+    private static final Pattern[] LOOKING_AGE = new Pattern[]{
+            Pattern.compile("(\\d+)\\D*felett"),
+            Pattern.compile("(\\d+)?\\D*alatt")
+    };
     private static final Pattern READING = Pattern.compile("(\\d+) levél, (\\d+) olvasatlan");
     private static final Pattern MEASUERS = Pattern.compile("(\\d+\\+?)\\s*(éves|kg|mell|derék|csípő|cm)");
 
@@ -268,28 +271,9 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
             if (props == LOOKING) {
                 val = val.replace("Negyed (SOS francia)", "SOS")
                         .replace("órára", "").replace("akár", "");
-                var am = LOOKING_AGE.matcher(val);
-                boolean find = am.find();
-                if (find && val.contains("év")) {
-                    Integer from = Integer.valueOf(am.group(1));
-                    Integer to;
-                    ArrayNode ara = OM.createArrayNode();
-                    if (StringUtil.isNumeric(am.group(3))) {
-                        to = Integer.valueOf(am.group(3));
-                        if (from < to) {
-                            ara.add(from);
-                            ara.add(to);
-                        } else {
-                            ara.add(to);
-                            ara.add(from);
-                        }
-                    } else {
-                        if (!StringUtil.isBlank(am.group(2))) {
-                            ara.add(18);
-                        }
-                        ara.add(from);
-                    }
-                    result.put("looking_age", ara);
+                Integer[] ar = findAgeRange(val);
+                if (ar != null) {
+                    result.put("looking_age", OM.valueToTree(ar));
                 } else {
                     for (String iv : val.split(",")) {
                         addProp(extra, LOOKING, arr, propsArr, iv);
@@ -308,6 +292,30 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         }
         if (!answerMap.isEmpty()) result.put("answers", answerMap);
         if (!arr.isEmpty()) result.put("looking", arr);
+    }
+
+    private Integer[] findAgeRange(String val) {
+        boolean find = false;
+        boolean low = true;
+        Integer[] ari = new Integer[2];
+        for (Pattern p : LOOKING_AGE) {
+            var am = p.matcher(val);
+            find = am.find();
+            if (find) {
+                Integer from = Integer.valueOf(am.group(1));
+                if (low) ari[0] = from;
+                else ari[1] = from;
+            }
+            low = false;
+        }
+        if (ari[0] == null) ari[0] = 18;
+        if (ari[1] == null) ari[1] = 90;
+        if (ari[0] > ari[1]) {
+            var tmp = ari[1];
+            ari[1] = ari[0];
+            ari[0] = tmp;
+        }
+        return find ? ari : null;
     }
 
     @NotNull

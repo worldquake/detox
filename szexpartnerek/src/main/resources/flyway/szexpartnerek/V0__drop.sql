@@ -4,8 +4,6 @@ DROP VIEW IF EXISTS user_partner_feedback_view;
 
 -- Drop triggers
 DROP TRIGGER IF EXISTS ienum_delete_cascade;
-DROP TRIGGER IF EXISTS update_user_ingestion_date;
-DROP TRIGGER IF EXISTS update_partner_ingestion_date;
 DROP TRIGGER IF EXISTS ppropetchk_insert;
 DROP TRIGGER IF EXISTS ppropetchk_update;
 DROP TRIGGER IF EXISTS paetchk_insert;
@@ -28,6 +26,9 @@ DROP TRIGGER IF EXISTS upfb_bechk_insert;
 DROP TRIGGER IF EXISTS upfb_bechk_update;
 DROP TRIGGER IF EXISTS upfb_detailsechk_insert;
 DROP TRIGGER IF EXISTS upfb_detailsechk_update;
+
+DROP TRIGGER IF EXISTS update_user_ingestion_date;
+DROP TRIGGER IF EXISTS update_partner_ingestion_date;
 DROP TRIGGER IF EXISTS update_upfeedback_ingestion_date;
 
 -- Drop tables (children first, then parents)

@@ -37,21 +37,36 @@ UPDATE partner SET breast=null WHERE breast<60;
 UPDATE partner SET height=null WHERE height<120;
 UPDATE partner SET weight=null WHERE weight<35;
 
+
 UPDATE partner_address AS ma
-SET json = json_set(
-    (SELECT su.json
+SET json = (
+    SELECT su.json
     FROM partner_address AS su
-    WHERE ma.location = su.location
-    AND su.location_extra = ''),
-    '$.extra', ma.location_extra
-) WHERE json_extract(ma.json, '$.name') = ma.location || '; ' || ma.location_extra;
+    WHERE su.location = ma.location
+    AND su.location_extra = ''
+    AND su.json IS NOT NULL
+    ORDER BY su.ts DESC LIMIT 1
+    )
+WHERE json_extract(ma.json, '$.name') = ma.location || '; ' || ma.location_extra
+  AND (
+    SELECT su.json
+    FROM partner_address AS su
+    WHERE su.location = ma.location
+  AND su.location_extra = ''
+  AND su.json IS NOT NULL
+    ORDER BY su.ts DESC LIMIT 1
+    ) IS NOT NULL;
+
+
 
 UPDATE user_partner_feedback
 SET user_id = 0
 WHERE user_id not in (SELECT id FROM user);
 
-UPDATE partner_like SET option = NULL WHERE option IS NOT NULL AND enum_id=14; -- HA_TOBBRE_VAGY_KIVANCSI_HIVJ_FEL
-UPDATE user_partner_feedback SET after_name=NULL, name=null, age=null WHERE partner_id IS NOT NULL;
+UPDATE partner_like SET option = NULL WHERE option IS NOT NULL
+                                        AND enum_id=14; -- HA_TOBBRE_VAGY_KIVANCSI_HIVJ_FEL
+UPDATE user_partner_feedback SET after_name=NULL, name=null, age=null
+WHERE partner_id IS NOT NULL;
 
 UPDATE partner_address
 SET lat = CASE

@@ -40,8 +40,8 @@ public class SyncCommand {
         if (data == null) return data;
         data = data.trim();
         if (ok) data = data
-                .replaceAll("[.,! ]{2,}", "!").replaceAll("[.,? ]{2,}", "?")
                 .replaceAll("\\s+([.,?!])", "$1")
+                .replaceAll("[.,!]{2,}", "!").replaceAll("[.,?]{2,}", "?")
                 .replaceAll("([.,?!])(\\S)", "$1 $2")
                 .replaceAll("\\s+", " ");
         if (StringUtil.isBlank(data) || data.equals("-") || data.equalsIgnoreCase("null")) data = null;

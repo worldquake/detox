@@ -28,6 +28,7 @@ CREATE TRIGGER update_user_ingestion_date
     AFTER UPDATE
     ON user
     FOR EACH ROW
+    WHEN NEW.ts = OLD.ts
 BEGIN
     UPDATE user SET ts = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
@@ -68,6 +69,7 @@ CREATE TRIGGER update_partner_ingestion_date
     AFTER UPDATE
     ON partner
     FOR EACH ROW
+    WHEN NEW.ts = OLD.ts
 BEGIN
     UPDATE partner SET ts = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
@@ -315,6 +317,7 @@ CREATE TRIGGER update_upfeedback_ingestion_date
     AFTER UPDATE
     ON user_partner_feedback
     FOR EACH ROW
+    WHEN NEW.ts = OLD.ts
 BEGIN
     UPDATE user_partner_feedback SET ts = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;

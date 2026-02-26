@@ -38,6 +38,10 @@
         "title": "Active",
         "field": "active_info",
         "sorter": "string",
+        "formatter": "tickCross",
+        "formatterParams": {
+          "tristate": true
+        },
         "headerFilter": "input",
         "minWidth": 50
       },
@@ -626,6 +630,19 @@
             "sorter": "number",
             "hozAlign": "right",
             "width": 120
+          }
+        ]
+      }
+    },
+    "view": {
+      "_view": {
+        "cols": [
+          {
+            "title": "Likes",
+            "field": "likes",
+            "sorter": "string",
+            "headerFilter": "input",
+            "minWidth": 110
           }
         ]
       }
