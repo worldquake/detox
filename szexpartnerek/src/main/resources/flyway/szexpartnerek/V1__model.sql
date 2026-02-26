@@ -457,13 +457,13 @@ SELECT fb.id as rowid,
        -- Good: enum names (bad=0)
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM user_partner_feedback_good gb
-                 JOIN int_enum e ON gb.enum_id = e.id AND e.type = 'fbgbtype'
+                 JOIN int_enum e ON gb.enum_id = e.id AND e.type = 'fbgoodtype'
         WHERE gb.fbid = fb.id)     AS good,
 
        -- Bad: enum names (bad=1)
        (SELECT GROUP_CONCAT(e.name, ', ')
         FROM user_partner_feedback_bad gb
-                 JOIN int_enum e ON gb.enum_id = e.id AND e.type = 'fbgbtype'
+                 JOIN int_enum e ON gb.enum_id = e.id AND e.type = 'fbbadtype'
         WHERE gb.fbid = fb.id)     AS bad,
 
        -- Details: each as "ENUMNAME: val", separated by double newline
@@ -471,13 +471,6 @@ SELECT fb.id as rowid,
         FROM user_partner_feedback_details d
                  JOIN int_enum e ON d.enum_id = e.id AND e.type = 'fbdtype'
         WHERE d.fbid = fb.id) AS details,
-
-       -- Direct location logic
-       CASE
-           WHEN fb.after_name IS NOT NULL AND (fb.partner_id IS NULL OR p.location IS NULL)
-               THEN fb.after_name
-           ELSE p.location
-           END                AS location,
     fb.log, fb.ts
 FROM user_partner_feedback fb
          LEFT JOIN partner p ON fb.partner_id = p.id
