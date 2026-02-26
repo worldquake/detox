@@ -42,6 +42,7 @@ import static hu.detox.szexpartnerek.spring.SyncCommand.text;
 public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters, ApplicationListener<ContextRefreshedEvent> {
     public static final String IDR = "partner_id";
     public static final Pattern IDP = Pattern.compile("(id=|member/|adatlap/)([0-9]+)");
+    private static final Pattern KRL = Pattern.compile("kedves rosszl[áa]ny v[áa]r( r[áa]d)?!?", Pattern.CASE_INSENSITIVE);
 
     private static final String EMAILP = "mailto:";
     private static final String DATEP = "\\d{4}-\\d{2}-\\d{2}";
@@ -295,13 +296,14 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
     }
 
     private Integer[] findAgeRange(String val) {
-        boolean find = false;
+        boolean find = false, ffind = find;
         boolean low = true;
         Integer[] ari = new Integer[2];
         for (Pattern p : LOOKING_AGE) {
             var am = p.matcher(val);
             find = am.find();
             if (find) {
+                ffind = true;
                 Integer from = Integer.valueOf(am.group(1));
                 if (low) ari[0] = from;
                 else ari[1] = from;
@@ -315,7 +317,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
             ari[1] = ari[0];
             ari[0] = tmp;
         }
-        return find ? ari : null;
+        return ffind ? ari : null;
     }
 
     @NotNull
@@ -392,9 +394,12 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
                 break;
             }
         }
-        intro = normalize(intro);
-        if (intro != null && (intro.startsWith(name) || intro.endsWith(".hu"))) intro = null;
-        result.put("pass", intro);
+        intro = StringUtils.trimToEmpty(normalize(intro))
+                .replaceAll("\"", "")
+                .replaceFirst("^Jelige: ", "");
+        if (intro.startsWith(name + ",") || intro.endsWith(". hu")) intro = null;
+        intro = StringUtils.trimToNull(intro);
+        if (intro != null) result.put("pass", intro);
 
         ArrayNode phoneArr = OM.createArrayNode();
         Elements phoneLinks = doc.select("a.phone-number");
@@ -483,8 +488,16 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         if (aboutDiv != null) {
             aboutDiv.select("div,span").remove();
             String introHtml = normalize(aboutDiv.html());
-            if (introHtml != null) introHtml = introHtml.replaceAll(">\\s+<", "><").trim();
-            result.put("about", introHtml);
+            if (introHtml != null) {
+                introHtml = introHtml
+                        .replaceAll(">\\s+<", "><")
+                        .replaceAll("kedves rosszl[áa]ny[ok]* v[áa]r[nak]*( r[áa]d)?!?", "><");
+                m = KRL.matcher(introHtml);
+                introHtml = m.replaceFirst("")
+                        .replaceFirst("^[!.:?);*\"\\-,]+\\s*", "")
+                        .trim().replaceFirst("^(<br/?>|:|\\)|\\s)*", "");
+            }
+            if (StringUtils.isNotBlank(introHtml)) result.put("about", introHtml);
         }
 
         Element likesDiv = leftContainer.selectFirst("div#dsLeftLikeContainer");

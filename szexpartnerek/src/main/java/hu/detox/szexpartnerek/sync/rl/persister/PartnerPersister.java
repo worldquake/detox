@@ -43,8 +43,8 @@ public class PartnerPersister extends AbstractPersister {
         partnerParams[1] = active ? phn.get(0).asText() : null;
         partnerParams[2] = name.asText();
         sb.append(' ').append(name);
-        partnerParams[3] = root.get("pass").asText();
-        partnerParams[4] = active ? root.get("about").asText() : null;
+        partnerParams[3] = root.hasNonNull("pass") ? root.get("pass").asText() : null;
+        partnerParams[4] = root.hasNonNull("about") ? root.get("about").asText() : null;
         partnerParams[5] = root.get("active").asText();
         partnerParams[6] = root.has("expect") && !root.get("expect").isNull() ? root.get("expect").asText() : null;
 

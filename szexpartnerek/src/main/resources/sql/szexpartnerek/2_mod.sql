@@ -177,20 +177,10 @@ WHERE enum_id = (SELECT id FROM int_enum WHERE type = 'properties' AND name = 'S
                        AND option = 'no');
 
 -- Partner pass update (removing/adjusting)
-update partner
-set pass=TRIM(SUBSTR(pass, INSTR(pass, '"') + 1, INSTR(SUBSTR(pass, INSTR(pass, '"') + 1), '"') - 1))
-where pass like '%"%"%';
-
-update partner
-set pass=null
-where pass = 'null'
-   or pass like '%. hu'
-   OR (name is not null and pass like name || '%');
-
-update partner set about=NULL WHERE about='null';
-update partner
-set about=TRIM(REPLACE(about, 'Kedves rosszlány vár! :)', ''))
-where about LIKE '%rosszl%';
+UPDATE partner SET expect=TRIM(REPLACE(REPLACE(expect, 'Transzszexuális,', ''), 'Transzszexuális', '')) WHERE about LIKE '%rans%';
+update partner SET pass=NULL where pass like '%. hu' OR pass IN ('rosszlány!', '', 'null', name) OR (name is not null and pass like name || '%');
+UPDATE partner SET about=NULL WHERE TRIM(about) in ('null', '', ':)', ';)');
+UPDATE partner SET expect=NULL WHERE TRIM(expect) in ('null', '');
 
 -- Delete from partner_prop the locations if WEBCAM ONLY
 DELETE
