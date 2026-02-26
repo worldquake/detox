@@ -53,8 +53,13 @@ window.stuff = {
     },
     fmt_location: function (cell, formatterParams, onRendered) {
         var cells = cell.getData();
-        var data = JSON.parse(cell.getValue());
+        var data = cell.getValue();
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+        }
         var mapslink = "";
+        var q = data.formatted || data.name;
         if (data.bbox && data.bbox.lat1 && data.bbox.lon1) {
             if (data.bbox.lat2 && data.bbox.lon2) {
                 var lat = (data.bbox.lat1 + data.bbox.lat2) / 2;
@@ -64,13 +69,12 @@ window.stuff = {
                 lon = data.bbox.lon1;
             }
             mapslink = `https://www.google.com/maps/@${lat},${lon},14z`;
-        } else if (data.formatted) {
-            mapslink = `https://www.google.com/maps?q=${encodeURIComponent(data.formatted)}`;
+        } else if (q) {
+            mapslink = `https://www.google.com/maps?q=${encodeURIComponent(q)}`;
         } else {
-            return data.formatted;
+            return data;
         }
-
-        return `<a target="map_${cells.partner_id}" href="${mapslink}">${data.formatted}</a>`;
+        return `<a target="map_${cells.partner_id}" href="${mapslink}">${q}</a>`;
     },
     fmt_call_number: function (cell, formatterParams, onRendered) {
         return "<a href=\"callto:" + cell.getValue() + "\">" + cell.getValue() + "</a>";
