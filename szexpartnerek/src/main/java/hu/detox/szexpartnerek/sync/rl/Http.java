@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Getter
-@ConfigurationProperties("rl.client")
+@ConfigurationProperties("szexpartnerek.rl.client")
 public class Http extends hu.detox.utils.Http {
     private String login;
     private static final String LIKE = "action=likes&action_parameter=cancel&like_rate=cancel";
