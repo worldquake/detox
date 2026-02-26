@@ -53,9 +53,9 @@ public class DataRepository {
         boolean onlyHeader;
 
         @SneakyThrows
-        private static List<OrderByElement> toOrder(JsonNode o) {
+        private static String toOrder(JsonNode o) {
             List<OrderByElement> orderByElements = new ArrayList<>();
-            if (o == null) return orderByElements;
+            if (o == null) return "";
             for (JsonNode sortItem : o) {
                 String field = sortItem.has("field") ? sortItem.get("field").asText() : null;
                 String dir = sortItem.has("dir") ? sortItem.get("dir").asText() : "asc";
@@ -67,7 +67,7 @@ public class DataRepository {
                     orderByElements.add(element);
                 }
             }
-            return orderByElements;
+            return StringUtils.join(orderByElements, ", ");
         }
 
 

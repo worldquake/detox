@@ -34,11 +34,11 @@ public class SyncCommand {
 
     public static String normalize(String data) {
         if (data == null) return data;
-        data = data.trim().replaceAll("([.,!])(\\S)", "$1 $2")
-                .replaceAll("\\s+", " ")
-                .replace(" , ", ", ")
-                .replace(".,", ",")
-                .replace(" .,", ",");
+        data = data.trim()
+                .replaceAll("[.,! ]{2,}", "!").replaceAll("[.,? ]{2,}", "?")
+                .replaceAll("\\s+([.,?!])", "$1")
+                .replaceAll("([.,?!])(\\S)", "$1 $2")
+                .replaceAll("\\s+", " ");
         if (StringUtil.isBlank(data) || data.equals("-") || data.equalsIgnoreCase("null")) data = null;
         return data;
     }

@@ -137,14 +137,14 @@
         "field": "looking_age_min",
         "sorter": "number",
         "hozAlign": "right",
-        "width": 150
+        "width": 50
       },
       {
         "title": "Looking Age Max",
         "field": "looking_age_max",
         "sorter": "number",
         "hozAlign": "right",
-        "width": 150
+        "width": 50
       },
       {
         "title": "Timestamp",
@@ -283,17 +283,15 @@
     "view": {
       "_ext": {
         "minus": [
-          "looking_age_max",
-          "looking_age_min",
           "del"
         ],
         "cols": [
           {
-            "title": "Accepted age",
-            "field": "ages",
+            "title": "Breasts",
+            "field": "breasts",
             "sorter": "string",
-            "hozAlign": "left",
-            "width": 50
+            "headerFilter": "input",
+            "width": 130
           },
           {
             "title": "Hair",
@@ -308,13 +306,6 @@
             "sorter": "string",
             "headerFilter": "input",
             "width": 120
-          },
-          {
-            "title": "Breasts",
-            "field": "breasts",
-            "sorter": "string",
-            "headerFilter": "input",
-            "width": 130
           },
           {
             "title": "Body",
