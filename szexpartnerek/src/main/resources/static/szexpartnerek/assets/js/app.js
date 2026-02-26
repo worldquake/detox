@@ -93,7 +93,7 @@ jQuery.get({
             initialSort.forEach(function (s) {
                 var parts = s.split(' ');
                 if (parts.length === 2) {
-                    tabulatorSort.push({column: parts[0], dir: parts[1] === 'desc' ? 'desc' : 'asc'});
+                    tabulatorSort.push({column: parts[0], dir: parts[1]});
                 }
             });
         }

@@ -48,7 +48,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
     private static final Pattern DATEF = Pattern.compile(DATEP);
     private static final Pattern[] LOOKING_AGE = new Pattern[]{
             Pattern.compile("(\\d+)\\D*felett"),
-            Pattern.compile("(\\d+)?\\D*alatt")
+            Pattern.compile("(\\d+)\\D*alatt")
     };
     private static final Pattern READING = Pattern.compile("(\\d+) levél, (\\d+) olvasatlan");
     private static final Pattern MEASUERS = Pattern.compile("(\\d+\\+?)\\s*(éves|kg|mell|derék|csípő|cm)");
@@ -482,8 +482,8 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         Element aboutDiv = leftContainer.selectFirst("div#bemutatkozasContainer");
         if (aboutDiv != null) {
             aboutDiv.select("div,span").remove();
-            String introHtml = normalize(aboutDiv.html())
-                    .replaceAll(">\\s+<", "><").trim();
+            String introHtml = normalize(aboutDiv.html());
+            if (introHtml != null) introHtml = introHtml.replaceAll(">\\s+<", "><").trim();
             result.put("about", introHtml);
         }
 

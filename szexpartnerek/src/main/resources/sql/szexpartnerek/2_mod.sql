@@ -180,11 +180,17 @@ WHERE enum_id = (SELECT id FROM int_enum WHERE type = 'properties' AND name = 'S
 update partner
 set pass=TRIM(SUBSTR(pass, INSTR(pass, '"') + 1, INSTR(SUBSTR(pass, INSTR(pass, '"') + 1), '"') - 1))
 where pass like '%"%"%';
+
 update partner
 set pass=null
 where pass = 'null'
-   or pass like '%.hu'
+   or pass like '%. hu'
    OR (name is not null and pass like name || '%');
+
+update partner set about=NULL WHERE about='null';
+update partner
+set about=TRIM(REPLACE(about, 'Kedves rosszlány vár! :)', ''))
+where about LIKE '%rosszl%';
 
 -- Delete from partner_prop the locations if WEBCAM ONLY
 DELETE
