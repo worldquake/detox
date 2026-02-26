@@ -80,6 +80,7 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
         JsonNode currCols = node.get(F_COLUMNS);
         if (currCols instanceof ObjectNode)
             cols.add(currCols);
+        minusOn(node, cols);
         node = (ObjectNode) node.get(longest.get());
         if (cols.isEmpty()) cols.add(ROWID);
         currCols = node.get(F_COLUMNS);
@@ -87,6 +88,17 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
         if (currCols instanceof ArrayNode) currCols.forEach(c -> {
             if (prjAll || prj.contains(c.get("field").asText())) cols.add(c);
         });
+        minusOn(node, cols);
+        JsonNode s = node.get(F_SORT);
+        if (s != null) sort.add(s);
+        if (finalName.contentEquals(sb)) return;
+        ObjectNode subObj = (ObjectNode) node.get(F_SUB);
+        findAndBuildColumns(subObj, prj, cols, sort, finalName, sb);
+        subObj = (ObjectNode) node.get("view");
+        findAndBuildColumns(subObj, prj, cols, sort, finalName, sb);
+    }
+
+    private static void minusOn(ObjectNode node, ArrayNode cols) {
         JsonNode minus = node.get("minus");
         if (minus instanceof ArrayNode) {
             minus.forEach(c -> {
@@ -104,13 +116,7 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
                 }
             } else removeByField(cols, tn);
         }
-        JsonNode s = node.get(F_SORT);
-        if (s != null) sort.add(s);
-        if (finalName.contentEquals(sb)) return;
-        ObjectNode subObj = (ObjectNode) node.get(F_SUB);
-        findAndBuildColumns(subObj, prj, cols, sort, finalName, sb);
-        subObj = (ObjectNode) node.get("view");
-        findAndBuildColumns(subObj, prj, cols, sort, finalName, sb);
+
     }
 
     private static void removeByField(ArrayNode cols, TextNode node) {

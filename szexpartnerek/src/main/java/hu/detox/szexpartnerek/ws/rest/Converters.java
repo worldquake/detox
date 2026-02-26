@@ -7,6 +7,7 @@ import hu.detox.utils.strings.StringUtils;
 import jakarta.validation.ValidationException;
 import lombok.SneakyThrows;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.AllColumns;
@@ -65,7 +66,9 @@ public class Converters implements WebMvcConfigurer {
         for (SelectItem<?> item : select.getSelectItems()) {
             if (item.getExpression() instanceof AllColumns) {
                 for (String col : allowed) {
-                    newItems.add(new SelectItem<>(new Column(col)));
+                    var si = new SelectItem<>(new Column(col));
+                    if (col.equals(DataRepository.FIELD_ROWID)) si.setAlias(new Alias(col));
+                    newItems.add(si);
                 }
             } else if (item.getExpression() instanceof Column c) {
                 String colName = c.getColumnName();

@@ -1,0 +1,1 @@
+ALTER TABLE main.partner_img ADD COLUMN likes INTEGER DEFAULT 0;

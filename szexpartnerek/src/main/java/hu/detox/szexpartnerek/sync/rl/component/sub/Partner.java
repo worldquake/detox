@@ -162,7 +162,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
 
     private void quality(Element dataCol, ArrayNode propsArr, ObjectNode result) {
         for (Element li : dataCol.select("li.check")) {
-            String txt = text(li);
+            String txt = text(true, li);
             if (txt == null
                     || txt.contains("adatlap kitöltés") || txt.contains("Belépett")) continue;
             addProp(extra, PROPS, propsArr, null, txt);
@@ -178,8 +178,8 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         String[] openHours = new String[7];
         Arrays.fill(openHours, null);
         for (Element row : rows) {
-            String days = text(row.selectFirst("td[align=right]"));
-            String time = text(row.select("td").get(1));
+            String days = text(false, row.selectFirst("td[align=right]"));
+            String time = text(false, row.select("td").get(1));
             if (time != null) for (String d : dayMap.keySet()) {
                 if (days.contains(d)) openHours[dayMap.get(d)] = time;
             }
@@ -220,7 +220,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         } catch (IndexOutOfBoundsException ioob) {
             // Ok, no props
         }
-        txt = text(dataCol.selectFirst("a[href^=" + EMAILP + "]"), "href");
+        txt = text(false, dataCol.selectFirst("a[href^=" + EMAILP + "]"), "href");
         if (txt != null) result.put("email", txt.replaceFirst(EMAILP, ""));
     }
 
@@ -228,7 +228,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         Element seg = html(dataCol, "⚠️");
         Element a = seg.selectFirst("a");
         if (a != null) a.append("⚠️");
-        String txt = text(seg).replaceAll("Fontos:", "⚠️");
+        String txt = text(true, seg).replaceAll("Fontos:", "⚠️");
 
         int idx2 = txt.indexOf("⚠️");
         ArrayNode loc = null;
@@ -367,9 +367,9 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         ArrayNode propsArr = OM.createArrayNode();
         ArrayNode massageArr = OM.createArrayNode();
 
-        String name = text(doc.selectFirst(".mainDataRow a.datasheetColorLink,div#memberReportingMain p.title"));
+        String name = text(true, doc.selectFirst(".mainDataRow a.datasheetColorLink,div#memberReportingMain p.title"));
         result.put("name", name.replace(" - Jelentés", ""));
-        name = text(
+        name = text(false,
                 doc.selectFirst("div#externalContainer a[href~=(member|adatlap)], form#tag_felhaszn_comment"),
                 "href", "action");
         Matcher m = IDP.matcher(name);
@@ -379,7 +379,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
 
         String intro = null;
         for (Element s : doc.select("div:containsOwn(Jelige: ),div#content h1")) {
-            intro = text(s);
+            intro = text(true, s);
             if (intro != null && intro.contains("Jelige")) {
                 break;
             }
@@ -403,7 +403,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         Elements dataCols = leftContainer.select("div.dataSheetColumnData");
         ArrayNode location = firstData(dataCols.get(0), propsArr, result);
         if (location != null) {
-            String glink = text(doc.selectFirst("div#mapsInnerContainer iframe"), "src");
+            String glink = text(false, doc.selectFirst("div#mapsInnerContainer iframe"), "src");
             if (glink != null) {
                 glink = HttpUrl.get(glink).queryParameter("q");
                 if (glink.matches("[0-9.,]+")) { // geo coordinate
@@ -456,11 +456,15 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
                 if (img != null) {
                     String src = img.attr("src");
                     String title = img.attr("title");
+                    m = Pattern.compile("([0-9]+) Tetszik").matcher(title);
+                    int likes = 0;
+                    if (m.find()) likes = Integer.parseInt(m.group(1));
                     m = Pattern.compile("Feltöltve: (" + DATEP + ")").matcher(title);
                     String date = m.find() ? m.group(1) : "";
                     ArrayNode imgData = OM.createArrayNode();
                     imgData.add(normalize(date));
                     imgData.add(src);
+                    imgData.add(likes);
                     imgsArr.add(imgData);
                 }
             }

@@ -21,20 +21,25 @@ import static hu.detox.spring.DetoxConfig.ctx;
 @RequiredArgsConstructor
 @ConditionalOnExpression("'hu.detox.szexpartnerek'.startsWith('${root}')")
 public class SyncCommand {
-    public static String text(Element el, String... attrs) {
+    public static String text(boolean clean, Element el, String... attrs) {
         if (el == null) return null;
         String data = null;
         for (String att : attrs) {
-            data = normalize(el.attr(att));
+            data = clean(clean, el.attr(att));
             if (data != null) break;
         }
-        if (data == null) data = normalize(el.text());
+        if (data == null) data = clean(clean, el.text());
         return data;
     }
 
     public static String normalize(String data) {
+        return clean(true, data);
+    }
+
+    private static String clean(boolean ok, String data) {
         if (data == null) return data;
-        data = data.trim()
+        data = data.trim();
+        if (ok) data = data
                 .replaceAll("[.,! ]{2,}", "!").replaceAll("[.,? ]{2,}", "?")
                 .replaceAll("\\s+([.,?!])", "$1")
                 .replaceAll("([.,?!])(\\S)", "$1 $2")

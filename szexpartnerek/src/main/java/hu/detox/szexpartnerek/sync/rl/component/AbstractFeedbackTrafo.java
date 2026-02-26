@@ -227,7 +227,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
 
         // Finding the partner "name" and all data we can use about the partner
         Element a = sel.length > 1 ? elem.selectFirst(sel[1]) : null;
-        String name = normalize(text(a));
+        String name = text(true, a);
         if (name != null) ret.put("name", name);
         Element extra = partnerIdAdderGetExtra(ret, elem);
         Timestamp ts = null;

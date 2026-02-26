@@ -18,7 +18,7 @@
     ]
   },
   "partner": {
-    "sort": "ts desc",
+    "srt": "ts desc",
     "cols": [
       {
         "title": "Phone",
@@ -208,6 +208,10 @@
         ]
       },
       "_img": {
+        "srt": [
+          "likes desc",
+          "ondate desc"
+        ],
         "cols": [
           {
             "title": "On Date",
@@ -220,6 +224,10 @@
             "title": "Path",
             "field": "path",
             "sorter": "string",
+            "formatter": "image",
+            "formatterParams": {
+              "urlPrefix": "https://rosszlanyok.hu/images"
+            },
             "headerFilter": "input",
             "minWidth": 320
           }
@@ -401,7 +409,7 @@
         ],
         "view": {
           "_view": {
-            "sort": "rating desc",
+            "srt": "rating desc",
             "cols": [
               {
                 "title": "Rating",

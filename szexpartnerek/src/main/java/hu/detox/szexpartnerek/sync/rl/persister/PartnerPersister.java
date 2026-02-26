@@ -126,8 +126,9 @@ public class PartnerPersister extends AbstractPersister {
         }
 
         for (JsonNode arr : root.get("imgs")) {
-            Object ondate = arr.get(0).isNull() ? null : arr.get(0).asText();
-            imgBatch.add(new Object[]{partnerId, ondate, arr.get(1).asText()});
+            Object ondate = arr.hasNonNull(0) ? arr.get(0).asText() : null;
+            String path = arr.get(1).asText().replace("./images", "");
+            imgBatch.add(new Object[]{partnerId, ondate, path, arr.get(2).asInt()});
         }
 
         JsonNode activity = root.get("activity");
@@ -179,7 +180,7 @@ public class PartnerPersister extends AbstractPersister {
                 new Object[]{null, getId() + "_looking", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", lookingBatch},
                 new Object[]{null, getId() + "_massage", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ") VALUES (?, ?)", massageBatch},
                 new Object[]{null, getId() + "_like", "(" + Partner.IDR + ", " + IPersister.ENUM_IDR + ", option) VALUES (?, ?, ?)", likeBatch},
-                new Object[]{null, getId() + "_img", "(" + Partner.IDR + ", ondate, path) VALUES (?, ?, ?)", imgBatch}
+                new Object[]{null, getId() + "_img", "(" + Partner.IDR + ", ondate, path, likes) VALUES (?, ?, ?, ?)", imgBatch}
         };
         String del;
         for (Object[] arr : tableNameOps) {

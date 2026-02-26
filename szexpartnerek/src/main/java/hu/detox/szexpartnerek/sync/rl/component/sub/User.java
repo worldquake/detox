@@ -165,8 +165,8 @@ public class User extends AbstractTrafoEngine implements ITrafoEngine.Filters {
         var soup = Jsoup.parse(data);
         Matcher idm = Partner.IDP.matcher(((Comment) soup.childNode(0)).getData());
         Element frst = soup.selectFirst("#about-me-user-list");
-        String frstln = frst == null ? "" : text(frst);
-        String name = text(soup.selectFirst("div#content h1"));
+        String frstln = frst == null ? "" : text(true, frst);
+        String name = text(true, soup.selectFirst("div#content h1"));
         ObjectNode result = null;
         if (name == null) {
             // Deleted user trigger
