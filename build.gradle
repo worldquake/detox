@@ -31,4 +31,19 @@ generateGrammarSource {
 
 application {
     mainClass = "hu.detox.Main"
+    applicationDefaultJvmArgs = file('java-args.txt').readLines().findAll { it }
+}
+
+distributions {
+    main {
+        contents {
+            from('src/main/sh') {
+                eachFile { fcd ->
+                    if (fcd.name.endsWith('.sh')) {
+                        fcd.fileMode = 0755
+                    }
+                }
+            }
+        }
+    }
 }
