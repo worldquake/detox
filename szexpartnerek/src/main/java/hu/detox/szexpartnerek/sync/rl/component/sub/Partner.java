@@ -491,7 +491,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
             if (introHtml != null) {
                 introHtml = introHtml
                         .replaceAll(">\\s+<", "><")
-                        .replaceAll("kedves rosszl[áa]ny[ok]* v[áa]r[nak]*( r[áa]d)?!?", "><");
+                        .replaceAll("kedves rosszl[áa]ny[ok]* v[áa]r[nak]*( r[áa]d)?!?", "");
                 m = KRL.matcher(introHtml);
                 introHtml = m.replaceFirst("")
                         .replaceFirst("^[!.:?);*\"\\-,]+\\s*", "")

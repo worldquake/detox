@@ -10,29 +10,53 @@ if (window.location.protocol === "file:") {
     colsUrl = baseFile + ".json";
 }
 
-function tableDone(x) {
-    const t = window.table;
-    t.hideColumn("name");
-}
-
-function setField(columns, what) {
+function initializeFields(columns) {
     columns.forEach(function (col) {
         // If this column uses the datetime formatter
-        if (col.formatter === what) {
-            var params = window.stuff[what];
+        if (col.formatter === "datetime") {
+            var params = window.stuff["datetime"];
             col.formatterParams = Object.assign({}, col.formatterParams, params);
-            col.sorter = what;
+            col.sorter = "datetime";
         }
         var fs = window.stuff["fmt_" + table + "_" + col.field] || window.stuff["fmt_" + col.field];
         if (fs) col.formatter = fs;
-        // If this column has subcolumns (nested columns)
-        if (col.columns) {
-            setDatetimeFormatterParams(col.columns, what);
-        }
+        col.headerMenu = window.stuff.headerMenu;
     });
 }
 
 window.stuff = {
+    headerMenu: function () {
+        var menu = [];
+        var columns = this.getColumns();
+
+        for (let column of columns) {
+            let $icon = $("<span>")
+                .addClass("ui-icon")
+                .addClass(column.isVisible() ? "ui-icon-check" : "ui-icon-blank")
+                .css({
+                    display: "inline-block",
+                    "vertical-align": "middle",
+                    "margin-right": "4px"
+                });
+
+            let $label = $("<span>");
+            let $title = $("<span>").text(" " + column.getDefinition().title);
+            $label.append($icon).append($title);
+            menu.push({
+                label: $label[0],
+                action: function (e) {
+                    e.stopPropagation();
+                    column.toggle();
+                    if (column.isVisible()) {
+                        $icon.removeClass("ui-icon-blank").addClass("ui-icon-check");
+                    } else {
+                        $icon.removeClass("ui-icon-check").addClass("ui-icon-blank");
+                    }
+                }
+            });
+        }
+        return menu;
+    },
     datetime: {
         inputFormat: "yyyy-MM-dd HH:mm:ss",
         outputFormat: "yyyy-MM-dd HH:mm:ss",
@@ -88,7 +112,7 @@ jQuery.get({
     success: function (def) {
         // Prepare columns and initialSort
         var columns = def.cols || [];
-        setField(columns, "datetime");
+        initializeFields(columns, "datetime");
         var initialSort = def.sort || [];
 
         // Convert sort array to Tabulator format if present
@@ -105,6 +129,7 @@ jQuery.get({
         // Initialize Tabulator
         window.table = new Tabulator("#results-table", {
             layout: "fitColumns",
+            persistenceMode: true, persistenceID: table, persistence: true,
             responsiveLayout: false,
             history: true,
             pagination: true,
@@ -157,6 +182,5 @@ jQuery.get({
                     });
             }
         });
-        window.table.on("tableBuilt", tableDone);
     }
 });
