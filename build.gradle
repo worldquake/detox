@@ -40,11 +40,7 @@ distributions {
     main {
         contents {
             from('src/main/sh') {
-                eachFile { fcd ->
-                    if (fcd.name.endsWith('.sh')) {
-                        fcd.fileMode = 0755
-                    }
-                }
+                fileMode = 0755
             }
         }
     }
