@@ -13,6 +13,9 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.shell.command.CommandCatalog;
 import org.springframework.shell.command.CommandContext;
 import org.springframework.shell.command.CommandRegistration;
@@ -46,17 +49,22 @@ public class Shell implements ApplicationListener<ApplicationReadyEvent> {
         childContext.scan(pkg);
         PCKS.put(pkg, childContext);
         childContext.refresh();
+        Map<String, ConversionService> csvcs = childContext.getBeansOfType(ConversionService.class);
+        CommandCatalog cc = cac.getBean(CommandCatalog.class);
         // Copy all beans from the child context to the parent context
         String[] beanNames = childContext.getBeanDefinitionNames();
         for (String beanName : beanNames) {
             if (cac.containsBean(beanName)) continue;
             Object bean = childContext.getBean(beanName);
+            if (bean instanceof Converter<?, ?> c)
+                for (ConversionService cs : csvcs.values()) {
+                    System.out.println("Adding " + c);
+                    ((GenericConversionService) cs).addConverter(c);
+                }
+            if (bean instanceof CommandRegistration c) cc.register(c);
             cac.getBeanFactory().registerSingleton(beanName, bean);
         }
         childContext.publishEvent(new ContextRefreshedEvent(childContext));
-        // Register commands manually after they are loaded
-        CommandCatalog c = cac.getBean(CommandCatalog.class);
-        cac.getBeansOfType(CommandRegistration.class).values().forEach(c::register);
         return true;
     }
 

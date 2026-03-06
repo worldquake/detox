@@ -1,9 +1,12 @@
 package hu.detox.spring;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import hu.detox.Agent;
 import hu.detox.config.Cfg2PropertySourceFactory;
 import hu.detox.io.IOUtils;
 import hu.detox.parsers.AmountCalculator;
+import hu.detox.parsers.JSonUtils;
+import lombok.SneakyThrows;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.jscience.physics.amount.Amount;
 import org.jspecify.annotations.Nullable;
@@ -15,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.io.FileSystemResource;
@@ -34,6 +38,17 @@ public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
     private static AsyncTaskExecutor executor;
     private static PropertyResolver resolver;
     private static ConversionService converter;
+
+    @Bean
+    Converter<String, JsonNode> nodeConverter() {
+        return new Converter<>() {
+            @SneakyThrows
+            @Override
+            public JsonNode convert(String s) {
+                return JSonUtils.OM.readValue(s, JsonNode.class);
+            }
+        };
+    }
 
     @Bean
     public ConversionService conversionService() {

@@ -161,7 +161,7 @@ public class DataRepository {
         }
 
         public void table(String override) {
-            String n = Converters.valueOf(q.getFromItem());
+            String n = WebConfig.valueOf(q.getFromItem());
             if (n == null) q.setFromItem(new Table(override));
         }
 

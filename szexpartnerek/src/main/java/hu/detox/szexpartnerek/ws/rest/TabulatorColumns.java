@@ -52,11 +52,11 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
     }
 
     public @NotNull ObjectNode generateTabulatorColumns(PlainSelect q) {
-        String name = Converters.valueOf(q.getFromItem());
+        String name = WebConfig.valueOf(q.getFromItem());
         StringBuilder sb = new StringBuilder();
         ArrayNode an = OM.createArrayNode();
         ArrayNode sort = OM.createArrayNode();
-        Collection<String> cLst = q.getSelectItems().stream().map(Converters::valueOf).collect(Collectors.toUnmodifiableSet());
+        Collection<String> cLst = q.getSelectItems().stream().map(WebConfig::valueOf).collect(Collectors.toUnmodifiableSet());
         findAndBuildColumns(root, cLst, an, sort, name, sb);
         if (name.contentEquals(sb)) {
             ObjectNode ret = OM.createObjectNode();
