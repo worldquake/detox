@@ -22,7 +22,7 @@ public class GeoCode implements Admin {
     @SneakyThrows
     @Override
     public void run() {
-        query("SELECT rowid,CONCAT(location,'; ',location_extra),lat,lon AS l FROM partner_address" +
+        query("SELECT rowid,CONCAT('Hungary, ',location,'; ',location_extra),lat,lon AS l FROM partner_address" +
                 " WHERE json IS NULL AND location_extra<>'' LIMIT 500", rs -> {
             Map<Integer, JsonObject> map = new HashMap<>();
             while (rs.next()) {

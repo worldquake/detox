@@ -20,15 +20,16 @@ UPDATE partner_address SET json = CONCAT('{"name": "',location,'; ',location_ext
 SELECT rowid
     FROM partner_address
     WHERE json IS NOT NULL AND location_extra <> ''
-    AND ((
-        location LIKE 'Budapest%'
-        AND (
-        json NOT LIKE '%Budapest%'
-            OR (INSTR(location, 'kerület') >0 AND
-                json NOT LIKE '%' || TRIM(SUBSTR(location, INSTR(location, 'Budapest') + LENGTH('Budapest'), LENGTH(location))) || '%')
-      )
+    AND (
+        (location LIKE 'Budapest%' AND (
+            json NOT LIKE '%Budapest%'
+                OR (INSTR(location, 'kerület') > 0 AND
+                    json NOT LIKE
+                    '%' || TRIM(SUBSTR(location, INSTR(location, 'Budapest') + LENGTH('Budapest'), LENGTH(location))) ||
+                    '%')
+        ))
+        OR ( location NOT LIKE 'Budapest%'  AND json NOT LIKE '%' || location || '%' )
     )
-    OR ( location NOT LIKE 'Budapest%'  AND json NOT LIKE '%' || location || '%' ))
 );
 
 UPDATE partner SET hips=null WHERE hips<80;
