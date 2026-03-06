@@ -33,7 +33,7 @@ sourceSets.main.java.srcDirs += antlrDir
 
 application {
     mainClass = "hu.detox.Main"
-    applicationDefaultJvmArgs = file('java-args.txt').readLines().findAll { it }
+    applicationDefaultJvmArgs = file("${rootDir}/java-args.txt").readLines().findAll { it }
 }
 
 distributions {
