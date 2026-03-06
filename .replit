@@ -8,7 +8,7 @@ packages = [
   "mc",
   "unzip",
   "p7zip",
-  "zip"?
+  "zip",
   "wget",
   "curl",
   "nano",
