@@ -24,10 +24,12 @@ dependencies {
     antlr "org.antlr:antlr4:4.13.2"
 }
 
+var antlrDir = "$rootProject.buildDir/generated/antlr"
 generateGrammarSource {
-    outputDirectory = file("$rootProject.buildDir/generated/antlr")
+    outputDirectory = file(antlrDir)
     arguments += ['-package', 'hu.detox.parsers']
 }
+sourceSets.main.java.srcDirs += antlrDir
 
 application {
     mainClass = "hu.detox.Main"

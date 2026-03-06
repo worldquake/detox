@@ -22,4 +22,5 @@ dependencies {
 
 application {
     mainClass = "hu.detox.szexpartnerek.Main"
+    applicationDefaultJvmArgs = file('java-args.txt').readLines().findAll { it }
 }
