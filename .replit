@@ -1,4 +1,4 @@
-modules = ["java-graalvm22.3", "nodejs-20", "bash"]
+modules = ["bash"]
 [agent]
 expertMode = true
 
@@ -42,9 +42,5 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "JAVA_HOME=/nix/store/2ds1jrzlmx4n08sp7flga5sxf000l2sl-zulu-ca-jdk-21.0.4 /nix/store/2ds1jrzlmx4n08sp7flga5sxf000l2sl-zulu-ca-jdk-21.0.4/bin/java @java-args.txt -jar ./szexpartnerek/target/libs/szexpartnerek-1.0-SNAPSHOT.jar"
+args = "JAVA_HOME=/nix/store/2ds1jrzlmx4n08sp7flga5sxf000l2sl-zulu-ca-jdk-21.0.4 /nix/store/2ds1jrzlmx4n08sp7flga5sxf000l2sl-zulu-ca-jdk-21.0.4/bin/java @java-args.txt -jar ./szexpartnerek/target/libs/szexpartnerek-1.0-SNAPSHOT.jar start"
 waitForPort = 8080
-
-[[ports]]
-localPort = 8080
-externalPort = 80
