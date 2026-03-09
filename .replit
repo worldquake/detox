@@ -1,4 +1,4 @@
-modules = ["bash"]
+modules = ["bash", "java-21"]
 [agent]
 expertMode = true
 
@@ -7,6 +7,7 @@ channel = "stable-25_05"
 packages = [
   "mc",
   "unzip",
+  "dos2unix",
   "p7zip",
   "zip",
   "wget",
@@ -18,7 +19,7 @@ packages = [
   "git",
   "tar",
   "findutils",
-  "coreutils"
+  "coreutils",
 ]
 
 [workflows]
@@ -38,9 +39,11 @@ name = "Start application"
 author = "agent"
 
 [workflows.workflow.metadata]
-outputType = "webview"
+outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "JAVA_HOME=/nix/store/2ds1jrzlmx4n08sp7flga5sxf000l2sl-zulu-ca-jdk-21.0.4 /nix/store/2ds1jrzlmx4n08sp7flga5sxf000l2sl-zulu-ca-jdk-21.0.4/bin/java @java-args.txt -jar ./szexpartnerek/target/libs/szexpartnerek-1.0-SNAPSHOT.jar start"
-waitForPort = 8080
+args = "START=./src/main/sh/startup.sh && cd /home/runner/workspace && chmod u+x $START && DTX_MAIN_CLASS=hu.detox.szexpartnerek.ws.Main $START"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-c03e2518-e66b-4271-a939-5b4c7ed09324"
