@@ -32,7 +32,6 @@ import java.util.concurrent.Future;
 
 @Configuration
 @ComponentScan
-//@Import({Shell.class, Commands.class})
 public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
     private static ApplicationContext context;
     private static AsyncTaskExecutor executor;

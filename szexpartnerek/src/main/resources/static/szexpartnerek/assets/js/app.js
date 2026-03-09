@@ -1,5 +1,5 @@
 const url = new URL(location.href);
-const table = url.searchParams.get('t') || "partner";
+const table = url.searchParams.get('t') || url.pathname.replace(/^\//, "").replaceAll('/', '_');
 const prj = url.searchParams.get('p') || "*";
 const q = "p=" + encodeURIComponent(prj) + "&t=" + encodeURIComponent(table);
 var rootUrl = "/api/szexpartnerek/" + table;

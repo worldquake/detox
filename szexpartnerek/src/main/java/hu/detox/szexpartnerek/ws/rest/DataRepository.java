@@ -1,6 +1,7 @@
 package hu.detox.szexpartnerek.ws.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import hu.detox.szexpartnerek.ws.WebConfig;
 import hu.detox.utils.Database;
 import hu.detox.utils.strings.StringUtils;
 import jakarta.validation.Valid;
