@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static hu.detox.szexpartnerek.spring.SzexConfig.query;
+import static hu.detox.szexpartnerek.sync.Shell.args;
 
 public abstract class AbstractTrafoEngine implements ITrafoEngine.Filters, ITrafoEngine {
     private static final Set<AbstractTrafoEngine> FLUSHING = new HashSet<>();
@@ -92,7 +93,7 @@ public abstract class AbstractTrafoEngine implements ITrafoEngine.Filters, ITraf
         untouchableIds = new HashSet<>(10000);
         processableIds = findProcessableIds();
         if (processableIds != null && untouchableIds != null) {
-            if (hu.detox.szexpartnerek.sync.Main.args().isFull()) untouchableIds.clear();
+            if (args().isFull()) untouchableIds.clear();
             System.err.println("Found " + processableIds.size() + " processable ids (Not touchable " + untouchableIds.size() + ") for " + getId());
         }
     }

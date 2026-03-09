@@ -56,7 +56,11 @@ public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
         if (bean instanceof ConversionService && converter != null) return converter;
         if (bean instanceof AsyncTaskExecutor) executor = (AsyncTaskExecutor) bean;
         else if (bean instanceof ConversionService) converter = (GenericConversionService) bean;
-        else System.out.println("Postprocessing " + beanName + " as: " + bean);
+        else {
+            ApplicationContext par = context.getParent();
+            if (par != null && par.containsBean(beanName)) bean = null;
+            else System.out.println("Bean " + beanName + " := " + bean);
+        }
         return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
     }
 

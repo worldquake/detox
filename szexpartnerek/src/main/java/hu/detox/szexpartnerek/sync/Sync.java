@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import static hu.detox.parsers.JSonUtils.OM;
+import static hu.detox.szexpartnerek.sync.Shell.args;
 
 public class Sync implements AutoCloseable {
     @Override
@@ -183,7 +184,7 @@ public class Sync implements AutoCloseable {
                         } else {
                             ln = serde.next();
                         }
-                        if (!hu.detox.szexpartnerek.sync.Main.args().isFull() && ln != null &&
+                        if (!args().isFull() && ln != null &&
                                 engine instanceof ITrafoEngine.Filters tf && tf.skips(ln)) {
                             skip++;
                             continue;

@@ -18,22 +18,24 @@ import java.util.Map;
 public class WebEndpointToggler {
     private final RequestMappingHandlerMapping requestMappingHandlerMapping;
     private final RequestMappingHandlerMapping controllerEndpointHandlerMapping;
-    private Map<RequestMappingInfo, HandlerMethod> lastRemoved;
+    private Map<RequestMappingInfo, HandlerMethod> lastRemoved = new HashMap<>();
+    private Map<RequestMappingInfo, HandlerMethod> lastRemovedController = new HashMap<>();
     private boolean alreadyInit;
 
     @SneakyThrows
     void initByPackage(String pck) {
         if (alreadyInit) return;
         initRemoved(pck);
-        if (lastRemoved.isEmpty()) {
+        if (lastRemoved.isEmpty() && lastRemovedController.isEmpty()) {
             requestMappingHandlerMapping.afterPropertiesSet();
+            controllerEndpointHandlerMapping.afterPropertiesSet();
             initRemoved(pck);
         }
     }
 
     @SneakyThrows
     private void initRemoved(String pck) {
-        lastRemoved = new HashMap<>();
+        lastRemoved.clear();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> e : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
             RequestMappingInfo info = e.getKey();
             HandlerMethod handlerMethod = e.getValue();
@@ -42,17 +44,28 @@ public class WebEndpointToggler {
                 lastRemoved.put(info, handlerMethod);
             }
         }
-        if (lastRemoved.isEmpty())
+        lastRemovedController.clear();
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> e : controllerEndpointHandlerMapping.getHandlerMethods().entrySet()) {
+            RequestMappingInfo info = e.getKey();
+            HandlerMethod handlerMethod = e.getValue();
+            Class<?> beanType = (Class<?>) handlerMethod.getClass().getMethod("getBeanType").invoke(handlerMethod);
+            if (beanType.getName().startsWith(pck + ".")) {
+                lastRemovedController.put(info, handlerMethod);
+            }
+        }
+        if (lastRemoved.isEmpty() && lastRemovedController.isEmpty()) {
             requestMappingHandlerMapping.afterPropertiesSet();
-        else {
-            alreadyInit = true; // If ever this happens it means the classes are loaded
+            controllerEndpointHandlerMapping.afterPropertiesSet();
+        } else {
+            alreadyInit = true;
             lastRemoved.clear();
+            lastRemovedController.clear();
         }
     }
 
     @SneakyThrows
     public boolean remove(String pck) {
-        if (!lastRemoved.isEmpty()) return false;
+        if (!lastRemoved.isEmpty() || !lastRemovedController.isEmpty()) return false;
         for (Map.Entry<RequestMappingInfo, HandlerMethod> e : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
             RequestMappingInfo info = e.getKey();
             HandlerMethod handlerMethod = e.getValue();
@@ -62,17 +75,37 @@ public class WebEndpointToggler {
                 lastRemoved.put(info, handlerMethod);
             }
         }
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> e : controllerEndpointHandlerMapping.getHandlerMethods().entrySet()) {
+            RequestMappingInfo info = e.getKey();
+            HandlerMethod handlerMethod = e.getValue();
+            Class<?> beanType = (Class<?>) handlerMethod.getClass().getMethod("getBeanType").invoke(handlerMethod);
+            if (beanType.getName().startsWith(pck + ".")) {
+                controllerEndpointHandlerMapping.unregisterMapping(info);
+                lastRemovedController.put(info, handlerMethod);
+            }
+        }
         return true;
     }
 
     @SneakyThrows
     public boolean register() {
-        if (lastRemoved.isEmpty()) return false;
-        for (var info : lastRemoved.entrySet()) {
-            HandlerMethod m = info.getValue();
-            requestMappingHandlerMapping.registerMapping(info.getKey(), m.getBean(), m.getMethod());
+        boolean result = false;
+        if (!lastRemoved.isEmpty()) {
+            for (var info : lastRemoved.entrySet()) {
+                HandlerMethod m = info.getValue();
+                requestMappingHandlerMapping.registerMapping(info.getKey(), m.getBean(), m.getMethod());
+            }
+            lastRemoved.clear();
+            result = true;
         }
-        lastRemoved.clear();
-        return true;
+        if (!lastRemovedController.isEmpty()) {
+            for (var info : lastRemovedController.entrySet()) {
+                HandlerMethod m = info.getValue();
+                controllerEndpointHandlerMapping.registerMapping(info.getKey(), m.getBean(), m.getMethod());
+            }
+            lastRemovedController.clear();
+            result = true;
+        }
+        return result;
     }
 }

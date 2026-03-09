@@ -1,11 +1,13 @@
 package hu.detox.szexpartnerek.ws;
 
+import hu.detox.spring.ConditionalOnNoApp;
 import hu.detox.spring.Shell;
 import hu.detox.szexpartnerek.spring.SzexConfig;
 import org.jline.utils.AttributedString;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
 import java.util.function.Function;
 
@@ -13,6 +15,8 @@ import java.util.function.Function;
         scanBasePackages = "hu.detox.szexpartnerek.ws",
         scanBasePackageClasses = SzexConfig.class
 )
+@Component("szexpartnerekWSMain")
+@ConditionalOnNoApp.Annotation
 public class Main implements Function<String, Boolean>, ApplicationListener<ContextRefreshedEvent> {
     private static AttributedString PROMPT = new AttributedString("SexWS> ");
     private WebEndpointToggler toggler;

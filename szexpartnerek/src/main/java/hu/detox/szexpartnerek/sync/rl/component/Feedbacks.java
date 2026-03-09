@@ -28,6 +28,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 
 import static hu.detox.spring.DetoxConfig.ctx;
+import static hu.detox.szexpartnerek.sync.Shell.args;
 
 @Component
 public class Feedbacks extends AbstractFeedbackTrafo implements ApplicationListener<ContextRefreshedEvent> {
@@ -107,7 +108,7 @@ public class Feedbacks extends AbstractFeedbackTrafo implements ApplicationListe
     @Override
     protected Timestamp tsIfToProcess(ObjectNode ret, Comment c, String ts) {
         Timestamp now = super.tsIfToProcess(ret, c, ts);
-        if (!hu.detox.szexpartnerek.sync.Main.args().isFull() && last != null && now.before(last)) return null;
+        if (!args().isFull() && last != null && now.before(last)) return null;
         return now;
     }
 

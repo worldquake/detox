@@ -1,5 +1,6 @@
 package hu.detox.szexpartnerek;
 
+import hu.detox.spring.ConditionalOnNoApp;
 import hu.detox.szexpartnerek.spring.SzexConfig;
 import lombok.RequiredArgsConstructor;
 import org.jline.utils.AttributedString;
@@ -15,6 +16,7 @@ import static hu.detox.szexpartnerek.spring.SyncCommand.normalize;
 @SpringBootApplication(scanBasePackageClasses = SzexConfig.class)
 @Component("szexpartnerek")
 @RequiredArgsConstructor
+@ConditionalOnNoApp.Annotation
 public class Main implements BeanPostProcessor {
     private static AttributedString PROMPT = new AttributedString("Szex> ");
 

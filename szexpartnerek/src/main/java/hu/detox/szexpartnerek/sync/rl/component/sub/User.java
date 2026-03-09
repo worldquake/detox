@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import hu.detox.szexpartnerek.sync.AbstractTrafoEngine;
 import hu.detox.szexpartnerek.sync.IPager;
 import hu.detox.szexpartnerek.sync.ITrafoEngine;
-import hu.detox.szexpartnerek.sync.rl.Http;
 import hu.detox.szexpartnerek.sync.rl.component.New;
 import hu.detox.szexpartnerek.sync.rl.component.UserPartnerFeedback;
 import hu.detox.szexpartnerek.sync.rl.persister.UserPersister;
@@ -33,7 +32,7 @@ public class User extends AbstractTrafoEngine implements ITrafoEngine.Filters {
     private final ITrafoEngine[] sub;
     private transient UserPersister persister;
 
-    private User(UserPartnerFeedback ur, Http cl) {
+    private User(UserPartnerFeedback ur) {
         sub = new ITrafoEngine[]{ur};
         persister = new UserPersister();
     }

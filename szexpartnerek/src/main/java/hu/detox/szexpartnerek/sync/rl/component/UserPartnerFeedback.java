@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 
 import static hu.detox.spring.DetoxConfig.ctx;
 import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
+import static hu.detox.szexpartnerek.sync.Shell.args;
 
 @Component
 public class UserPartnerFeedback extends AbstractFeedbackTrafo {
@@ -84,7 +85,7 @@ public class UserPartnerFeedback extends AbstractFeedbackTrafo {
         Timestamp now = super.tsIfToProcess(ret, c, ts);
         Integer uid = ret.get(User.IDR).asInt();
         Timestamp last = processableIds != null && processableIds.contains(uid) ? null : persister.maxLogTime(uid, null);
-        if (!hu.detox.szexpartnerek.sync.Main.args().isFull() && last != null && now.before(last)) now = null;
+        if (!args().isFull() && last != null && now.before(last)) now = null;
         return now;
     }
 

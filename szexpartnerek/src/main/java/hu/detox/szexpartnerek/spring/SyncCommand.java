@@ -55,7 +55,7 @@ public class SyncCommand {
         List<String> what = ctx.getParserResults().positional();
         var args = new Args(full, maxBatch, what);
         var sync = ctx().getBean(Shell.class)
-                .loadBean(hu.detox.szexpartnerek.sync.Main.class);
+                .loadBean(hu.detox.szexpartnerek.sync.Shell.class);
         return sync.apply(args);
     }
 

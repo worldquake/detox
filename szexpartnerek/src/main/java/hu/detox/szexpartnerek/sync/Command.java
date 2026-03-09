@@ -19,7 +19,7 @@ import java.util.function.Function;
 @Component("szexpartnerekSyncCmd")
 @ConditionalOnExpression("'hu.detox.szexpartnerek.sync'.startsWith('${root}')")
 public class Command implements Function<CommandContext, Sync.Entry> {
-    private final hu.detox.szexpartnerek.sync.Main main;
+    private final hu.detox.szexpartnerek.sync.Shell shell;
 
     @Bean
     public CommandRegistration szexpartnerekSyncRL() {
@@ -33,7 +33,7 @@ public class Command implements Function<CommandContext, Sync.Entry> {
         var sArgs = new ArrayList<>(cmd.getParserResults().positional());
         sArgs.addFirst(cmdStr);
         var args = new Args(false, 0, sArgs);
-        List<Sync.Entry> lst = main.apply(args);
+        List<Sync.Entry> lst = shell.apply(args);
         return lst.isEmpty() ? null : lst.getFirst();
     }
 }

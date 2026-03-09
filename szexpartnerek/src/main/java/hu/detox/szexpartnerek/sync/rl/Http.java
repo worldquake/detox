@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("rlHttp")
 @Getter
 @ConfigurationProperties("szexpartnerek.rl.client")
 public class Http extends hu.detox.utils.Http {

@@ -16,7 +16,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class Entry implements hu.detox.szexpartnerek.sync.Sync.Entry {
     private final List<ITrafoEngine> trafos;
-    private final Http client;
+    private final Http rlHttp;
 
     public static Configuration cfg(String name) throws IOException {
         return ConfigReader.INSTANCE.toCfg(toName(name));
@@ -32,7 +32,7 @@ public class Entry implements hu.detox.szexpartnerek.sync.Sync.Entry {
                 .filter(entry -> doOnly == null || doOnly.remove(entry.getId().toLowerCase(Locale.ROOT)))
                 .toList();
         for (ITrafoEngine te : trfs) {
-            var sync = new Sync(client, recurse, te);
+            var sync = new Sync(rlHttp, recurse, te);
             System.err.println("Processing " + te.getId());
             skp += sync.dataDl(null);
         }

@@ -14,6 +14,7 @@ import org.springframework.boot.context.event.SpringApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.shell.command.CommandCatalog;
@@ -47,9 +48,11 @@ public class Shell implements ApplicationListener<SpringApplicationEvent>, AutoC
         AnnotationConfigApplicationContext childContext = new AnnotationConfigApplicationContext();
         ConfigurableApplicationContext cac = (ConfigurableApplicationContext) ctx();
         childContext.setParent(cac);
-        childContext.scan(pkg);
-        PCKS.put(pkg, childContext);
+        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(childContext);
+        scanner.addExcludeFilter(new ConditionalOnNoApp());
+        scanner.scan(pkg);
         childContext.refresh();
+        PCKS.put(pkg, childContext);
         CommandCatalog cc = cac.getBean(CommandCatalog.class);
         // Copy all beans from the child context to the parent context
         String[] beanNames = childContext.getBeanDefinitionNames();
@@ -58,7 +61,7 @@ public class Shell implements ApplicationListener<SpringApplicationEvent>, AutoC
             Object bean = childContext.getBean(beanName);
             if (bean instanceof Converter<?, ?> c) DetoxConfig.converter().addConverter(c);
             if (bean instanceof CommandRegistration c) cc.register(c);
-            cac.getBeanFactory().registerSingleton(beanName, bean);
+            //cac.getBeanFactory().registerSingleton(beanName, bean);
         }
         childContext.publishEvent(new ContextRefreshedEvent(childContext));
         return true;

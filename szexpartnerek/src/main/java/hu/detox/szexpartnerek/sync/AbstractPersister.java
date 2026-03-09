@@ -12,13 +12,14 @@ import java.time.Instant;
 import java.util.*;
 
 import static hu.detox.szexpartnerek.spring.SzexConfig.jdbc;
+import static hu.detox.szexpartnerek.sync.Shell.args;
 
 public abstract class AbstractPersister implements IPersister, ID<String> {
     private int batch;
 
     @Override
     public void incBatch() {
-        if (++batch >= hu.detox.szexpartnerek.sync.Main.args().getMaxBatch()) {
+        if (++batch >= args().getMaxBatch()) {
             flush();
         }
     }
@@ -64,7 +65,7 @@ public abstract class AbstractPersister implements IPersister, ID<String> {
     }
 
     protected boolean notBigEnoughBatch() {
-        return batch < hu.detox.szexpartnerek.sync.Main.args().getMaxBatch();
+        return batch < args().getMaxBatch();
     }
 
     @Override
