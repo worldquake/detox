@@ -8,6 +8,8 @@ import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.boot.context.event.SpringApplicationEvent;
@@ -54,6 +56,7 @@ public class Shell implements ApplicationListener<SpringApplicationEvent>, AutoC
         childContext.refresh();
         PCKS.put(pkg, childContext);
         CommandCatalog cc = cac.getBean(CommandCatalog.class);
+        DefaultListableBeanFactory parBf = (DefaultListableBeanFactory) cac.getBeanFactory();
         // Copy all beans from the child context to the parent context
         String[] beanNames = childContext.getBeanDefinitionNames();
         for (String beanName : beanNames) {
@@ -61,7 +64,9 @@ public class Shell implements ApplicationListener<SpringApplicationEvent>, AutoC
             Object bean = childContext.getBean(beanName);
             if (bean instanceof Converter<?, ?> c) DetoxConfig.converter().addConverter(c);
             if (bean instanceof CommandRegistration c) cc.register(c);
-            //cac.getBeanFactory().registerSingleton(beanName, bean);
+            BeanDefinition def = childContext.getBeanDefinition(beanName);
+            if (def.isSingleton()) parBf.registerSingleton(beanName, bean);
+            else parBf.registerBeanDefinition(beanName, def);
         }
         childContext.publishEvent(new ContextRefreshedEvent(childContext));
         return true;
