@@ -19,12 +19,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.format.support.DefaultFormattingConversionService;
 
 import java.io.File;
 import java.util.concurrent.Callable;
@@ -37,7 +37,7 @@ public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
     private static ApplicationContext context;
     private static AsyncTaskExecutor executor;
     private static PropertyResolver resolver;
-    private static ConversionService converter;
+    private static GenericConversionService converter;
 
     @Bean
     Converter<String, JsonNode> nodeConverter() {
@@ -50,18 +50,13 @@ public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
         };
     }
 
-    @Bean
-    public ConversionService conversionService() {
-        return new DefaultFormattingConversionService();
-    }
-
     @Override
     public @Nullable Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        if (bean instanceof AsyncTaskExecutor && executor != null) return bean;
-        if (bean instanceof ConversionService && converter != null) return bean;
+        if (bean instanceof AsyncTaskExecutor && executor != null) return executor;
+        if (bean instanceof ConversionService && converter != null) return converter;
         if (bean instanceof AsyncTaskExecutor) executor = (AsyncTaskExecutor) bean;
-        else if (bean instanceof ConversionService) converter = (ConversionService) bean;
-        else System.out.println(beanName + " is: " + bean);
+        else if (bean instanceof ConversionService) converter = (GenericConversionService) bean;
+        else System.out.println("Postprocessing " + beanName + " as: " + bean);
         return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
     }
 
@@ -103,7 +98,7 @@ public class DetoxConfig implements ApplicationContextAware, BeanPostProcessor {
         return context.getResource(res);
     }
 
-    public static ConversionService converter() {
+    public static GenericConversionService converter() {
         return converter;
     }
 
