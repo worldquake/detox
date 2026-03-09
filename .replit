@@ -48,7 +48,5 @@ args = "source /run/replit/env/latest && START=./src/main/sh/startup.sh && cd $H
 [objectStorage]
 defaultBucketID = "replit-objstore-c03e2518-e66b-4271-a939-5b4c7ed09324"
 
-[userenv]
-
 [userenv.shared]
 PATH = "/home/runner/.nix-profile/bin:/home/runner/.local/state/nix/profiles/default/bin:$PATH"
