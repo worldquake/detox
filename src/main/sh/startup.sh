@@ -1,5 +1,6 @@
 #!/bin/bash
-set -x
+#set -x
+LIBDIR=lib
 export CYGWIN=nodosfilewarning
 test -z "${ABASE}" && ABASE=`dirname $0`
 OABASE=$ABASE
@@ -12,13 +13,11 @@ DTX_JAVA_EXECUTABLE="${DTX_JAVA_EXECUTABLE:-java}"
 DTX_ENV=${DTX_ENV:-true}
 test -z "${DTX_ENV_HOME}" -o -f ${DTX_ENV_HOME}/.update-ignore && DTX_ENV=false
 $DTX_ENV || DTX_ENV_HOME=
-UBASE=${USERPROFILE:-$HOME}/.detox-utils; mkdir "$UBASE"
+UBASE=${USERPROFILE:-$HOME}/.detox-utils; mkdir "$UBASE" 2>/dev/null
 UBASE=`realpath ${UBASE}`
-JBASE=$ABASE/ext
-test -z "${UTILS}" && UTILS=$ABASE/detox-*jar && UTILS=`echo $UTILS`
+JBASE=$ABASE/$LIBDIR
 ASPECTJ=aspectjweaver*.jar && ASPECTJ=`echo $ASPECTJ`
 COLUMNS=$(tput cols)
-LAUNCHER=$JBASE/${LAUNCHER:-submodule/launcher}
 MACOSX=false
 unameOut="$(uname -s)"
 case "${unameOut}" in
@@ -35,16 +34,11 @@ if [ "$machine" == "Min" ];then
 	ADTX_JAVA_EXECUTABLE=`which "$DTX_JAVA_EXECUTABLE" 2>/dev/null` && DTX_JAVA_EXECUTABLE=`cygpath -a "$ADTX_JAVA_EXECUTABLE"` || DTX_JAVA_EXECUTABLE=`cygpath -a "$DTX_JAVA_EXECUTABLE"`
 fi
 $CYGWINBOOL && export PATH="$JBASE/native:$PATH"
-if [ ! -f $UTILS ]; then
-	UTILS=$ABASE/../../../target/detox-*jar
-fi
-[ -f $UTILS ] && UTILS=`find $UTILS` || UTILS=$ABASE/detox-*.jar
-DTX_CLASSPATH=$UBASE/ext/cp:$JBASE/cp:$DTX_CLASSPATH:$LAUNCHER
+DTX_CLASSPATH=$UBASE/$LIBDIR/cp:$JBASE/cp:$DTX_CLASSPATH:$(echo "$LIBDIR"/*.jar | tr ' ' ':')
 if test ! -e $DTX_JAVA_EXECUTABLE; then
 	DTX_JAVA_EXECUTABLE=$DTX_JAVA_EXECUTABLE.exe
 	test -e $DTX_JAVA_EXECUTABLE && CYGWINBOOL=true
 fi
-DIR=`dirname $UTILS`
 JARCH=32
 
 eval `$DTX_JAVA_EXECUTABLE -version 2>&1| dos2unix |awk -F ' ' '/version/ {split($3,a,/["\.]/);print "JAVAVER="a[2]a[3]} /HotSpot/ {sub(/-Bit/, "", $3);print "JARCH="$3}'`
@@ -64,47 +58,38 @@ argread() {
 				if test -f "$x"; then
 					JARGSF=${x}.bak
 					test ! -f ${JARGSF} && dos2unix -n $x ${JARGSF}
-					while read; do DTX_JARGS="$DTX_JARGS $REPLY"; done <${JARGSF}
+					while read; do DTX_JARGS+=("$REPLY"); done <${JARGSF}
 				fi
 			done
 		done
 	done
 }
-NOSWT=$MACOSX
 DEBUG=${DEBUG:-false}
 [[ ${DEBUG} == *"local"* ]] && DTX_DJARGS="$DTX_DJARGS -Ddebug=true -Daj.weaving.verbose=true"
 [[ ${DEBUG} == *"remote"* ]] && DTX_DJARGS="$DTX_DJARGS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
 [[ ${DEBUG} == *"mgmtr"* ]] && DTX_DJARGS="$DTX_DJARGS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=5006 -Dcom.sun.management.jmxremote.ssl=false"
 [[ ${DEBUG} == *"mgmtl"* ]] && DTX_DJARGS="$DTX_DJARGS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true"
-[[ ${DEBUG} == *"covc"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:ext/jacocoagent.jar=destfile=%TARGET%\%DTX_EXECUTABLE%.exec,append=true"
-[[ ${DEBUG} == *"covf"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:ext/jacocoagent.jar=destfile=%TARGET%\%DTX_EXECUTABLE%.exec,append=false,jmx=true"
-DTX_JARGS="$DTX_DJARGS $DTX_JARGS -Dconsole_width=$COLUMNS -splash:res/splash.jpg"
-$NOSWT && DTX_JARGS="$DTX_JARGS -DnoSwt=true"
+[[ ${DEBUG} == *"covc"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:$LIBDIR/jacocoagent.jar=destfile=%TARGET%/%DTX_EXECUTABLE%.exec,append=true"
+[[ ${DEBUG} == *"covf"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:$LIBDIR/jacocoagent.jar=destfile=%TARGET%/%DTX_EXECUTABLE%.exec,append=false,jmx=true"
+DTX_JARGS+=("-Dconsole_width=$COLUMNS" "-splash:res/splash.jpg")
 USERINIT=${UBASE}/init.sh && test -f "${USERINIT}" && source "${USERINIT}"
 test -z "${DTX_ENV_HOME}" && DTX_ENV=false || DTX_ENV=true
 $DTX_ENV && USERINIT=${DTX_ENV_HOME}/init.sh && test -f "${USERINIT}" && source "${USERINIT}"
 USERINIT=${UBASE}/${BASE_NAME}.sh && test -f "${USERINIT}" && source "${USERINIT}"
 $DTX_ENV && USERINIT=${DTX_ENV_HOME}/${BASE_NAME}.sh && test -f "${USERINIT}" && source "${USERINIT}"
 argread java ${BASE_NAME}
-DTX_AGENT=${DTX_AGENT:-$UTILS}
 test -f "$ASPECTJ" || ASPECTJ=$JBASE/aspectjweaver*.jar && ASPECTJ=`echo $ASPECTJ`
-export UTILS
+test -f "$ASPECTJ" || ASPECTJ=
 test -z "${STDIN}" && STDIN=`basename $0` && [[ "$DTX_JAVA_EXECUTABLE" == *javaw* ]] && STDIN=-
 test -z "${UPDATE}" && UPDATE=$TARGET/update
-if test -z "$LAUNCH"; then
-	LAUNCH=false
-  test -d "$LAUNCHER" && LAUNCH=true
-  (( $JAVAVER > 170 )) && LAUNCH=false
-fi
 if $CYGWINBOOL; then
-	UTILS=`cygpath -w -a $UTILS`
 	ABASE=`cygpath -w -a $ABASE`
-	DTX_CLASSPATH=`cygpath -w -a -p $DTX_CLASSPATH`
-	ASPECTJ=`find $JBASE | grep aspectjweaver`
-	ASPECTJ=`cygpath -w $ASPECTJ`
+	DTX_CLASSPATH=`cygpath -w -a -p $DTX_CLASSPATH 2>/dev/null`
+	test ! -z "$ASPECTJ" && ASPECTJ=`find $JBASE | grep aspectjweaver` && ASPECTJ=`cygpath -w $ASPECTJ`
 else
 	export LD_LIBRARY_PATH=$JBASE/native:$LD_LIBRARY_PATH
 fi
+test ! -z "$ASPECTJ" && DTX_JARGS+=("-javaagent$ASPECTJ")
 if [ -e $UPDATE ]; then
 	if [[ `basename $UPDATE` == update ]]; then
 		cp -r $UPDATE/* $OABASE/
@@ -114,13 +99,8 @@ if [ -e $UPDATE ]; then
 		rm "$UPF"
 		rm -r "$UPDATE"
 	else
-		"$DTX_JAVA_EXECUTABLE" $DTX_JARGS "-Dbase=$ABASE" "-Dtarget=$TARGET" -cp "$DTX_CLASSPATH" hu.detox.launcher.Main
+		"$DTX_JAVA_EXECUTABLE" "${DTX_JARGS[@]}" "-Dbase=$ABASE" "-Dtarget=$TARGET" -cp "$DTX_CLASSPATH" hu.detox.launcher.Main
 	fi
 fi
 
-if $LAUNCH; then
-	$DTX_SHELL "$DTX_JAVA_EXECUTABLE" $DTX_JARGS -DstdIn=$STDIN "-Dagents=$DTX_AGENT=a:" "-Dbase=$ABASE" "-Dtarget=$TARGET" -cp "$DTX_CLASSPATH" -Dmain_class=$DTX_MAIN_CLASS hu.detox.launcher.Main "$@"
-else
-	$CYGWINBOOL && DTX_CLASSPATH="$DTX_CLASSPATH;$UTILS" || DTX_CLASSPATH="$DTX_CLASSPATH:$UTILS"
-	$DTX_SHELL "$DTX_JAVA_EXECUTABLE" $DTX_JARGS "-javaagent:$DTX_AGENT" "-javaagent:$ASPECTJ" -cp "$DTX_CLASSPATH" -DstdIn=$STDIN "-Dtarget=$TARGET" "-Dbase=$ABASE" $DTX_MAIN_CLASS "$@"
-fi
+$DTX_SHELL "$DTX_JAVA_EXECUTABLE" "${DTX_JARGS[@]}" -cp "$DTX_CLASSPATH" -DstdIn=$STDIN "-Dtarget=$TARGET" "-Dbase=$ABASE" $DTX_MAIN_CLASS "$@"
