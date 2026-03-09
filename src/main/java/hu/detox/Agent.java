@@ -18,14 +18,17 @@ import org.springframework.core.io.ResourceLoader;
 import javax.measure.unit.NonSI;
 import javax.measure.unit.SI;
 import javax.measure.unit.UnitFormat;
+import javax.swing.*;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.util.*;
+import java.util.List;
 
-public class Agent {
+public class Agent implements AutoCloseable {
     private static String USERNAME_KEY = "user.name";
     public static String DEBUG_KEY = "debug";
     private static String TEST_KEY = "dtx.test";
@@ -50,8 +53,14 @@ public class Agent {
     public static final File BASE;
     public static final File WORK;
     private static Date time;
+    private static Graphics2D SPLASHG;
+    private static SplashScreen SPLASH;
 
     static {
+        if (!GraphicsEnvironment.isHeadless()) {
+            SPLASH = SplashScreen.getSplashScreen();
+            SPLASHG = SPLASH.createGraphics();
+        }
         Agent.timer("Start");
         final String sys = System.getProperty(Agent.SYS_KEY, Agent.getEnvOfKey(Agent.SYS_KEY));
         if (StringUtils.isEmpty(sys)) {
@@ -126,7 +135,34 @@ public class Agent {
         if (Agent.user == null) {
             Agent.user = org.apache.commons.lang3.SystemUtils.USER_NAME;
         }
+        splash((Agent.HOME != null ? "HOME=" + Agent.HOME + "\n" : org.apache.commons.lang3.StringUtils.EMPTY) + // Home can be unset on systems where user should not configure anything
+                (Agent.ENV != null ? "ENV=" + Agent.ENV + "\n" : org.apache.commons.lang3.StringUtils.EMPTY) + // ENV can be if standalone
+                (Agent.SYS != null ? "SYS=" + Arrays.toString(Agent.SYS) + "\n" : org.apache.commons.lang3.StringUtils.EMPTY) + // SYS list is optional
+                (Agent.WORK != null ? "WORK=" + Agent.WORK + "\n" : org.apache.commons.lang3.StringUtils.EMPTY) + // WORK directory must normally exist...
+                "BASE=" + Agent.BASE + // Installation directory
+                "\nJAVA=" + org.apache.commons.lang3.SystemUtils.JAVA_RUNTIME_NAME + " " + org.apache.commons.lang3.SystemUtils.JAVA_RUNTIME_VERSION);
         Agent.timer("Finish Agent Init (w=" + Agent.WORK + ", b=" + Agent.BASE + ")");
+    }
+
+    public static final void splash(final String message) {
+        if (SPLASHG == null) {
+            System.err.println(message);
+        } else {
+            final JTextArea ta = new JTextArea();
+            ta.setText(message);
+            ta.setSize(540, 150);
+            ta.setLineWrap(true);
+            ta.print(SPLASHG.create(20, 20, ta.getWidth(), ta.getHeight()));
+            SPLASH.update();
+        }
+    }
+
+    public static void closeSplash() {
+        if (Agent.SPLASH != null) {
+            Agent.SPLASH.close();
+        }
+        SPLASH = null;
+        SPLASHG = null;
     }
 
     private static File initHome() {
@@ -327,5 +363,10 @@ public class Agent {
 
     private Agent(final Instrumentation i) {
         // Static class
+    }
+
+    @Override
+    public void close() throws Exception {
+        closeSplash();
     }
 }

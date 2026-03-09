@@ -104,6 +104,7 @@ public class Shell implements ApplicationListener<ApplicationReadyEvent> {
     @SneakyThrows
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
+        Agent.closeSplash();
         if (Agent.IDE || System.console() != null)
             intRunner.run((String[]) null);
     }

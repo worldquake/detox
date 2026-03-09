@@ -1,8 +1,22 @@
 #!/bin/bash
 #set -x
+declare -a DTX_JARGS
 LIBDIR=lib
 export CYGWIN=nodosfilewarning
 test -z "${ABASE}" && ABASE=`dirname $0`
+if test ! -d "${ABASE}/$LIBDIR"; then
+  # Run a Spring jar...
+  TABASE="$ABASE/../../../target/libs"
+  if test -d "$TABASE"; then
+    JBASE="$TABASE"
+    LIBDIR=`basename "$TABASE"`
+    ABASE=`dirname "$JBASE"`
+    rm "$JBASE"/*-plain.jar 2>/dev/null
+    JAR=`echo "$JBASE"/*.jar`
+  else
+    JAR=`echo "$ABASE"/*.jar`
+  fi
+fi
 OABASE=$ABASE
 test -z "${TARGET}" && TARGET=${OABASE}/target
 USERINIT=${TARGET}/init.sh && test -f "${USERINIT}" && source "${USERINIT}"
@@ -15,7 +29,7 @@ test -z "${DTX_ENV_HOME}" -o -f ${DTX_ENV_HOME}/.update-ignore && DTX_ENV=false
 $DTX_ENV || DTX_ENV_HOME=
 UBASE=${USERPROFILE:-$HOME}/.detox-utils; mkdir "$UBASE" 2>/dev/null
 UBASE=`realpath ${UBASE}`
-JBASE=$ABASE/$LIBDIR
+test -z "$JBASE" && JBASE="$ABASE/$LIBDIR"
 ASPECTJ=aspectjweaver*.jar && ASPECTJ=`echo $ASPECTJ`
 COLUMNS=$(tput cols)
 MACOSX=false
@@ -34,7 +48,8 @@ if [ "$machine" == "Min" ];then
 	ADTX_JAVA_EXECUTABLE=`which "$DTX_JAVA_EXECUTABLE" 2>/dev/null` && DTX_JAVA_EXECUTABLE=`cygpath -a "$ADTX_JAVA_EXECUTABLE"` || DTX_JAVA_EXECUTABLE=`cygpath -a "$DTX_JAVA_EXECUTABLE"`
 fi
 $CYGWINBOOL && export PATH="$JBASE/native:$PATH"
-DTX_CLASSPATH=$UBASE/$LIBDIR/cp:$JBASE/cp:$DTX_CLASSPATH:$(echo "$LIBDIR"/*.jar | tr ' ' ':')
+DTX_CLASSPATH=$UBASE/$LIBDIR/cp:$JBASE/cp:$DTX_CLASSPATH
+test -z "$JAR" && DTX_CLASSPATH=$DTX_CLASSPATH:$(echo "$JBASE"/*.jar | tr ' ' ':')
 if test ! -e $DTX_JAVA_EXECUTABLE; then
 	DTX_JAVA_EXECUTABLE=$DTX_JAVA_EXECUTABLE.exe
 	test -e $DTX_JAVA_EXECUTABLE && CYGWINBOOL=true
@@ -69,8 +84,8 @@ DEBUG=${DEBUG:-false}
 [[ ${DEBUG} == *"remote"* ]] && DTX_DJARGS="$DTX_DJARGS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
 [[ ${DEBUG} == *"mgmtr"* ]] && DTX_DJARGS="$DTX_DJARGS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=5006 -Dcom.sun.management.jmxremote.ssl=false"
 [[ ${DEBUG} == *"mgmtl"* ]] && DTX_DJARGS="$DTX_DJARGS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true"
-[[ ${DEBUG} == *"covc"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:$LIBDIR/jacocoagent.jar=destfile=%TARGET%/%DTX_EXECUTABLE%.exec,append=true"
-[[ ${DEBUG} == *"covf"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:$LIBDIR/jacocoagent.jar=destfile=%TARGET%/%DTX_EXECUTABLE%.exec,append=false,jmx=true"
+[[ ${DEBUG} == *"covc"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:JBASE/jacocoagent.jar=destfile=%TARGET%/%DTX_EXECUTABLE%.exec,append=true"
+[[ ${DEBUG} == *"covf"* ]] && DTX_DJARGS="$DTX_DJARGS -javaagent:JBASE/jacocoagent.jar=destfile=%TARGET%/%DTX_EXECUTABLE%.exec,append=false,jmx=true"
 DTX_JARGS+=("-Dconsole_width=$COLUMNS" "-splash:res/splash.jpg")
 USERINIT=${UBASE}/init.sh && test -f "${USERINIT}" && source "${USERINIT}"
 test -z "${DTX_ENV_HOME}" && DTX_ENV=false || DTX_ENV=true
@@ -102,5 +117,9 @@ if [ -e $UPDATE ]; then
 		"$DTX_JAVA_EXECUTABLE" "${DTX_JARGS[@]}" "-Dbase=$ABASE" "-Dtarget=$TARGET" -cp "$DTX_CLASSPATH" hu.detox.launcher.Main
 	fi
 fi
-
-$DTX_SHELL "$DTX_JAVA_EXECUTABLE" "${DTX_JARGS[@]}" -cp "$DTX_CLASSPATH" -DstdIn=$STDIN "-Dtarget=$TARGET" "-Dbase=$ABASE" $DTX_MAIN_CLASS "$@"
+if test -z "$JAR"; then
+  DTX_JARGS+=("$DTX_MAIN_CLASS")
+else
+  DTX_JARGS+=("-Dloader.main=$DTX_MAIN_CLASS" "-jar" "$JAR")
+fi
+$DTX_SHELL "$DTX_JAVA_EXECUTABLE" -DstdIn=$STDIN "-Dtarget=$TARGET" "-Dbase=$ABASE" -cp "$DTX_CLASSPATH" "${DTX_JARGS[@]}" "$@"

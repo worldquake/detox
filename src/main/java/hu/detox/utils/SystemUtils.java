@@ -44,7 +44,6 @@ public class SystemUtils extends org.apache.commons.lang3.SystemUtils {
         SystemUtils.HTML_TIDY.setWraplen(Integer.MAX_VALUE);
     }
 
-    public static boolean MAINBASE;
     private static InetAddress PUBLIC;
 
     public static String classNotationToResource(final String cls) {
