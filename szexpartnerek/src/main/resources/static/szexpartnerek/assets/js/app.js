@@ -166,7 +166,7 @@ jQuery.get({
                             const impm = window.table.modules.import
                             const imp = impm.lookupImporter("csv");
                             return impm.importData(imp, data).then(parsedData => {
-                                const keys = parsedData.shift(); // Fejléc sor kiszedése
+                                const keys = parsedData.shift();
                                 const dataAsObjects = parsedData.map(row =>
                                     Object.fromEntries(keys.map((key, i) => [key.trim(), row[i]]))
                                 );

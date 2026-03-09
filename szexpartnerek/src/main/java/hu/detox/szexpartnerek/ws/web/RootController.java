@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @ConditionalOnExpression("'${root}'.startsWith('hu.detox.szexpartnerek')")
 public class RootController {
-    @RequestMapping(value = {"/{path:^(?!assets).*}"})
+    @RequestMapping(value = {"/{path}"})
     public String forward() {
         return FwdController.FWD;
     }
