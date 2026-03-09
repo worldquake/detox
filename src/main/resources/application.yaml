@@ -1,6 +1,6 @@
-application:
-  name: DeToX
 spring:
+  application:
+    name: DeToX
   jackson:
     default-property-inclusion: non_null
     deserialization:
@@ -19,6 +19,8 @@ spring:
   flyway:
     enabled: false
   shell:
+    history:
+      name: ${target}/shell.log
     help:
       enabled: true
       long-names: help

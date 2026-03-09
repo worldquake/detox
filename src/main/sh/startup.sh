@@ -122,4 +122,4 @@ if test -z "$JAR"; then
 else
   DTX_JARGS+=("-Dloader.main=$DTX_MAIN_CLASS" "-jar" "$JAR")
 fi
-$DTX_SHELL "$DTX_JAVA_EXECUTABLE" -DstdIn=$STDIN "-Dtarget=$TARGET" "-Dbase=$ABASE" -cp "$DTX_CLASSPATH" "${DTX_JARGS[@]}" "$@"
+$DTX_SHELL "$DTX_JAVA_EXECUTABLE" -DstdIn=$STDIN "-Dlogging.file.path=$TARGET" -Dtarget=$TARGET" "-Dbase=$ABASE" -cp "$DTX_CLASSPATH" "${DTX_JARGS[@]}" "$@"

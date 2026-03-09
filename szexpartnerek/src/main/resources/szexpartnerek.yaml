@@ -1,4 +1,6 @@
 szexpartnerek:
+  application:
+    name: Szex
   rl:
     client.login: "action=login&lname=kand-ur&lpass=D1kk44.&rememberMe=1"
   flyway:
@@ -18,6 +20,3 @@ szexpartnerek:
 spring:
   flyway:
     enabled: false
-
-application:
-  name: szexpartnerek

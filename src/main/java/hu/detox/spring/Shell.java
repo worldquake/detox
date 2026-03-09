@@ -9,6 +9,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.boot.context.event.SpringApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -31,10 +33,11 @@ import static hu.detox.spring.DetoxConfig.ctx;
 
 @Component("detoxShell")
 @RequiredArgsConstructor
-public class Shell implements ApplicationListener<ApplicationReadyEvent> {
+public class Shell implements ApplicationListener<SpringApplicationEvent>, AutoCloseable {
     private static final Map<String, ConfigurableApplicationContext> PCKS = new HashMap<>();
     private final NonInteractiveShellRunner runner;
     private final InteractiveShellRunner intRunner;
+    private transient Thread intThread;
 
     public static String getCmd(CommandContext cmd) {
         String[] cmdStr = cmd.getCommandRegistration().getCommand().split(" ");
@@ -103,9 +106,19 @@ public class Shell implements ApplicationListener<ApplicationReadyEvent> {
 
     @SneakyThrows
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        Agent.closeSplash();
-        if (Agent.IDE || System.console() != null)
+    public void onApplicationEvent(SpringApplicationEvent event) {
+        if (event instanceof ApplicationStartedEvent) Agent.closeSplash();
+        if (event instanceof ApplicationReadyEvent && (Agent.IDE || System.console() != null)) {
+            intThread = Thread.currentThread();
             intRunner.run((String[]) null);
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (intThread != null) {
+            intThread.interrupt();
+            intThread = null;
+        }
     }
 }

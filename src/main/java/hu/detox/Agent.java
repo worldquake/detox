@@ -59,7 +59,7 @@ public class Agent implements AutoCloseable {
     static {
         if (!GraphicsEnvironment.isHeadless()) {
             SPLASH = SplashScreen.getSplashScreen();
-            SPLASHG = SPLASH.createGraphics();
+            SPLASHG = SPLASH != null ? SPLASH.createGraphics() : null;
         }
         Agent.timer("Start");
         final String sys = System.getProperty(Agent.SYS_KEY, Agent.getEnvOfKey(Agent.SYS_KEY));

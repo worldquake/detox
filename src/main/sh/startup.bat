@@ -122,6 +122,6 @@ if "x"=="x%JAR%" (
 ) else (
   set "DTX_JARGS=!DTX_JARGS! -Dloader.main=%DTX_MAIN_CLASS% -jar %JAR%"
 )
-%DTX_SHELL% "%DTX_JAVA_EXECUTABLE%" -cp "%DTX_CLASSPATH%" -DstdIn=%STDIN% -Dtarget=%TARGET% -Dbase=%BASE% !DTX_JARGS! %*
+%DTX_SHELL% "%DTX_JAVA_EXECUTABLE%" -cp "%DTX_CLASSPATH%" -DstdIn=%STDIN% "-Dlogging.file.path=%TARGET%" -Dtarget=%TARGET% -Dbase=%BASE% !DTX_JARGS! %*
 
 ENDLOCAL
