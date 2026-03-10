@@ -67,8 +67,11 @@ tabulatorFunctions = {
             data = JSON.parse(data);
         } catch (e) {
         }
-        var mapslink = "";
-        var q = data.formatted || data.name;
+        var q = null;
+        if (data.city) q = data.city + (data.district ? ", " + data.district : "");
+        if (!q) q = data.formatted;
+        if (!q) q = data.name;
+        var ex = data.oextra ? "(" + data.oextra + ")" : (data.extra || "");
         if (data.bbox && data.bbox.lat1 && data.bbox.lon1) {
             if (data.bbox.lat2 && data.bbox.lon2) {
                 var lat = (data.bbox.lat1 + data.bbox.lat2) / 2;
@@ -77,13 +80,13 @@ tabulatorFunctions = {
                 lat = data.bbox.lat1;
                 lon = data.bbox.lon1;
             }
-            mapslink = `/@${lat},${lon},14z`;
+            mapslink = `@${lat},${lon}`;
         } else if (q) {
-            mapslink = `?q=${encodeURIComponent(q)}`;
+            mapslink = `${encodeURIComponent(q)}`;
         } else {
             return data;
         }
-        return `<a target="map_${cells.partner_id}" href="https://www.google.com/maps${mapslink}">${q}</a>`;
+        return `<a target="map_${cells.partner_id}" href="https://www.google.com/maps?q=${mapslink}">${q}</a> ${ex}`;
     },
     fmt_call_number: function (cell, formatterParams, onRendered) {
         return "<a href=\"callto:" + cell.getValue() + "\">" + cell.getValue() + "</a>";

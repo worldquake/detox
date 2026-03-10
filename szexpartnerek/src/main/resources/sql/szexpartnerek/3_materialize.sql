@@ -8,7 +8,7 @@ SELECT p.id as rowid,
        p.call_number,p.name,p.pass,p.about,p.expect,
        p.age,COALESCE(p.looking_age_min,18) AS looking_age_min,COALESCE(p.looking_age_max,90) as looking_age_max,
        p.height,p.weight,p.breast,p.waist,p.hips,
-       (SELECT COALESCE(json,
+       (SELECT COALESCE(IIF(location_extra='', json, json_set(json, '$.oextra', location_extra)),
                         IIF(lat IS NULL, NULL, CONCAT(lat,',',lon)),
                         CONCAT(location, IIF(location_extra='', '', CONCAT('; ',location_extra))))
         FROM partner_address pa WHERE pa.partner_id=p.id ORDER BY ts DESC LIMIT 1) AS location,

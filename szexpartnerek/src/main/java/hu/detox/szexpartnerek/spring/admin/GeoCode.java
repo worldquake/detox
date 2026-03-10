@@ -22,18 +22,20 @@ public class GeoCode implements Admin {
     @SneakyThrows
     @Override
     public void run() {
-        query("SELECT rowid,CONCAT('Hungary, ',location,'; ',location_extra),lat,lon AS l FROM partner_address" +
+        query("SELECT rowid,CONCAT(location,'; ',location_extra),lat,lon AS l FROM partner_address" +
                 " WHERE json IS NULL AND location_extra<>'' LIMIT 500", rs -> {
             Map<Integer, JsonObject> map = new HashMap<>();
             while (rs.next()) {
                 String name = rs.getString(2);
                 Double lat = (Double) rs.getObject(3);
                 double[] latLon = lat == null ? null : new double[]{lat, rs.getDouble(4)};
-                var loc = geo.getLocation(name, latLon);
+                var loc = geo.getLocation("Hungary; " + name, latLon);
                 if (loc == null) {
                     loc = new JsonObject();
                     loc.addProperty("name", name);
                 }
+                String[] na = name.split("; ");
+                loc.addProperty("oextra", na[1]);
                 System.err.print(".");
                 map.put(rs.getInt(1), loc);
             }
