@@ -1,7 +1,7 @@
 const url = new URL(location.href);
 const table = url.searchParams.get('t') || url.pathname.replace(/^\//, "").replaceAll('/', '_');
 const prj = url.searchParams.get('p') || "*";
-const q = "p=" + encodeURIComponent(prj) + "&t=" + encodeURIComponent(table);
+const q = "p=" + encodeURIComponent(prj);
 var rootUrl = "/api/szexpartnerek/" + table;
 var colsUrl = rootUrl + "?" + q + "&pg.size=0";
 if (window.location.protocol === "file:") {
@@ -10,21 +10,7 @@ if (window.location.protocol === "file:") {
     colsUrl = baseFile + ".json";
 }
 
-function initializeFields(columns) {
-    columns.forEach(function (col) {
-        // If this column uses the datetime formatter
-        if (col.formatter === "datetime") {
-            var params = window.stuff["datetime"];
-            col.formatterParams = Object.assign({}, col.formatterParams, params);
-            col.sorter = "datetime";
-        }
-        var fs = window.stuff["fmt_" + table + "_" + col.field] || window.stuff["fmt_" + col.field];
-        if (fs) col.formatter = fs;
-        col.headerMenu = window.stuff.headerMenu;
-    });
-}
-
-window.stuff = {
+tabulatorFunctions = {
     headerMenu: function () {
         var menu = [];
         var columns = this.getColumns();
@@ -72,8 +58,7 @@ window.stuff = {
     },
     fmt_partner_rowid: function (cell, formatterParams, onRendered) {
         var id = cell.getValue();
-        var data = cell.getData();
-        return `<a target="p_${id}" href="https://rosszlanyok.hu/rosszlanyok.php?pid=szexpartner-data&id=${id}">${data.name} (${id})</a>`;
+        return `<a target="p_${id}" href="https://rosszlanyok.hu/rosszlanyok.php?pid=szexpartner-data&id=${id}">${id}</a>`;
     },
     fmt_location: function (cell, formatterParams, onRendered) {
         var cells = cell.getData();
@@ -92,30 +77,50 @@ window.stuff = {
                 lat = data.bbox.lat1;
                 lon = data.bbox.lon1;
             }
-            mapslink = `https://www.google.com/maps/@${lat},${lon},14z`;
+            mapslink = `/@${lat},${lon},14z`;
         } else if (q) {
-            mapslink = `https://www.google.com/maps?q=${encodeURIComponent(q)}`;
+            mapslink = `?q=${encodeURIComponent(q)}`;
         } else {
             return data;
         }
-        return `<a target="map_${cells.partner_id}" href="${mapslink}">${q}</a>`;
+        return `<a target="map_${cells.partner_id}" href="https://www.google.com/maps${mapslink}">${q}</a>`;
     },
     fmt_call_number: function (cell, formatterParams, onRendered) {
         return "<a href=\"callto:" + cell.getValue() + "\">" + cell.getValue() + "</a>";
     },
 };
-window.stuff.fmt_partner_ext_rowid = window.stuff.fmt_partner_rowid;
-window.stuff.fmt_partner_ext_view_rowid = window.stuff.fmt_partner_rowid;
+tabulatorFunctions.fmt_partner_ext_rowid = tabulatorFunctions.fmt_partner_rowid;
+tabulatorFunctions.fmt_partner_ext_view_rowid = tabulatorFunctions.fmt_partner_rowid;
+
+function urlGenerator(url, config, params) {
+    const query = [];
+    if (params.page) query.push(`pg=${params.page}/${params.size}`);
+    if (params.sort && params.sort.length > 0) query.push("o=" + encodeURIComponent(JSON.stringify(params.sort)));
+    if (params.filter && params.filter.length > 0) query.push("w=" + encodeURIComponent(JSON.stringify(params.filter)));
+    return url + '?' + q + (query.length ? "&" + query.join('&') : '');
+}
+
+function initializeFields(columns) {
+    columns.forEach(function (col) {
+        if (col.formatter === "datetime") {
+            var params = tabulatorFunctions.datetime;
+            col.formatterParams = Object.assign({}, col.formatterParams, params);
+            col.sorter = "datetime";
+        }
+        var fs = tabulatorFunctions["fmt_" + table + "_" + col.field] || tabulatorFunctions["fmt_" + col.field];
+        if (fs) col.formatter = fs;
+        col.headerMenu = tabulatorFunctions.headerMenu;
+    });
+}
+
 jQuery.get({
     url: colsUrl,
     dataType: 'json',
     success: function (def) {
-        // Prepare columns and initialSort
         var columns = def.cols || [];
-        initializeFields(columns, "datetime");
+        initializeFields(columns);
         var initialSort = def.sort || [];
 
-        // Convert sort array to Tabulator format if present
         var tabulatorSort = [];
         if (initialSort && initialSort.length) {
             initialSort.forEach(function (s) {
@@ -126,8 +131,7 @@ jQuery.get({
             });
         }
 
-        // Initialize Tabulator
-        window.table = new Tabulator("#results-table", {
+        tabulator = new Tabulator("#results-table", {
             layout: "fitColumns",
             persistenceMode: true, persistenceID: table, persistence: true,
             responsiveLayout: false,
@@ -139,6 +143,11 @@ jQuery.get({
             paginationMode: "remote",
             sortMode: "remote",
             filterMode: "remote",
+            movableColumns: true,
+            columnDefaults: {tooltip: true},
+            columns: columns,
+            initialSort: tabulatorSort,
+            ajaxURLGenerator: urlGenerator,
             ajaxURL: rootUrl,
             ajaxConfig: {
                 method: "GET",
@@ -146,40 +155,28 @@ jQuery.get({
                     "Accept": "text/csv"
                 }
             },
-            movableColumns: true,
-            columnDefaults: {tooltip: true},
-            columns: columns,
-            initialSort: tabulatorSort,
-            ajaxURLGenerator: function (url, config, params) {
-                const query = [];
-                if (params.page) query.push(`pg=${params.page}/${params.size}`);
-                if (params.sort && params.sort.length > 0) query.push("o=" + encodeURIComponent(JSON.stringify(params.sort)));
-                if (params.filter && params.filter.length > 0) query.push("w=" + encodeURIComponent(JSON.stringify(params.filter)));
-                return url + '?' + q + (query.length ? "&" + query.join('&') : '');
-            },
             ajaxRequestFunc: function (url, config, params) {
-                url = window.table.options.ajaxURLGenerator(url, config, params);
-                return fetch(url)
-                    .then(response => {
-                        const hds = response.headers;
-                        return response.text().then(data => {
-                            const impm = window.table.modules.import
-                            const imp = impm.lookupImporter("csv");
-                            return impm.importData(imp, data).then(parsedData => {
-                                const keys = parsedData.shift();
-                                const dataAsObjects = parsedData.map(row =>
-                                    Object.fromEntries(keys.map((key, i) => [key.trim(), row[i]]))
-                                );
-                                return {
-                                    data: dataAsObjects,
-                                    last_page: parseInt(hds.get('X-Page-Count') || 1, 10),
-                                    current_page: parseInt(hds.get('X-Page-Current') || 1, 10),
-                                    page_size: parseInt(hds.get('X-Page-Size') || 25, 10),
-                                    total: parseInt(hds.get('X-Total') || 0, 10)
-                                };
-                            });
+                url = urlGenerator(url, config, params);
+                return fetch(url).then(response => {
+                    const hds = response.headers;
+                    return response.text().then(data => {
+                        const impm = tabulator.modules.import;
+                        const imp = impm.lookupImporter("csv");
+                        return impm.importData(imp, data).then(parsedData => {
+                            const keys = parsedData.shift();
+                            const dataAsObjects = parsedData.map(row =>
+                                Object.fromEntries(keys.map((key, i) => [key.trim(), row[i]]))
+                            );
+                            return {
+                                data: dataAsObjects,
+                                last_page: parseInt(hds.get('X-Page-Count') || 1, 10),
+                                current_page: parseInt(hds.get('X-Page-Current') || 1, 10),
+                                page_size: parseInt(hds.get('X-Page-Size') || 25, 10),
+                                total: parseInt(hds.get('X-Total') || 0, 10)
+                            };
                         });
                     });
+                });
             }
         });
     }
