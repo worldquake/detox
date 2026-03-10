@@ -445,7 +445,7 @@
                 "minWidth": 220
               },
               {
-                "title": "Languages",
+                "title": "Extra languages",
                 "field": "extra_languages",
                 "sorter": "string",
                 "headerFilter": "input",

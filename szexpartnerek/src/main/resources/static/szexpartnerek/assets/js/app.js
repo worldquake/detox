@@ -58,6 +58,39 @@ tabulatorFunctions = {
         var id = cell.getValue();
         return `<a target="p_${id}" href="https://rosszlanyok.hu/rosszlanyok.php?pid=szexpartner-data&id=${id}">${id}</a>`;
     },
+    col_extra_languages: {tooltip: false},
+    fmt_extra_languages: function (cell, formatterParams, onRendered) {
+        var data = cell.getValue().split(", ");
+        var html = [];
+        data.forEach(function (lang) {
+            lang = attempt2To3(false, lang).toLowerCase();
+            const cs = findCountriesByLang(lang);
+            if (cs) {
+                if (cs.length > 1) html.push("(")
+                for (const c of cs) {
+                    const n = c.name.nativeName[lang] ? c.name.nativeName[lang].common : c.name.official;
+                    let l = Object.values(c.languages)[0];
+                    if (c.languages[lang]) l = c.languages[lang];
+                    html.push(`<span title='${l} / ${n}'>${c.flag}</span>`);
+                }
+                if (cs.length > 1) html.push(")")
+            }
+        });
+        return html.join(" ");
+    },
+    col_location: {
+        tooltip: function (e, cell, onRendered) {
+            var data = cell.getValue();
+            try {
+                data = JSON.parse(data);
+                data = data.formatted || data.name;
+                if (data) data = "Kb: " + data;
+                return data;
+            } catch (ex) {
+                return data;
+            }
+        }
+    },
     fmt_location: function (cell, formatterParams, onRendered) {
         var cells = cell.getData();
         var data = cell.getValue();
@@ -103,11 +136,13 @@ function urlGenerator(url, config, params) {
 
 function initializeFields(columns) {
     columns.forEach(function (col) {
-        if (col.formatter === "datetime") {
-            var params = tabulatorFunctions.datetime;
+        const params = tabulatorFunctions["fmp_" + target + "_" + col.field] || tabulatorFunctions["fmp_" + col.field];
+        if (params) {
             col.formatterParams = Object.assign({}, col.formatterParams, params);
-            col.sorter = "datetime";
+            col.sorter = col.formatter;
         }
+        const cold = tabulatorFunctions["col_" + target + "_" + col.field] || tabulatorFunctions["col_" + col.field];
+        if (cold) Object.assign(col, cold);
         var fs = tabulatorFunctions["fmt_" + target + "_" + col.field] || tabulatorFunctions["fmt_" + col.field];
         if (fs) col.formatter = fs;
         col.headerMenu = tabulatorFunctions.headerMenu;

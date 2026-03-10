@@ -25,7 +25,7 @@ async function getCountryFromIP() {
     }
     let cUrl = "https://ipinfo.io/json";
     if (isLocal) {
-        cUrl = rootUrl + "/ipinfo.json";
+        cUrl = bRootUrl + "/ipinfo.json";
     }
     const res = await fetch(cUrl);
     const data = await res.json();
@@ -42,7 +42,7 @@ async function getCountries() {
     }
     let cUrl = "https://restcountries.com/v3.1/all?fields=name,region,flag,cca2,cca3,translations,languages";
     if (isLocal) {
-        cUrl = rootUrl + "/all_countries.json";
+        cUrl = bRootUrl + "/all_countries.json";
     }
     const res = await fetch(cUrl);
     const data = await res.json();
@@ -56,7 +56,7 @@ async function getLocales() {
     if (cached) {
         return cached;
     }
-    let locUrl = rootUrl + "/loc";
+    let locUrl = bRootUrl + "/loc";
     if (isLocal) {
         locUrl += ".json";
     }
@@ -81,11 +81,30 @@ function loadMap() {
     });
 }
 
-function findCountryByLang(lng) {
-    if (!window.allCountries) return;
-    const code3 = attempt2To3(true, lng).toLowerCase();
+const mainCountryByLang = {
+    eng: ['GB', 'US', 'CA', 'AU', 'IE', 'NZ'],
+    deu: ['DE', 'AT', 'CH', 'LI', 'LU'],
+    fra: ['FR', 'BE', 'CH', 'CA', 'LU', 'MC'],
+    spa: ['ES', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE'],
+    ita: ['IT', 'CH', 'SM', 'VA'],
+    rus: ['RU', 'BY', 'KZ', 'KG'],
+    por: ['PT', 'BR', 'AO', 'MZ'],
+    nld: ['NL', 'BE', 'SR'],
+    pl: ['PL'],
+    hun: ['HU'],
+    tur: ['TR'],
+    ell: ['GR', 'CY'],
+    heb: ['IL'],
+    ara: ['EG', 'SA', 'MA', 'DZ', 'IQ', 'SY', 'JO', 'AE'],
+    jpn: ['JP'],
+    zho: ['CN', 'TW', 'SG', 'HK']
+    // Add more as needed
+};
 
-    return window.allCountries.find(country => {
+function findCountriesByLang(lng, limit = 2) {
+    if (!window.allCountries) return [];
+    const code3 = attempt2To3(true, lng).toLowerCase();
+    let matches = window.allCountries.filter(country => {
         if (!country.languages) return false;
         if (country.languages[code3]) return true;
         if (country.languages[lng]) return true;
@@ -93,6 +112,18 @@ function findCountryByLang(lng) {
             name => name.toLowerCase() === lng.toLowerCase()
         );
     });
+    const priority = mainCountryByLang[code3];
+    if (priority) {
+        matches.sort((a, b) => {
+            const aIdx = priority.indexOf(a.cca2);
+            const bIdx = priority.indexOf(b.cca2);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+        });
+    }
+    return matches.slice(0, limit);
 }
 
 function attempt2To3(country, any) {
