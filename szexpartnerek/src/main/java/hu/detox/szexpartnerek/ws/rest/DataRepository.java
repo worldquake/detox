@@ -2,6 +2,7 @@ package hu.detox.szexpartnerek.ws.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import hu.detox.szexpartnerek.ws.WebConfig;
+import hu.detox.szexpartnerek.ws.converters.SelectConverter;
 import hu.detox.utils.Database;
 import hu.detox.utils.strings.StringUtils;
 import jakarta.validation.Valid;
@@ -16,7 +17,10 @@ import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.select.Limit;
+import net.sf.jsqlparser.statement.select.OrderByElement;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.util.cnfexpression.MultiAndExpression;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpHeaders;
@@ -149,15 +153,7 @@ public class DataRepository {
             }
             if (pg == null) pg = new PagingParam(1, 25);
             else if (pg.size() == 0) onlyHeader = true;
-            Limit l = q.getLimit();
-            if (l == null) {
-                l = new Limit();
-                l.setRowCount(new LongValue(pg.size()));
-                Offset os = q.getOffset();
-                l.setOffset(os == null ? new LongValue(pg.offset()) : os.getOffset());
-                q.setLimit(l);
-                q.setOffset(null);
-            }
+            SelectConverter.setLimit(q, pg);
             this.q = q;
         }
 
@@ -171,11 +167,13 @@ public class DataRepository {
             Limit limit = q.getLimit();
             long size = ((LongValue) limit.getRowCount()).getValue();
             long offset = limit.getOffset() != null ? ((LongValue) limit.getOffset()).getValue() : 0;
-            long cnt = total / size + (total % size > 0 ? 1 : 0);
-            long currentPage = (offset / size) + 1;
 
-            heads.add(H_COUNT, String.valueOf(cnt));
-            heads.add(H_CURRENT, String.valueOf(currentPage));
+            if (size > 0) {
+                long cnt = total / size + (total % size > 0 ? 1 : 0);
+                long currentPage = (offset / size) + 1;
+                heads.add(H_COUNT, String.valueOf(cnt));
+                heads.add(H_CURRENT, String.valueOf(currentPage));
+            }
             heads.add(H_SIZE, String.valueOf(size));
             heads.add(H_TOTAL, String.valueOf(total));
             return heads;
@@ -192,6 +190,10 @@ public class DataRepository {
             int page = Integer.parseInt(arr[0]);
             Integer size = arr.length == 1 ? null : Integer.parseInt(arr[1]);
             return new PagingParam(page, size);
+        }
+
+        public boolean hasAnything() {
+            return page != null || size != null;
         }
 
         public Integer page() {

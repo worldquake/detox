@@ -129,10 +129,10 @@ tabulatorFunctions = {
     col_call_number: {tooltip: false},
     fmt_call_number: function (cell, formatterParams, onRendered) {
         let val = cell.getValue().split(" ");
-        let ret = "<a href=\"tel:" + val[0] + "\">📞 " + val[0] + "</a>";
+        let ret = "📲 <a href=\"tel:" + val[0] + "\">" + val[0] + "</a>";
         const obj = {
-            WHATSAPP: `<a href="https://api.whatsapp.com/send?phone=${val[0].replace("+", "")}" target="_blank" title="WhatsApp"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="WhatsApp" class="phone"></a>`,
-            VIBER: `<a href="viber://call?number=${val[0]}" title="Call on Viber"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/viber.svg" alt="Viber" class="phone"></a>`
+            WHATSAPP: `<a href="https://api.whatsapp.com/send?phone=${val[0].replace("+", "")}" target="_blank" title="On WhatsApp"><img src="assets/whatsapp.svg" alt="WhatsApp" class="phone"></a>`,
+            VIBER: `<a href="viber://call?number=${val[0]}" title="On Viber"><img src="assets/viber.svg" alt="Viber" class="phone"></a>`
         };
         for (const c of val.slice(1)) if (obj[c]) ret += " " + obj[c]; else ret += " " + c;
         return ret;

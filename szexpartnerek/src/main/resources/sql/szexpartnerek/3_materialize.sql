@@ -269,11 +269,11 @@ CREATE VIEW partner_ext_view AS
 SELECT p.rowid, ROUND(tpr.r, 1) as rating,
        p.client_type,
        p.active_info,
-       TRIM(p.call_number || ' ' || ( (SELECT GROUP_CONCAT(e.name, ' ')
+       TRIM(p.call_number || ' ' || COALESCE( (SELECT GROUP_CONCAT(e.name, ' ')
                                  FROM partner_prop pp
                                           JOIN int_enum e ON pp.enum_id = e.id
                                      AND e.type = 'properties' AND e.name IN ('VIBER', 'WHATSAPP')
-                                 WHERE pp.partner_id = p.rowid) )) AS call_number,
+                                 WHERE pp.partner_id = p.rowid) , '')) AS call_number,
        p.name, p.pass, p.about,
        p.expect,
        p.age, p.looking_age_min, p.looking_age_max,

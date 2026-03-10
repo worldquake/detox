@@ -185,7 +185,7 @@ public class DataController {
         String cnt = hs.getFirst(SelectParams.H_COUNT);
         String sz = hs.getFirst(SelectParams.H_SIZE);
         int currPg = Integer.parseInt(curr);
-        if (currPg > 0) {
+        if (currPg > 1) {
             prev = buildPageUrl(baseUrl, currPg - 1, sz);
         }
         if (!curr.equals(cnt)) {

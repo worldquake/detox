@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,7 @@ import static hu.detox.parsers.JSonUtils.OM;
 @Component
 @RequiredArgsConstructor
 public class TabulatorColumns implements ApplicationListener<ContextRefreshedEvent> {
+    public static final String F_PAGES = "pg";
     public static final String F_TABLE = "tbl";
     public static final String F_COLUMNS = "cols";
     public static final String F_SORT = "srt";
@@ -58,18 +60,20 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
         ArrayNode an = OM.createArrayNode();
         ArrayNode sort = OM.createArrayNode();
         Collection<String> cLst = q.getSelectItems().stream().map(WebConfig::valueOf).collect(Collectors.toUnmodifiableSet());
-        findAndBuildColumns(root, cLst, an, sort, name, sb);
+        AtomicInteger limit = new AtomicInteger(-1);
+        findAndBuildColumns(limit, root, cLst, an, sort, name, sb);
         if (name.contentEquals(sb)) {
             ObjectNode ret = OM.createObjectNode();
             ret.set(F_SORT, sort);
             ret.set(F_COLUMNS, an);
             ret.put(F_TABLE, name);
+            if (limit.get() >= 0) ret.put(F_PAGES, limit.get());
             return ret;
         }
         throw new ValidationException("No such table: " + name);
     }
 
-    private static void findAndBuildColumns(ObjectNode node, Collection<String> prj, ArrayNode cols, ArrayNode sort, String finalName, StringBuilder sb) {
+    private static void findAndBuildColumns(AtomicInteger limit, ObjectNode node, Collection<String> prj, ArrayNode cols, ArrayNode sort, String finalName, StringBuilder sb) {
         if (node == null) return;
         final AtomicReference<String> longest = new AtomicReference<>("");
         node.forEachEntry((k, jsonNode) -> {
@@ -83,6 +87,8 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
             cols.add(currCols);
         minusOn(node, cols);
         node = (ObjectNode) node.get(longest.get());
+        JsonNode pageSize = node.get(F_PAGES);
+        if (pageSize != null) limit.set(pageSize.asInt());
         if (cols.isEmpty()) cols.add(ROWID);
         currCols = node.get(F_COLUMNS);
         boolean prjAll = prj == null || prj.contains("*");
@@ -94,9 +100,9 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
         if (s != null) sort.add(s);
         if (finalName.contentEquals(sb)) return;
         ObjectNode subObj = (ObjectNode) node.get(F_SUB);
-        findAndBuildColumns(subObj, prj, cols, sort, finalName, sb);
+        findAndBuildColumns(limit, subObj, prj, cols, sort, finalName, sb);
         subObj = (ObjectNode) node.get("view");
-        findAndBuildColumns(subObj, prj, cols, sort, finalName, sb);
+        findAndBuildColumns(limit, subObj, prj, cols, sort, finalName, sb);
     }
 
     private static void minusOn(ObjectNode node, ArrayNode cols) {

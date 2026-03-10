@@ -9,11 +9,10 @@ import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
+import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.select.AllColumns;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.statement.select.*;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +25,28 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SelectConverter implements Converter<String, PlainSelect> {
     private final TabulatorColumns columns;
+
+    public static void setLimit(PlainSelect q, DataRepository.PagingParam limit) {
+        if (limit == null || !limit.hasAnything()) return;
+        Limit l = q.getLimit();
+        if (l == null) {
+            l = new Limit();
+            l.setRowCount(new LongValue(limit.size()));
+            Offset os = q.getOffset();
+            l.setOffset(os == null ? new LongValue(limit.offset()) : os.getOffset());
+            q.setLimit(l);
+            q.setOffset(null);
+        } else {
+            LongValue size = (LongValue) l.getRowCount();
+            if (size != null) {
+                long nLimit = Math.min(size.getValue(), limit.size());
+                l.setRowCount(new LongValue(nLimit));
+            }
+            if (l.getOffset() == null)
+                l.setOffset(new LongValue(limit.offset()));
+        }
+
+    }
 
     @Override
     public PlainSelect convert(String s) {
@@ -66,6 +87,10 @@ public class SelectConverter implements Converter<String, PlainSelect> {
             } else {
                 throw new ValidationException("Only column names, not [" + item + "]");
             }
+        }
+        JsonNode pgs = tableCols.get(TabulatorColumns.F_PAGES);
+        if (pgs != null) {
+            setLimit(select, new DataRepository.PagingParam(null, pgs.asInt()));
         }
         select.setSelectItems(new LinkedList<>(newItems));
     }
