@@ -40,8 +40,10 @@ public class Main implements Function<String, Boolean>, ApplicationListener<Cont
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        if (toggler == null) toggler = event.getApplicationContext().getBean(WebEndpointToggler.class);
-        toggler.initByPackage(Main.class.getPackageName());
+        if (toggler == null) {
+            toggler = event.getApplicationContext().getBean(WebEndpointToggler.class);
+            toggler.initByPackage(Main.class.getPackageName());
+        }
     }
 }
 

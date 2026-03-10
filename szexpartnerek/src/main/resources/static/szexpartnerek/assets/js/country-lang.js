@@ -23,32 +23,47 @@ async function getCountryFromIP() {
     if (cached) {
         return cached;
     }
-    try {
-        const res = await fetch("https://ipinfo.io/json");
-        const data = await res.json();
-        saveCache(cacheKey, data);
-        return data;
-    } catch (err) {
-        console.error("IP lookup failed:", err);
+    let cUrl = "https://ipinfo.io/json";
+    if (isLocal) {
+        cUrl = rootUrl + "/ipinfo.json";
     }
-    return null;
+    const res = await fetch(cUrl);
+    const data = await res.json();
+    saveCache(cacheKey, data);
+    return data;
 }
 
-// Step 3: Get countries details from REST API
+// Step 3: Get countries/locales details from REST API
 async function getCountries() {
     const cacheKey = `countryDetails`;
     let cached = loadCache(cacheKey);
     if (cached) {
         return cached;
     }
-    try {
-        const res = await fetch("https://restcountries.com/v3.1/all?fields=name,region,flag,cca2,cca3,translations,languages");
-        const data = await res.json();
-        saveCache(cacheKey, data);
-    } catch (err) {
-        console.error(err);
-        return null;
+    let cUrl = "https://restcountries.com/v3.1/all?fields=name,region,flag,cca2,cca3,translations,languages";
+    if (isLocal) {
+        cUrl = rootUrl + "/all_countries.json";
     }
+    const res = await fetch(cUrl);
+    const data = await res.json();
+    saveCache(cacheKey, data);
+    return data;
+}
+
+async function getLocales() {
+    const cacheKey = `localeDetails`;
+    let cached = loadCache(cacheKey);
+    if (cached) {
+        return cached;
+    }
+    let locUrl = rootUrl + "/loc";
+    if (isLocal) {
+        locUrl += ".json";
+    }
+    const res = await fetch(locUrl);
+    const data = await res.json();
+    saveCache(cacheKey, data);
+    return data;
 }
 
 // Step 4: Initialize Google Map with localization
@@ -68,7 +83,7 @@ function loadMap() {
 
 function findCountryByLang(lng) {
     if (!window.allCountries) return;
-    const code3 = attempt2To3(lng);
+    const code3 = attempt2To3(true, lng).toLowerCase();
 
     return window.allCountries.find(country => {
         if (!country.languages) return false;
@@ -80,20 +95,26 @@ function findCountryByLang(lng) {
     });
 }
 
-function attempt2To3(any) {
-    if (!window.cca2ToLang3) return any;
+function attempt2To3(country, any) {
+    if (!window.allLocales) return any;
+    const map = country ? window.allLocales.countryMap : window.allLocales.languageMap;
     const codeSmall = any.toLowerCase();
-    return window.cca2ToLang3[codeSmall] || any;
+    let entry = Object.entries(map).find(
+        ([k, v]) => k.toLowerCase() === codeSmall || v.toLowerCase() === codeSmall
+    );
+    return entry?.[0] || any;
 }
 
 (async () => {
+    window.allLocales = await getLocales();
+
+    const allCountries = await getCountries();
+    window.allCountries = allCountries;
+
     if (!countryCode) {
         countryCode = await getCountryFromIP();
         countryCode = countryCode.country
     }
-    const allCountries = await getCountries();
-
-    window.allCountries = allCountries;
     window.country = allCountries.find(country => country.cca2 === countryCode)
     saveCache("country", window.country);
 

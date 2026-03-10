@@ -34,7 +34,7 @@ public class Loc {
         Loc.mapLanguageISO3toISO2 = new DualTreeBidiMap();
         final String[] languages = Locale.getISOLanguages();
         for (final String lang : languages) {
-            final Locale locale = new Locale(StringUtils.EMPTY, lang);
+            final Locale locale = new Locale(lang, StringUtils.EMPTY);
             Loc.mapLanguageISO3toISO2.put(locale.getISO3Language().toLowerCase(CORRECTIVE_LOCALE), lang);
         }
     }
@@ -480,10 +480,11 @@ public class Loc {
 
     @GetMapping
     public Object getMappings() {
-        return new Object[]{
-                mapCountryISO3toISO2, mapLanguageISO3toISO2,
-                Loc.ALL
-        };
+        return Map.of(
+                "countryMap", mapCountryISO3toISO2,
+                "languageMap", mapLanguageISO3toISO2,
+                "locales", Loc.ALL
+        );
     }
 
 }

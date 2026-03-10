@@ -1,15 +1,11 @@
-const url = new URL(location.href);
-const table = url.searchParams.get('t') || url.pathname.replace(/^\//, "").replaceAll('/', '_');
 const prj = url.searchParams.get('p') || "*";
-var rootUrl = table;
-var colsUrl = null;
-if (window.location.protocol === "file:") {
-    rootUrl = "example/" + rootUrl;
+let colsUrl = null;
+if (isLocal) {
     colsUrl = rootUrl + ".json";
     rootUrl += ".csv?";
 } else {
-    const q = "p=" + encodeURIComponent(prj);
-    rootUrl = "/api/szexpartnerek/" + rootUrl + "?" + q;
+    rootUrl = rootUrl.replace("/example", "/szexpartnerek");
+    rootUrl += "?p=" + encodeURIComponent(prj);
     colsUrl = rootUrl + "&pg.size=0";
 }
 tabulatorFunctions = {
@@ -112,7 +108,7 @@ function initializeFields(columns) {
             col.formatterParams = Object.assign({}, col.formatterParams, params);
             col.sorter = "datetime";
         }
-        var fs = tabulatorFunctions["fmt_" + table + "_" + col.field] || tabulatorFunctions["fmt_" + col.field];
+        var fs = tabulatorFunctions["fmt_" + target + "_" + col.field] || tabulatorFunctions["fmt_" + col.field];
         if (fs) col.formatter = fs;
         col.headerMenu = tabulatorFunctions.headerMenu;
     });
@@ -150,7 +146,7 @@ jQuery.get({
             columnDefaults: {tooltip: true},
             columns: columns,
             // Remember everything
-            persistenceMode: true, persistenceID: table, persistence: true,
+            persistenceMode: true, persistenceID: target, persistence: true,
             // Pagination is enabled
             pagination: true,
             paginationInitialPage: 1,

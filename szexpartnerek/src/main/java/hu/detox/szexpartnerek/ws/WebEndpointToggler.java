@@ -2,6 +2,9 @@ package hu.detox.szexpartnerek.ws;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -9,8 +12,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import java.util.HashMap;
 import java.util.Map;
 
-//@Component
-//@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class WebEndpointToggler {
     private final RequestMappingHandlerMapping requestMappingHandlerMapping;
@@ -21,10 +24,6 @@ public class WebEndpointToggler {
     void initByPackage(String pck) {
         if (alreadyInit) return;
         initRemoved(pck);
-        if (lastRemoved.isEmpty()) {
-            requestMappingHandlerMapping.afterPropertiesSet();
-            initRemoved(pck);
-        }
     }
 
     @SneakyThrows
