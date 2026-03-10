@@ -25,6 +25,8 @@ import kotlin.Pair;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.similarity.LevenshteinDetailedDistance;
+import org.apache.commons.text.similarity.LevenshteinResults;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -64,6 +66,21 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     private static final SimpleDateFormat FORMAT7 = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ENGLISH);
     public static final SimpleDateFormat[] NUM_FORMAT = new SimpleDateFormat[]{FORMAT1, FORMAT2, FORMAT3, FORMAT4, FORMAT5, FORMAT6, FORMAT7};
     public static final String SUBTRANSCRIPTCHR = "☇";
+
+    public static String findMostSimilar(String input, Collection<String> candidates) {
+        LevenshteinDetailedDistance ld = LevenshteinDetailedDistance.getDefaultInstance();
+        String best = null;
+        int minDistance = Integer.MAX_VALUE, cd;
+        for (String candidate : candidates) {
+            LevenshteinResults dist = ld.apply(input.toLowerCase(), candidate.toLowerCase());
+            cd = dist.getDistance();
+            if (cd < minDistance) {
+                minDistance = cd;
+                best = candidate;
+            }
+        }
+        return best;
+    }
 
     public static void appendIfNotEmpty(final StringBuilder sb, final String sep, final Object... os) {
         sb.setLength(0);

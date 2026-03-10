@@ -2,11 +2,13 @@ package hu.detox.utils.url;
 
 import hu.detox.utils.strings.StringUtils;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
 import java.text.MessageFormat;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class UserPass extends User {
     private String password;

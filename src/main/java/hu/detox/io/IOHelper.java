@@ -139,7 +139,6 @@ public class IOHelper extends IOUtils implements Closeable {
     protected int buffer;
     @Setter
     private String name;
-    @Setter
     private Object src;
 
     protected IOHelper(final InputStream parIs, final Number parBuf) {

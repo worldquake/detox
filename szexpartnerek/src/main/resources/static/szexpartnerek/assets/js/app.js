@@ -1,15 +1,17 @@
 const url = new URL(location.href);
 const table = url.searchParams.get('t') || url.pathname.replace(/^\//, "").replaceAll('/', '_');
 const prj = url.searchParams.get('p') || "*";
-const q = "p=" + encodeURIComponent(prj);
-var rootUrl = "/api/szexpartnerek/" + table + "?" + q;
-var colsUrl = rootUrl + "&pg.size=0";
+var rootUrl = table;
+var colsUrl = null;
 if (window.location.protocol === "file:") {
-    const baseFile = "example/" + table;
-    rootUrl = baseFile + ".csv";
-    colsUrl = baseFile + ".json";
+    rootUrl = "example/" + rootUrl;
+    colsUrl = rootUrl + ".json";
+    rootUrl += ".csv?";
+} else {
+    const q = "p=" + encodeURIComponent(prj);
+    rootUrl = "/api/szexpartnerek/" + rootUrl + "?" + q;
+    colsUrl = rootUrl + "&pg.size=0";
 }
-
 tabulatorFunctions = {
     headerMenu: function () {
         var menu = [];
@@ -116,6 +118,11 @@ function initializeFields(columns) {
     });
 }
 
+$(function () {
+    $("#main-accordion").accordion({
+        active: 1, heightStyle: "fill"
+    });
+});
 jQuery.get({
     url: colsUrl,
     dataType: 'json',

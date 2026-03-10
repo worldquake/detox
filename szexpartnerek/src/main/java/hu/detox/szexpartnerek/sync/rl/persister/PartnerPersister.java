@@ -1,6 +1,7 @@
 package hu.detox.szexpartnerek.sync.rl.persister;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import hu.detox.spring.Loc;
 import hu.detox.szexpartnerek.sync.AbstractPersister;
 import hu.detox.szexpartnerek.sync.IPersister;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
@@ -97,7 +98,8 @@ public class PartnerPersister extends AbstractPersister {
         }
 
         for (JsonNode n : root.get("langs")) {
-            langBatch.add(new Object[]{partnerId, n.asText()});
+            String iso2 = Loc.correctLang(null, n.asText());
+            langBatch.add(new Object[]{partnerId, iso2});
         }
 
         JsonNode ans = root.get("answers");

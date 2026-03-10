@@ -4,10 +4,10 @@ import com.google.api.client.util.ByteStreams;
 import com.google.common.net.HttpHeaders;
 import hu.detox.Agent;
 import hu.detox.parsers.AmountCalculator;
-import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.SystemUtils;
 import hu.detox.utils.TimeUtils;
 import hu.detox.utils.reflection.ReflectionUtils;
+import hu.detox.utils.strings.StringUtils;
 import kotlin.Pair;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FilenameUtils;
@@ -197,7 +197,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
     }
 
     public static String concat(final String... paths) {
-        return StringUtils.concat("/", paths);
+        return StringUtils.concat("/", (Object[]) paths);
     }
 
     public static void createFolder(final File parFolder) throws IOException {

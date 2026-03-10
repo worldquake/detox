@@ -1,2 +1,14 @@
 @import url("normalize.css");
 @import url("../vendor/tabulator/css/tabulator.min.css");
+
+#app, body {
+    min-height: 100vh;
+}
+body {
+    overflow: hidden;
+}
+.ui-accordion .ui-accordion-content {
+    padding: 0.2em 0.2em;
+    border-top:0;
+    overflow:auto
+}
