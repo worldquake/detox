@@ -67,7 +67,7 @@ tabulatorFunctions = {
             lang = attempt2To3(false, lang).toLowerCase();
             const cs = findCountriesByLang(lang);
             if (cs) {
-                if (cs.length > 1) html.push("(")
+                if (cs.length > 1) html.push("<span class='infinite-scroll'>")
                 for (const c of cs) {
                     let l, n, a;
                     a = locale([iso2, c.cca3], 0);
@@ -80,7 +80,7 @@ tabulatorFunctions = {
                     }
                     html.push(`<span title='${l.cap()} / ${n}'>${c.flag}</span>`);
                 }
-                if (cs.length > 1) html.push(")")
+                if (cs.length > 1) html.push("</span>")
             }
         });
         return html.join(" ");
@@ -126,8 +126,16 @@ tabulatorFunctions = {
         }
         return `<a target="map_${cells.partner_id}" href="https://www.google.com/maps?q=${mapslink}">${q}</a> ${ex}`;
     },
+    col_call_number: {tooltip: false},
     fmt_call_number: function (cell, formatterParams, onRendered) {
-        return "<a href=\"callto:" + cell.getValue() + "\">" + cell.getValue() + "</a>";
+        let val = cell.getValue().split(" ");
+        let ret = "<a href=\"tel:" + val[0] + "\">📞 " + val[0] + "</a>";
+        const obj = {
+            WHATSAPP: `<a href="https://api.whatsapp.com/send?phone=${val[0].replace("+", "")}" target="_blank" title="WhatsApp"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="WhatsApp" class="phone"></a>`,
+            VIBER: `<a href="viber://call?number=${val[0]}" title="Call on Viber"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/viber.svg" alt="Viber" class="phone"></a>`
+        };
+        for (const c of val.slice(1)) if (obj[c]) ret += " " + obj[c]; else ret += " " + c;
+        return ret;
     },
 };
 tabulatorFunctions.fmt_partner_ext_rowid = tabulatorFunctions.fmt_partner_rowid;

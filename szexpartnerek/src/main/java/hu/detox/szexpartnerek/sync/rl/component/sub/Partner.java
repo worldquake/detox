@@ -401,17 +401,15 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         intro = StringUtils.trimToNull(intro);
         if (intro != null) result.put("pass", intro);
 
-        ArrayNode phoneArr = OM.createArrayNode();
         Elements phoneLinks = doc.select("a.phone-number");
         for (Element link : phoneLinks) {
             String txt = link.text().replaceAll("[^\\d+]", "");
-            if (!txt.isEmpty()) phoneArr.add(txt);
+            if (!txt.isEmpty()) result.put("phone", txt);
             for (Element img : link.select("img")) {
                 String alt = img.attr("src").replaceAll(".+/([a-z]+)_icon.+", "$1");
-                addProp(extra, PROPS, phoneArr, null, alt);
+                addProp(extra, PROPS, null, propsArr, alt);
             }
         }
-        result.set("phone", phoneArr);
 
         Elements dataCols = leftContainer.select("div.dataSheetColumnData");
         ArrayNode location = firstData(dataCols.get(0), propsArr, result);

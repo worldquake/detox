@@ -12,3 +12,7 @@ body {
     border-top:0;
     overflow:auto
 }
+.phone {
+    width:18px;
+    height:18px;
+}

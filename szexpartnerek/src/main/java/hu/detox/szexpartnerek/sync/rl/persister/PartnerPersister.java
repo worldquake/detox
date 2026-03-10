@@ -40,8 +40,8 @@ public class PartnerPersister extends AbstractPersister {
         Object[] partnerParams = new Object[15];
         partnerParams[0] = partnerId;
         JsonNode phn = root.get("phone");
-        boolean active = phn != null && !phn.isEmpty();
-        partnerParams[1] = active ? phn.get(0).asText() : null;
+        boolean active = phn != null && phn.isTextual();
+        partnerParams[1] = active ? phn.asText() : null;
         partnerParams[2] = name.asText();
         sb.append(' ').append(name);
         partnerParams[3] = root.hasNonNull("pass") ? root.get("pass").asText() : null;

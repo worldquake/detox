@@ -269,7 +269,12 @@ CREATE VIEW partner_ext_view AS
 SELECT p.rowid, ROUND(tpr.r, 1) as rating,
        p.client_type,
        p.active_info,
-       p.call_number, p.name, p.pass, p.about,
+       TRIM(p.call_number || ' ' || ( (SELECT GROUP_CONCAT(e.name, ' ')
+                                 FROM partner_prop pp
+                                          JOIN int_enum e ON pp.enum_id = e.id
+                                     AND e.type = 'properties' AND e.name IN ('VIBER', 'WHATSAPP')
+                                 WHERE pp.partner_id = p.rowid) )) AS call_number,
+       p.name, p.pass, p.about,
        p.expect,
        p.age, p.looking_age_min, p.looking_age_max,
        p.height, p.weight, p.breast, p.waist, p.hips,
@@ -286,6 +291,7 @@ SELECT p.rowid, ROUND(tpr.r, 1) as rating,
             AND e.type = 'properties'
             AND NOT (name LIKE '%_HAJ' OR name LIKE 'HAJ_%' OR name LIKE '%_SZEM'
                 OR name LIKE '%_CICI' OR name LIKE '%_ALKAT'
+                OR name IN ('VIBER', 'WHATSAPP')
                 OR name LIKE 'INTIM_%' OR name IN ('HETERO', 'HOMO', 'BISZEX')
                 OR name IN ('LANY', 'PAR', 'FIU', 'TRANSZSZEXUALIS')
                 OR name IN ('LEGKONDICIONALT_LAKAS', 'NEM_LEGKONDICIONALT_LAKAS')

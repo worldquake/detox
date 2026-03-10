@@ -107,7 +107,7 @@ public abstract class AbstractTrafoEngine implements ITrafoEngine.Filters, ITraf
         var ar = new AtomicReference<>(enm);
         Integer res = onEnum(map, arr, propsArr, ar);
         if (res == null) {
-            res = doAddProp(map, arr, ar.get());
+            res = doAddProp(map, arr == null ? propsArr : arr, ar.get());
             if (sb != null && res == null) {
                 if (!sb.isEmpty()) sb.append(", ");
                 sb.append(prp);

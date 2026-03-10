@@ -1,3 +1,74 @@
+const mainCountryByLang = {
+    eng: ['GB', 'IE', 'US', 'CA', 'AU', 'MT'], // Malta (MT) is also English-speaking
+    deu: ['DE', 'AT', 'CH', 'LI', 'LU', 'BE'], // German in Belgium
+    fra: ['FR', 'BE', 'CH', 'LU', 'MC'],
+    spa: ['ES', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE'],
+    ita: ['IT', 'CH', 'SM', 'VA'],
+    rus: ['RU', 'BY', 'KZ', 'KG'],
+    por: ['PT', 'BR', 'AO', 'MZ'],
+    nld: ['NL', 'BE', 'SR'],
+    hun: ['HU'],
+    tur: ['TR'],
+    ell: ['GR', 'CY'],
+    heb: ['IL'],
+    ara: ['EG', 'MA', 'DZ'], // Not European, but kept for completeness
+    jpn: ['JP'],
+    zho: ['CN', 'SG'], // Not European, but kept for completeness
+    swe: ['SE', 'FI'], // Swedish in Finland
+    dan: ['DK'],
+    nor: ['NO'],
+    fin: ['FI'],
+    pol: ['PL'],
+    ces: ['CZ'],
+    slk: ['SK'],
+    slv: ['SI'],
+    hrv: ['HR'],
+    srp: ['RS', 'ME', 'BA'], // Serbian in Serbia, Montenegro, Bosnia
+    bos: ['BA'], // Bosnian in Bosnia
+    mkd: ['MK'],
+    bul: ['BG'],
+    ron: ['RO', 'MD'], // Romanian in Moldova
+    lav: ['LV'],
+    lit: ['LT'],
+    est: ['EE'],
+    alb: ['AL'],
+    cat: ['ES', 'AD'], // Catalan in Andorra and Spain
+    gla: ['GB'], // Scottish Gaelic in UK
+    gle: ['IE'], // Irish in Ireland
+    mlt: ['MT'], // Maltese in Malta
+    isl: ['IS'],
+    ukr: ['UA'],
+    bel: ['BY'], // Belarusian in Belarus
+    // Add more as needed
+};
+
+function reorderLocaleMap(locales) {
+    const entries = Object.entries(locales);
+    const usedKeys = new Set();
+    const resultEntries = [];
+
+    // 1. Add all mainCountryByLang entries in exact order
+    Object.entries(mainCountryByLang).forEach(([iso3, countries]) => {
+        countries.forEach(country => {
+            // Find the first matching entry
+            for (const [key, arr] of entries) {
+                if (arr[2] === iso3 && arr[3] === country && !usedKeys.has(key)) {
+                    resultEntries.push([key, arr]);
+                    usedKeys.add(key);
+                    break; // Only one per (lang, country) pair
+                }
+            }
+        });
+    });
+    for (const [key, arr] of entries) {
+        if (!usedKeys.has(key)) {
+            resultEntries.push([key, arr]);
+            usedKeys.add(key);
+        }
+    }
+    return resultEntries;
+}
+
 function saveCache(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
@@ -62,6 +133,7 @@ async function getLocales() {
     }
     const res = await fetch(locUrl);
     const data = await res.json();
+    data.locales = reorderLocaleMap(data.locales);
     saveCache(cacheKey, data);
     return data;
 }
@@ -81,29 +153,15 @@ function loadMap() {
     });
 }
 
-const mainCountryByLang = {
-    eng: ['GB', 'US', 'CA', 'AU', 'IE', 'NZ'],
-    deu: ['DE', 'AT', 'CH', 'LI', 'LU'],
-    fra: ['FR', 'BE', 'CH', 'CA', 'LU', 'MC'],
-    spa: ['ES', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE'],
-    ita: ['IT', 'CH', 'SM', 'VA'],
-    rus: ['RU', 'BY', 'KZ', 'KG'],
-    por: ['PT', 'BR', 'AO', 'MZ'],
-    nld: ['NL', 'BE', 'SR'],
-    pl: ['PL'],
-    hun: ['HU'],
-    tur: ['TR'],
-    ell: ['GR', 'CY'],
-    heb: ['IL'],
-    ara: ['EG', 'SA', 'MA', 'DZ', 'IQ', 'SY', 'JO', 'AE'],
-    jpn: ['JP'],
-    zho: ['CN', 'TW', 'SG', 'HK']
-    // Add more as needed
-};
-
-function findCountriesByLang(lng, limit = 2) {
+function findCountriesByLang(lng, limit) {
     if (!window.allCountries) return [];
     const code3 = attempt2To3(true, lng).toLowerCase();
+    if (!limit) {
+        let ln3 = attempt2To3(false, lng).toLowerCase();
+        limit = mainCountryByLang[ln3];
+        if (limit) limit = limit.length
+        if (!limit) limit = 2; else if (limit > 3) limit = 3;
+    }
     let matches = window.allCountries.filter(country => {
         if (!country.languages) return false;
         if (country.languages[code3]) return true;
@@ -155,7 +213,7 @@ function locale(search, what) {
     let searchArr = search;
     if (!Array.isArray(search)) searchArr = [search];
 
-    for (const [key, arr] of Object.entries(locales)) {
+    for (const [key, arr] of locales) {
         let matchCount = 0;
 
         for (let i = 0; i < searchArr.length; i++) {
