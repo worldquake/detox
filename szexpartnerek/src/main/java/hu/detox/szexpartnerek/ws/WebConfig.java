@@ -34,8 +34,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        boolean rootSzex = System.getProperty("root").startsWith("hu.detox.szexpartnerek");
-        registry.addResourceHandler((rootSzex ? "" : PREFIX) + "/assets/**")
+        registry.addResourceHandler("/assets/**")
                 .addResourceLocations("classpath:/static" + PREFIX + "/assets/");
     }
 

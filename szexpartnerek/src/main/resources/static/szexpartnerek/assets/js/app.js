@@ -1,3 +1,6 @@
+const target = isLocal ? url.searchParams.get('t') || "" : url.pathname.replace(/^\//, "").replaceAll('/', '_');
+rootUrl += target;
+
 const prj = url.searchParams.get('p') || "*";
 let colsUrl = null;
 if (isLocal) {

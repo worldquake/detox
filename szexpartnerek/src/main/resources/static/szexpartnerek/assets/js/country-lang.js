@@ -1,132 +1,15 @@
-const mainCountryByLang = {
-    eng: ['GB', 'IE', 'US', 'CA', 'AU', 'MT'], // Malta (MT) is also English-speaking
-    deu: ['DE', 'AT', 'CH', 'LI', 'LU', 'BE'], // German in Belgium
-    fra: ['FR', 'BE', 'CH', 'LU', 'MC'],
-    spa: ['ES', 'MX', 'AR', 'CO', 'CL', 'PE', 'VE'],
-    ita: ['IT', 'CH', 'SM', 'VA'],
-    rus: ['RU', 'BY', 'KZ', 'KG'],
-    por: ['PT', 'BR', 'AO', 'MZ'],
-    nld: ['NL', 'BE', 'SR'],
-    hun: ['HU'],
-    tur: ['TR'],
-    ell: ['GR', 'CY'],
-    heb: ['IL'],
-    ara: ['EG', 'MA', 'DZ'], // Not European, but kept for completeness
-    jpn: ['JP'],
-    zho: ['CN', 'SG'], // Not European, but kept for completeness
-    swe: ['SE', 'FI'], // Swedish in Finland
-    dan: ['DK'],
-    nor: ['NO'],
-    fin: ['FI'],
-    pol: ['PL'],
-    ces: ['CZ'],
-    slk: ['SK'],
-    slv: ['SI'],
-    hrv: ['HR'],
-    srp: ['RS', 'ME', 'BA'], // Serbian in Serbia, Montenegro, Bosnia
-    bos: ['BA'], // Bosnian in Bosnia
-    mkd: ['MK'],
-    bul: ['BG'],
-    ron: ['RO', 'MD'], // Romanian in Moldova
-    lav: ['LV'],
-    lit: ['LT'],
-    est: ['EE'],
-    alb: ['AL'],
-    cat: ['ES', 'AD'], // Catalan in Andorra and Spain
-    gla: ['GB'], // Scottish Gaelic in UK
-    gle: ['IE'], // Irish in Ireland
-    mlt: ['MT'], // Maltese in Malta
-    isl: ['IS'],
-    ukr: ['UA'],
-    bel: ['BY'], // Belarusian in Belarus
-    // Add more as needed
-};
-
-function reorderLocaleMap(locales) {
-    const entries = Object.entries(locales);
-    const usedKeys = new Set();
-    const resultEntries = [];
-
-    // 1. Add all mainCountryByLang entries in exact order
-    Object.entries(mainCountryByLang).forEach(([iso3, countries]) => {
-        countries.forEach(country => {
-            // Find the first matching entry
-            for (const [key, arr] of entries) {
-                if (arr[2] === iso3 && arr[3] === country && !usedKeys.has(key)) {
-                    resultEntries.push([key, arr]);
-                    usedKeys.add(key);
-                    break; // Only one per (lang, country) pair
-                }
-            }
-        });
-    });
-    for (const [key, arr] of entries) {
-        if (!usedKeys.has(key)) {
-            resultEntries.push([key, arr]);
-            usedKeys.add(key);
-        }
-    }
-    return resultEntries;
-}
-
-function saveCache(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
-
-function loadCache(key) {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : null;
-}
-
-// Step 1: Detect browser language
-const browserLang = navigator.language || navigator.userLanguage;
-let [langCode, countryCode] = browserLang.split('-');
-if (countryCode) countryCode = countryCode.toUpperCase();
-else {
-    window.loc = loadCache("loc");
-    countryCode = window.loc ? window.loc[1] : null;
-}
-
-// Step 2: Fallback to IP-based geolocation
-async function getCountryFromIP() {
-    const cacheKey = "ipCountryCode";
-    let cached = loadCache(cacheKey);
-    if (cached) {
-        return cached;
-    }
-    let cUrl = "https://ipinfo.io/json";
-    if (isLocal) {
-        cUrl = bRootUrl + "/ipinfo.json";
-    }
-    const res = await fetch(cUrl);
-    const data = await res.json();
-    saveCache(cacheKey, data);
-    return data;
-}
-
-// Step 3: Get countries/locales details from REST API
-async function getCountries() {
-    const cacheKey = `countryDetails`;
-    let cached = loadCache(cacheKey);
-    if (cached) {
-        return cached;
-    }
+async function fetchCountries() {
     let cUrl = "https://restcountries.com/v3.1/all?fields=name,region,flag,cca2,cca3,translations,languages";
     if (isLocal) {
         cUrl = bRootUrl + "/all_countries.json";
     }
     const res = await fetch(cUrl);
-    const data = await res.json();
-    saveCache(cacheKey, data);
-    return data;
+    return await res.json();
 }
 
-async function getLocales() {
-    const cacheKey = `localeDetails`;
-    let cached = loadCache(cacheKey);
-    if (cached) {
-        return cached;
-    }
+const getCountries = withCache("countryDetails", fetchCountries);
+
+async function fetchLocales() {
     let locUrl = bRootUrl + "/loc";
     if (isLocal) {
         locUrl += ".json";
@@ -134,24 +17,40 @@ async function getLocales() {
     const res = await fetch(locUrl);
     const data = await res.json();
     data.locales = reorderLocaleMap(data.locales);
-    saveCache(cacheKey, data);
     return data;
 }
 
-// Step 4: Initialize Google Map with localization
-function initMap(lang, region) {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&language=${lang}&region=${region}&callback=loadMap`;
-    script.async = true;
-    document.head.appendChild(script);
+const getLocales = withCache("localeDetails", fetchLocales);
+
+async function i18nData(l) {
+    const cacheKey = `/loc/${l}`;
+    let cached = loadCache(cacheKey);
+    if (cached) {
+        return cached;
+    }
+    let locUrl = bRootUrl + cacheKey;
+    if (isLocal) {
+        locUrl += ".json";
+    }
+    const response = await fetch(locUrl);
+    const data = await response.json();
+    saveCache(cacheKey, data);
+    await i18next.init({
+        lng: window.loc[0],
+        resources: data
+    });
+    return data;
 }
 
-function loadMap() {
-    const map = new google.maps.Map(document.getElementById("map"), {
-        center: {lat: 47.4979, lng: 19.0402}, // Example: Budapest
-        zoom: 6
+async function fetchI18N(path, l = `${window.loc[0]}_${window.loc[1]}`) {
+    const data = await i18nData(`${path}/${l}`);
+    return await i18next.init({
+        lng: window.loc[0],
+        resources: data
     });
 }
+
+const getI18N = withCache("localeDetails", fetchI18N);
 
 function findCountriesByLang(lng, limit) {
     if (!window.allCountries) return [];
@@ -260,19 +159,6 @@ function attempt2To3(country, any) {
 
 (async () => {
     window.allLocales = await getLocales();
-
-    const allCountries = await getCountries();
-    window.allCountries = allCountries;
-
-    if (!countryCode) {
-        countryCode = await getCountryFromIP();
-        countryCode = countryCode.country
-    }
-    window.country = allCountries.find(country => country.cca2 === countryCode)
-    saveCache("country", window.country);
-
-    window.loc = [langCode, countryCode];
-    saveCache("loc", window.loc);
-
-    initMap(langCode || 'en', countryCode || 'US');
+    window.allCountries = await getCountries();
+    window.country = window.allCountries.find(country => country.cca2 === countryCode)
 })();
