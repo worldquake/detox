@@ -18,11 +18,9 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static hu.detox.parsers.JSonUtils.OM;
 
@@ -59,9 +57,8 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
         StringBuilder sb = new StringBuilder();
         ArrayNode an = OM.createArrayNode();
         ArrayNode sort = OM.createArrayNode();
-        Collection<String> cLst = q.getSelectItems().stream().map(WebConfig::valueOf).collect(Collectors.toUnmodifiableSet());
         AtomicInteger limit = new AtomicInteger(-1);
-        findAndBuildColumns(limit, root, cLst, an, sort, name, sb);
+        findAndBuildColumns(limit, root, an, sort, name, sb);
         if (name.contentEquals(sb)) {
             ObjectNode ret = OM.createObjectNode();
             ret.set(F_SORT, sort);
@@ -73,7 +70,7 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
         throw new ValidationException("No such table: " + name);
     }
 
-    private static void findAndBuildColumns(AtomicInteger limit, ObjectNode node, Collection<String> prj, ArrayNode cols, ArrayNode sort, String finalName, StringBuilder sb) {
+    private static void findAndBuildColumns(AtomicInteger limit, ObjectNode node, ArrayNode cols, ArrayNode sort, String finalName, StringBuilder sb) {
         if (node == null) return;
         final AtomicReference<String> longest = new AtomicReference<>("");
         node.forEachEntry((k, jsonNode) -> {
@@ -91,18 +88,15 @@ public class TabulatorColumns implements ApplicationListener<ContextRefreshedEve
         if (pageSize != null) limit.set(pageSize.asInt());
         if (cols.isEmpty()) cols.add(ROWID);
         currCols = node.get(F_COLUMNS);
-        boolean prjAll = prj == null || prj.contains("*");
-        if (currCols instanceof ArrayNode) currCols.forEach(c -> {
-            if (prjAll || prj.contains(c.get("field").asText())) cols.add(c);
-        });
+        if (currCols instanceof ArrayNode) currCols.forEach(cols::add);
         minusOn(node, cols);
         JsonNode s = node.get(F_SORT);
         if (s != null) sort.add(s);
         if (finalName.contentEquals(sb)) return;
         ObjectNode subObj = (ObjectNode) node.get(F_SUB);
-        findAndBuildColumns(limit, subObj, prj, cols, sort, finalName, sb);
+        findAndBuildColumns(limit, subObj, cols, sort, finalName, sb);
         subObj = (ObjectNode) node.get("view");
-        findAndBuildColumns(limit, subObj, prj, cols, sort, finalName, sb);
+        findAndBuildColumns(limit, subObj, cols, sort, finalName, sb);
     }
 
     private static void minusOn(ObjectNode node, ArrayNode cols) {

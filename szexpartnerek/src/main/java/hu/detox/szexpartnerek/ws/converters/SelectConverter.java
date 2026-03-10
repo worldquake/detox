@@ -16,10 +16,8 @@ import net.sf.jsqlparser.statement.select.*;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -58,39 +56,26 @@ public class SelectConverter implements Converter<String, PlainSelect> {
             throw new ValidationException("Invalid query: " + s, e);
         }
         ObjectNode tableCols = columns.generateTabulatorColumns(select);
-        adjust(select, tableCols);
-        var v = new NoSubQueryValidator(select);
+        var v = new NoSubQueryValidator(select, tableCols);
+        adjust(select, v);
+        JsonNode pgs = tableCols.get(TabulatorColumns.F_PAGES);
+        if (pgs != null) {
+            setLimit(select, new DataRepository.PagingParam(null, pgs.asInt()));
+        }
         v.validate();
         return select;
     }
 
-    private void adjust(PlainSelect select, ObjectNode tableCols) {
-        Set<String> allowed = new HashSet<>();
-        for (JsonNode field : tableCols.get(TabulatorColumns.F_COLUMNS)) {
-            allowed.add(field.get("field").asText());
-        }
-
+    private void adjust(PlainSelect select, NoSubQueryValidator val) {
         LinkedHashSet<SelectItem<?>> newItems = new LinkedHashSet<>();
         for (SelectItem<?> item : select.getSelectItems()) {
             if (item.getExpression() instanceof AllColumns) {
-                for (String col : allowed) {
+                for (String col : val.getAllowed()) {
                     var si = new SelectItem<>(new Column(col));
                     if (col.equals(DataRepository.FIELD_ROWID)) si.setAlias(new Alias(col));
                     newItems.add(si);
                 }
-            } else if (item.getExpression() instanceof Column c) {
-                String colName = c.getColumnName();
-                if (!allowed.contains(colName)) {
-                    throw new ValidationException("Column not allowed: " + colName);
-                }
-                newItems.add(item);
-            } else {
-                throw new ValidationException("Only column names, not [" + item + "]");
-            }
-        }
-        JsonNode pgs = tableCols.get(TabulatorColumns.F_PAGES);
-        if (pgs != null) {
-            setLimit(select, new DataRepository.PagingParam(null, pgs.asInt()));
+            } else newItems.add(item);
         }
         select.setSelectItems(new LinkedList<>(newItems));
     }
