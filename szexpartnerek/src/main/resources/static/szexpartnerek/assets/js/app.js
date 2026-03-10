@@ -63,15 +63,22 @@ tabulatorFunctions = {
         var data = cell.getValue().split(", ");
         var html = [];
         data.forEach(function (lang) {
+            let iso2 = lang;
             lang = attempt2To3(false, lang).toLowerCase();
             const cs = findCountriesByLang(lang);
             if (cs) {
                 if (cs.length > 1) html.push("(")
                 for (const c of cs) {
-                    const n = c.name.nativeName[lang] ? c.name.nativeName[lang].common : c.name.official;
-                    let l = Object.values(c.languages)[0];
-                    if (c.languages[lang]) l = c.languages[lang];
-                    html.push(`<span title='${l} / ${n}'>${c.flag}</span>`);
+                    let l, n, a;
+                    a = locale([iso2, c.cca3], 0);
+                    if (a) n = a[1];
+                    else n = c.name.nativeName[lang] ? c.name.nativeName[lang].common : c.name.official;
+                    if (a) l = a[0];
+                    else {
+                        l = Object.values(c.languages)[0];
+                        if (c.languages[lang]) l = c.languages[lang];
+                    }
+                    html.push(`<span title='${l.cap()} / ${n}'>${c.flag}</span>`);
                 }
                 if (cs.length > 1) html.push(")")
             }

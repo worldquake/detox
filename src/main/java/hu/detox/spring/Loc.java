@@ -3,12 +3,14 @@ package hu.detox.spring;
 import org.apache.commons.collections.bidimap.DualTreeBidiMap;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/loc")
@@ -21,6 +23,7 @@ public class Loc {
     private static final String LOCALE_MINUS = "\\-|minus";
     public static final String DETECTED = "DET";
     private static final List<Locale> ALL = new LinkedList<>(Arrays.asList(Locale.getAvailableLocales()));
+    private static final List<Locale> MAIN;
     public static DualTreeBidiMap mapCountryISO3toISO2;
     public static DualTreeBidiMap mapLanguageISO3toISO2;
 
@@ -37,6 +40,23 @@ public class Loc {
             final Locale locale = new Locale(lang, StringUtils.EMPTY);
             Loc.mapLanguageISO3toISO2.put(locale.getISO3Language().toLowerCase(CORRECTIVE_LOCALE), lang);
         }
+        List<Locale> mainLocales = Loc.ALL.stream()
+                .filter(l -> {
+                    boolean ret = true;
+                    try {
+                        ret &= l.getISO3Country() != null && l.getISO3Language() != null;
+                    } catch (MissingResourceException mr) {
+                        ret = false;
+                    }
+                    ret = ret & !l.getLanguage().isEmpty() && !l.getCountry().isEmpty() && l.getVariant().isEmpty();
+                    return ret;
+                })
+                .collect(Collectors.toList());
+        Map<String, Locale> langToLocale = new LinkedHashMap<>();
+        for (Locale l : mainLocales) {
+            langToLocale.putIfAbsent(l.getLanguage() + l.getCountry(), l);
+        }
+        MAIN = List.copyOf(langToLocale.values());
     }
 
     public static String attemptGet(boolean country, final Collection<Locale> nlocs, final String orig) {
@@ -480,11 +500,32 @@ public class Loc {
 
     @GetMapping
     public Object getMappings() {
+        Map<String, Object> mainLocales = new HashMap<>();
+        Locale locale = LocaleContextHolder.getLocale();
+        for (Locale l : Loc.MAIN) {
+            List<String> lst = new ArrayList<>();
+            lst.add(l.toLanguageTag());
+            lst.add(l.getLanguage());
+            lst.add(l.getISO3Language());
+            lst.add(l.getCountry());
+            lst.add(l.getISO3Country());
+            lst.add(l.getScript());
+            lst.add(l.getDisplayLanguage(locale));
+            lst.add(l.getDisplayCountry(locale));
+            lst.add(l.getDisplayLanguage(l));
+            lst.add(l.getDisplayCountry(l));
+            lst.add(l.getDisplayLanguage(Loc.CORRECTIVE_LOCALE));
+            lst.add(l.getDisplayCountry(Loc.CORRECTIVE_LOCALE));
+            mainLocales.put(l.toString(), lst);
+        }
         return Map.of(
                 "countryMap", mapCountryISO3toISO2,
                 "languageMap", mapLanguageISO3toISO2,
-                "locales", Loc.ALL
+                "locales", mainLocales
         );
     }
 
+    public static void main(String[] args) {
+        System.out.println(MAIN);
+    }
 }
