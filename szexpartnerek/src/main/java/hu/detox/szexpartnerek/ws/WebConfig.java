@@ -1,10 +1,13 @@
 package hu.detox.szexpartnerek.ws;
 
+import hu.detox.spring.JacksonConverter;
 import hu.detox.szexpartnerek.ws.rest.GenericRequestParamArgumentResolver;
 import hu.detox.utils.strings.StringUtils;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -39,5 +42,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(new GenericRequestParamArgumentResolver());
+    }
+
+    @Bean
+    public HttpMessageConverter<com.fasterxml.jackson.databind.JsonNode> jacksonConverter() {
+        return new JacksonConverter();
     }
 }

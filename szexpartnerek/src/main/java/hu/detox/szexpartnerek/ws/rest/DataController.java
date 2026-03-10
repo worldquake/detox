@@ -90,7 +90,7 @@ public class DataController {
                 }
                 node.set("data", data);
             }
-            res = OM.writeValueAsString(node);
+            res = node;
         } else {
             repo.getResults(q, cm);
             res = toSeparatedValues(cm, pcs.getFirst());
@@ -102,7 +102,7 @@ public class DataController {
         Pair<String, Charset> res;
         ObjectNode tableCols = columns.generateTabulatorColumns(ps);
         if (ConfigReader.JSON.equals(ext)) {
-            res = new Pair<>(OM.writeValueAsString(tableCols), Charset.defaultCharset());
+            res = new Pair<>(tableCols.toString(), Charset.defaultCharset());
         } else {
             var ar = new AtomicReference<>(tableCols.get(TabulatorColumns.F_TABLE).asText());
             Pair<CsvPreference, Charset> pcs = MatrixReader.forNameWithExtension(ar, accept);
@@ -146,7 +146,7 @@ public class DataController {
             ObjectNode node = OM.createObjectNode();
             node.set("pg", buildPagingNode(request, params, content.getFirst()));
             node.set("data", OM.valueToTree(content.getSecond()));
-            res = OM.writeValueAsString(node);
+            res = node;
         } else {
             CsvListRowMapper m = new CsvListRowMapper();
             content = repo.getResults(params, m);
