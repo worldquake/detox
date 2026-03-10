@@ -3,11 +3,11 @@ package hu.detox.szexpartnerek.spring;
 import hu.Main;
 import hu.detox.spring.GeoCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.ContextRefreshedEvent;
 
-@SpringBootApplication(scanBasePackageClasses = SzexConfig.class)
+@ComponentScan(basePackageClasses = hu.detox.szexpartnerek.Main.class)
 @RequiredArgsConstructor
 public class Test implements ApplicationListener<ContextRefreshedEvent> {
 

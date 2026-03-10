@@ -13,6 +13,8 @@ import java.util.List;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+    private final static String PREFIX = "/szexpartnerek";
+
     public static String valueOf(FromItem fi) {
         if (fi == null) return null;
         String name = StringUtils.trimToNull(fi.toString());
@@ -29,9 +31,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        if (System.getProperty("root").startsWith("hu.detox.szexpartnerek"))
-            registry.addResourceHandler("/assets/**")
-                    .addResourceLocations("classpath:/static/szexpartnerek/assets/");
+        boolean rootSzex = System.getProperty("root").startsWith("hu.detox.szexpartnerek");
+        registry.addResourceHandler((rootSzex ? "" : PREFIX) + "/assets/**")
+                .addResourceLocations("classpath:/static" + PREFIX + "/assets/");
     }
 
     @Override

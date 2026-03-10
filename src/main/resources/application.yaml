@@ -13,6 +13,7 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.webmvc.autoconfigure.error.ErrorMvcAutoConfiguration
   cloud:
     config:
       enabled: false

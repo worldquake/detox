@@ -8,14 +8,12 @@ import hu.detox.spring.DetoxConfig;
 import hu.detox.spring.GeoCode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
 import org.supercsv.io.CsvListReader;
 
 import java.io.IOException;
 import java.util.List;
 
-@SpringBootApplication
 @RequiredArgsConstructor
 @Import(DetoxConfig.class)
 public class Test {

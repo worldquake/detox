@@ -5,7 +5,8 @@ import hu.detox.szexpartnerek.spring.SzexConfig;
 import lombok.RequiredArgsConstructor;
 import org.jline.utils.AttributedString;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.shell.command.CommandRegistration;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,8 @@ import java.text.Normalizer;
 
 import static hu.detox.szexpartnerek.spring.SyncCommand.normalize;
 
-@SpringBootApplication(scanBasePackageClasses = SzexConfig.class)
+@Configuration
+@ComponentScan(basePackageClasses = {SzexConfig.class, hu.detox.Main.class})
 @Component("szexpartnerek")
 @RequiredArgsConstructor
 @ConditionalOnNoApp.Annotation

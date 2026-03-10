@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class FwdController {
     static final String FWD = "forward:/szexpartnerek/index.html";
 
-    @RequestMapping(value = {"/szexpartnerek/{path:^(?!assets).*}"})
+    @RequestMapping(value = {"/szexpartnerek/{path}"})
     public String forward() {
         return FWD;
     }

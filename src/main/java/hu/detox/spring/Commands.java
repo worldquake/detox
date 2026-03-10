@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import hu.detox.Agent;
-import hu.detox.Main;
 import hu.detox.utils.strings.StringUtils;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
@@ -23,6 +22,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static hu.detox.Main.PROMPT;
+import static hu.detox.Main.cr;
+
 @Configuration
 @ShellComponent
 @Component
@@ -31,7 +33,7 @@ public class Commands implements Quit.Command, PromptProvider {
     @Bean
     @ConditionalOnExpression("'hu.detox'.startsWith('${root}')")
     public CommandRegistration run() {
-        return Main.cr("run")
+        return cr("run")
                 .command("run").description("Runs the basic setup, and positional arguments").withOption()
                 .longNames("test").shortNames('t').arity(0, 0).type(boolean.class).defaultValue("false").description("Sets the system to test mode (ideally no execution).")
                 .and().withOption()
@@ -61,7 +63,7 @@ public class Commands implements Quit.Command, PromptProvider {
 
     @Override
     public AttributedString getPrompt() {
-        return Main.PROMPT;
+        return PROMPT;
     }
 
 }

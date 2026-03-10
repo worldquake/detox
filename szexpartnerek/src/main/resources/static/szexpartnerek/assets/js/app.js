@@ -2,8 +2,8 @@ const url = new URL(location.href);
 const table = url.searchParams.get('t') || url.pathname.replace(/^\//, "").replaceAll('/', '_');
 const prj = url.searchParams.get('p') || "*";
 const q = "p=" + encodeURIComponent(prj);
-var rootUrl = "/api/szexpartnerek/" + table;
-var colsUrl = rootUrl + "?" + q + "&pg.size=0";
+var rootUrl = "/api/szexpartnerek/" + table + "?" + q;
+var colsUrl = rootUrl + "&pg.size=0";
 if (window.location.protocol === "file:") {
     const baseFile = "example/" + table;
     rootUrl = baseFile + ".csv";
@@ -97,7 +97,7 @@ function urlGenerator(url, config, params) {
     if (params.page) query.push(`pg=${params.page}/${params.size}`);
     if (params.sort && params.sort.length > 0) query.push("o=" + encodeURIComponent(JSON.stringify(params.sort)));
     if (params.filter && params.filter.length > 0) query.push("w=" + encodeURIComponent(JSON.stringify(params.filter)));
-    return url + '?' + q + (query.length ? "&" + query.join('&') : '');
+    return url + (query.length ? "&" + query.join('&') : '');
 }
 
 function initializeFields(columns) {
@@ -132,21 +132,24 @@ jQuery.get({
         }
 
         tabulator = new Tabulator("#results-table", {
+            initialSort: tabulatorSort,
             layout: "fitColumns",
-            persistenceMode: true, persistenceID: table, persistence: true,
             responsiveLayout: false,
             history: true,
+            movableColumns: true,
+            columnDefaults: {tooltip: true},
+            columns: columns,
+            // Remember everything
+            persistenceMode: true, persistenceID: table, persistence: true,
+            // Pagination is enabled
             pagination: true,
             paginationInitialPage: 1,
             paginationSize: 25,
             paginationCounter: "rows",
+            // Remote all:
             paginationMode: "remote",
             sortMode: "remote",
             filterMode: "remote",
-            movableColumns: true,
-            columnDefaults: {tooltip: true},
-            columns: columns,
-            initialSort: tabulatorSort,
             ajaxURLGenerator: urlGenerator,
             ajaxURL: rootUrl,
             ajaxConfig: {

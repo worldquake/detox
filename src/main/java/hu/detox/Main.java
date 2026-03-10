@@ -1,5 +1,6 @@
 package hu.detox;
 
+import hu.detox.spring.ConditionalOnNoApp;
 import hu.detox.spring.DetoxConfig;
 import hu.detox.utils.reflection.ReflectionUtils;
 import hu.detox.utils.strings.StringUtils;
@@ -12,9 +13,8 @@ import org.springframework.shell.command.CommandRegistration;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-@SpringBootApplication(
-        scanBasePackageClasses = DetoxConfig.class
-)
+@SpringBootApplication(scanBasePackageClasses = DetoxConfig.class)
+@ConditionalOnNoApp.Annotation
 @Primary
 public class Main implements BeanPostProcessor {
     public static AttributedString PROMPT = new AttributedString("DeToX> ");
