@@ -56,7 +56,7 @@ if test ! -e $DTX_JAVA_EXECUTABLE; then
 fi
 JARCH=32
 
-eval `$DTX_JAVA_EXECUTABLE -version 2>&1| dos2unix |awk -F ' ' '/version/ {split($3,a,/["\.]/);print "JAVAVER="a[2]a[3]} /HotSpot/ {sub(/-Bit/, "", $3);print "JARCH="$3}'`
+eval `$DTX_JAVA_EXECUTABLE -version 2>&1| dos2unix |awk -F ' ' '/version/ {split($3,a,/["\.]/);print "JAVAVER="a[2]} /HotSpot/ {sub(/-Bit/, "", $3);print "JARCH="$3}'`
 BASE_NAME=`basename -s .sh $0 2>/dev/null` || BASE_NAME=`basename $0 .sh 2>/dev/null`
 if [ -z $DTX_MAIN_CLASS ]; then
 	DTX_MAIN_CLASS=$BASE_NAME
@@ -122,4 +122,4 @@ if test -z "$JAR"; then
 else
   DTX_JARGS+=("-Dloader.main=$DTX_MAIN_CLASS" "-jar" "$JAR")
 fi
-$DTX_SHELL "$DTX_JAVA_EXECUTABLE" -DstdIn=$STDIN "-Dlogging.file.path=$TARGET" -Dtarget=$TARGET" "-Dbase=$ABASE" -cp "$DTX_CLASSPATH" "${DTX_JARGS[@]}" "$@"
+$DTX_SHELL "$DTX_JAVA_EXECUTABLE" -DstdIn=$STDIN "-Dlogging.file.path=$TARGET" "-Dtarget=$TARGET" "-Dbase=$ABASE" -cp "$DTX_CLASSPATH" "${DTX_JARGS[@]}" "$@"
