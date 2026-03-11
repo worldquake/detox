@@ -7,12 +7,33 @@
 body {
     overflow: hidden;
 }
-.ui-accordion .ui-accordion-content {
-    padding: 0.2em 0.2em;
-    border-top:0;
-    overflow:auto
-}
 .phone {
     width:18px;
     height:18px;
+}
+
+.tabulator {
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1 1 auto; /* Kitölti a maradék helyet a panelen belül */
+  flex-direction: column;
+}
+.tabulator-tableHolder {
+  flex: 1 1 auto;
+  overflow-y: auto !important;
+  max-height: none !important;
+}
+.tabulator-header, .tabulator-footer {
+  flex: 0 0 auto;
+}
+
+.ui-accordion {
+    height: calc(100vh);
+}
+.ui-accordion .ui-accordion-content {
+    padding: 0.2em;
+    border-top:0;
+    overflow: hidden !important;
+	height: 100%;
+	flex-direction: column;
 }

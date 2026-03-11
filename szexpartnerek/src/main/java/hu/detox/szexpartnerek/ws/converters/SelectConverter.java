@@ -40,8 +40,7 @@ public class SelectConverter implements Converter<String, PlainSelect> {
                 long nLimit = Math.min(size.getValue(), limit.size());
                 l.setRowCount(new LongValue(nLimit));
             }
-            if (l.getOffset() == null)
-                l.setOffset(new LongValue(limit.offset()));
+            l.setOffset(new LongValue(limit.offset()));
         }
 
     }

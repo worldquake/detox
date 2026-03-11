@@ -182,6 +182,20 @@ function initializeFields(columns) {
     });
 }
 
+function calculatePageSize() {
+    var tableHolder = window.table.element.querySelector('.tabulator-tableholder');
+    var bodyHeight = tableHolder.clientHeight;
+    var row = tableHolder.querySelector('.tabulator-row');
+    if (!row) return null;
+    var rowHeight = row.offsetHeight;
+    return Math.floor(bodyHeight / rowHeight);
+}
+
+function updatePageSize() {
+    var pageSize = calculatePageSize();
+    if (pageSize) window.table.setPageSize(pageSize);
+}
+
 $(function () {
     $("#main-accordion").accordion({
         active: 1, heightStyle: "fill"
@@ -204,7 +218,7 @@ jQuery.get({
                 }
             });
         }
-
+        const pgMode = isLocal ? "local" : "remote";
         tabulator = new Tabulator("#results-table", {
             initialSort: tabulatorSort,
             layout: "fitColumns",
@@ -220,10 +234,11 @@ jQuery.get({
             paginationInitialPage: 1,
             paginationSize: 25,
             paginationCounter: "rows",
-            // Remote all:
-            paginationMode: "remote",
-            sortMode: "remote",
-            filterMode: "remote",
+            // Set pagination style:
+            paginationMode: pgMode,
+            sortMode: pgMode,
+            filterMode: pgMode,
+            // Setup ajax
             ajaxURLGenerator: urlGenerator,
             ajaxURL: rootUrl,
             ajaxConfig: {
@@ -244,7 +259,7 @@ jQuery.get({
                             const dataAsObjects = parsedData.map(row =>
                                 Object.fromEntries(keys.map((key, i) => [key.trim(), row[i]]))
                             );
-                            return {
+                            return isLocal ? dataAsObjects : {
                                 data: dataAsObjects,
                                 last_page: parseInt(hds.get('X-Page-Count') || 1, 10),
                                 current_page: parseInt(hds.get('X-Page-Current') || 1, 10),
@@ -255,6 +270,12 @@ jQuery.get({
                     });
                 });
             }
+        });
+        window.table = tabulator;
+        tabulator.on("tableBuilt", updatePageSize);
+        $(window).on('resize', function () {
+            $("#main-accordion").accordion("refresh");
+            updatePageSize();
         });
     }
 });
