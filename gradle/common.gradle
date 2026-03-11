@@ -35,6 +35,9 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-client'
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
 
+    implementation 'org.zalando:logbook-core:3.9.0'
+    implementation 'org.zalando:logbook-spring:3.9.0'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

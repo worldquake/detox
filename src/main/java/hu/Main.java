@@ -9,15 +9,18 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 
-@Configuration
+@Component(Main.BEAN_NAME)
 public class Main implements ApplicationContextAware {
+    public static final String BEAN_NAME = "rootMain";
     private static ApplicationContext context;
     private static PropertyResolver resolver;
 

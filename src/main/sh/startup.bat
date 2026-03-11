@@ -94,8 +94,9 @@ if not "x%DEBUG:covc=%"=="x%DEBUG%" set "DTX_DJARGS=%DTX_DJARGS% -javaagent:%LIB
 if not "x%DEBUG:covf=%"=="x%DEBUG%" set "DTX_DJARGS=%DTX_DJARGS% -javaagent:%LIBDIR%/jacocoagent.jar=destfile=%TARGET%\%DTX_EXECUTABLE%.exec,append=false,jmx=true"
 for /F "usebackq tokens=2* delims=: " %%W in (`mode con ^| findstr Columns`) do set COLUMNS=%%W
 set "DTX_JARGS=!DTX_JARGS! %DTX_DJARGS% -Dconsole_width=%COLUMNS% -splash:res/splash.jpg"
-set DTX_CLASSPATH=%DTX_PROFILE_DIR%/%LIBDIR%/cp;%JBASE%/cp;%DTX_CLASSPATH%
-if "x"=="x%JAR%" for %%J in ("%JBASE%\*.jar") do set "DTX_CLASSPATH=!DTX_CLASSPATH!;%%J"
+set CP_FILE=%TEMP%\jargs_%RANDOM%.txt
+<nul set /p ="%DTX_PROFILE_DIR%/%LIBDIR%/cp;%JBASE%/cp;%DTX_CLASSPATH%" >>"%CP_FILE%"
+if "x"=="x%JAR%" for %%J in ("%JBASE%\*.jar") do <nul set /p =";%%J" >>"%CP_FILE%"
 if x%DTX_MAIN_CLASS%==x (
 	set DTX_MAIN_CLASS=%~n0
 	if a!DTX_MAIN_CLASS!==astartup set DTX_MAIN_CLASS=Main
@@ -114,7 +115,7 @@ if exist "%UPDATE%" (
 	) else (
 		set NDTX_SHELL=%DTX_SHELL%
 		if NOT %NDTX_SHELL%x==x set NDTX_SHELL=%NDTX_SHELL% /WAIT
-		%NDTX_SHELL% "%DTX_JAVA_EXECUTABLE%" !DTX_JARGS! -cp "%DTX_CLASSPATH%" -Dtarget=%TARGET% -Dbase=%BASE% hu.detox.launcher.Main
+		%NDTX_SHELL% "%DTX_JAVA_EXECUTABLE%" !DTX_JARGS! -cp @"%CP_FILE%" -Dtarget=%TARGET% -Dbase=%BASE% hu.detox.launcher.Main
 	)
 )
 if "x"=="x%JAR%" (
@@ -122,6 +123,7 @@ if "x"=="x%JAR%" (
 ) else (
   set "DTX_JARGS=!DTX_JARGS! -Dloader.main=%DTX_MAIN_CLASS% -jar %JAR%"
 )
-%DTX_SHELL% "%DTX_JAVA_EXECUTABLE%" -cp "%DTX_CLASSPATH%" -DstdIn=%STDIN% "-Dlogging.file.path=%TARGET%" -Dtarget=%TARGET% -Dbase=%BASE% !DTX_JARGS! %*
+rem "%DTX_JAVA_EXECUTABLE%" -cp @"%CP_FILE%" -XshowSettings:property -version 2>&1
+%DTX_SHELL% "%DTX_JAVA_EXECUTABLE%" -cp @"%CP_FILE%" -DstdIn=%STDIN% "-Dlogging.file.path=%TARGET%" -Dtarget=%TARGET% -Dbase=%BASE% !DTX_JARGS! %*
 
 ENDLOCAL
