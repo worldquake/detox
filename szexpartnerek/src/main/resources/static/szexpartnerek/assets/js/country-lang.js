@@ -1,5 +1,5 @@
-async function fetchCountries() {
-    let cUrl = "https://restcountries.com/v3.1/all?fields=name,region,flag,cca2,cca3,translations,languages";
+async function fetchCountries(ck) {
+    let cUrl = "https://restcountries.com/v3.1/all?fields=" + ck;
     if (isLocal) {
         cUrl = bRootUrl + "/all_countries.json";
     }
@@ -7,10 +7,10 @@ async function fetchCountries() {
     return await res.json();
 }
 
-const getCountries = withCache("countryDetails", fetchCountries);
+const getCountries = withCache("name,region,flag,cca2,cca3,translations,languages", fetchCountries);
 
-async function fetchLocales() {
-    let locUrl = bRootUrl + "/loc";
+async function fetchLocales(ck) {
+    let locUrl = bRootUrl + "/" + ck;
     if (isLocal) {
         locUrl += ".json";
     }
@@ -20,37 +20,27 @@ async function fetchLocales() {
     return data;
 }
 
-const getLocales = withCache("localeDetails", fetchLocales);
+const getLocales = withCache("loc", fetchLocales);
 
-async function i18nData(l) {
+async function fetchI18NData(ck) {
     const cacheKey = `/loc/${l}`;
-    let cached = loadCache(cacheKey);
-    if (cached) {
-        return cached;
-    }
     let locUrl = bRootUrl + cacheKey;
     if (isLocal) {
         locUrl += ".json";
     }
     const response = await fetch(locUrl);
-    const data = await response.json();
-    saveCache(cacheKey, data);
-    await i18next.init({
-        lng: window.loc[0],
-        resources: data
-    });
-    return data;
+    return await response.json();
 }
 
-async function fetchI18N(path, l = `${window.loc[0]}_${window.loc[1]}`) {
-    const data = await i18nData(`${path}/${l}`);
+async function fetchI18N(ck) {
+    const data = await fetchI18NData(ck);
     return await i18next.init({
         lng: window.loc[0],
         resources: data
     });
 }
 
-const getI18N = withCache("localeDetails", fetchI18N);
+// const getI18N = withCache(`${window.loc[0]}_${window.loc[1]}`, fetchI18N);
 
 function findCountriesByLang(lng, limit) {
     if (!window.allCountries) return [];

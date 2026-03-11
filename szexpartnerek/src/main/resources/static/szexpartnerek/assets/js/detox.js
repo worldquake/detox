@@ -105,43 +105,30 @@ function withCache(cacheKey, fetcher) {
     return async function (...args) {
         let cached = loadCache(cacheKey);
         if (cached) return cached;
-        const data = await fetcher(...args);
+        const data = await fetcher(cacheKey, ...args);
         saveCache(cacheKey, data);
         return data;
     };
 }
 
 if (!countryCode) {
-    async function fetchCountryFromIP() {
-        let cUrl = "https://ipinfo.io/json";
+    async function fetchCountryFromIP(ck) {
+        let cUrl = `https://${ck}.io/json`;
         if (isLocal) {
-            cUrl = bRootUrl + "/ipinfo.json";
+            cUrl = bRootUrl + `/${ck}.json`;
         }
         const res = await fetch(cUrl);
         return await res.json();
     }
 
-    const getCountryFromIP = withCache("ipCountryCode", fetchCountryFromIP);
+    const getCountryFromIP = withCache("ipinfo", fetchCountryFromIP);
 
     (async () => {
         window.geoip = await getCountryFromIP();
-        countryCode = countryCode.country
+        countryCode = window.geoip.country
         if (!window.loc) window.loc = [langCode, countryCode];
     })();
 }
-
-// Google maps loader
-function googleLoadMapCallback() {
-    const map = new google.maps.Map(document.getElementById("map"), {
-        center: {lat: 47.4979, lng: 19.0402}, // Example: Budapest
-        zoom: 6
-    });
-}
-
-const script = document.createElement('script');
-script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&language=${langCode}&region=${countryCode}&callback=googleLoadMapCallback`;
-script.async = true;
-document.head.appendChild(script);
 
 // An infinite-scroll item changer
 function startLanScrollCycling($container, delay = 5000) {

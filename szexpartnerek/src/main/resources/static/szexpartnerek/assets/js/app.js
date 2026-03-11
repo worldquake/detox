@@ -1,6 +1,21 @@
 const target = isLocal ? url.searchParams.get('t') || "" : url.pathname.replace(/^\//, "").replaceAll('/', '_');
 rootUrl += target;
 
+// Google maps loader
+function googleLoadMapCallback() {
+    const map = new google.maps.Map(document.getElementById("map"), {
+        center: {lat: 47.4979, lng: 19.0402}, // Example: Budapest
+        zoom: 6
+    });
+}
+
+function startGoogleMap() {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&language=${langCode}&region=${countryCode}&callback=googleLoadMapCallback`;
+    script.async = true;
+    document.head.appendChild(script);
+}
+
 const prj = url.searchParams.get('p') || "*";
 let colsUrl = null;
 if (isLocal) {
