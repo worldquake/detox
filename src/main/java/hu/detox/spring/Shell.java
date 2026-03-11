@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static hu.detox.spring.DetoxConfig.ctx;
+import static hu.Main.ctx;
 
 @Component("detoxShell")
 @RequiredArgsConstructor

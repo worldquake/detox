@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import static hu.detox.spring.DetoxConfig.ctx;
+import static hu.Main.ctx;
 
 @Configuration
 @RequiredArgsConstructor

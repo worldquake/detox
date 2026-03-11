@@ -20,7 +20,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static hu.detox.spring.DetoxConfig.prop;
+import static hu.Main.prop;
 import static hu.detox.spring.DetoxConfig.toAmount;
 
 public class IOUtils extends org.apache.commons.io.IOUtils {

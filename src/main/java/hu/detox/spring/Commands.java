@@ -3,6 +3,7 @@ package hu.detox.spring;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import hu.Main;
 import hu.detox.Agent;
 import hu.detox.utils.strings.StringUtils;
 import lombok.SneakyThrows;
@@ -51,7 +52,7 @@ public class Commands implements Quit.Command, PromptProvider {
             Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
             rootLogger.setLevel(Level.toLevel(log, Level.INFO));
         }
-        Shell sh = DetoxConfig.ctx().getBean(Shell.class);
+        Shell sh = Main.ctx().getBean(Shell.class);
         sh.execute(positional);
         return CollectionUtils.isEmpty(positional) ? null : positional.get(0);
     }

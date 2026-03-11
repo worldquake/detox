@@ -1,5 +1,6 @@
 package hu.detox.spring;
 
+import hu.Main;
 import org.jspecify.annotations.NonNull;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
@@ -19,6 +20,6 @@ public class ConditionalOnNoApp implements TypeFilter {
     @Override
     public boolean match(@NonNull MetadataReader mdr, @NonNull MetadataReaderFactory mdrf) {
         boolean hasAnnotation = mdr.getAnnotationMetadata().hasAnnotation(Annotation.class.getName());
-        return DetoxConfig.ctx() == null || !hasAnnotation;
+        return Main.ctx() == null || !hasAnnotation;
     }
 }

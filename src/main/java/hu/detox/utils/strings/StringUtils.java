@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static hu.detox.spring.DetoxConfig.prop;
+import static hu.Main.prop;
 
 //CHOFF This is a class copied from the Internet without change
 public class StringUtils extends org.apache.commons.lang3.StringUtils {

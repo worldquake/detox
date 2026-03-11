@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 
-import static hu.detox.spring.DetoxConfig.ctx;
+import static hu.Main.ctx;
 import static hu.detox.szexpartnerek.sync.Shell.args;
 
 @Component

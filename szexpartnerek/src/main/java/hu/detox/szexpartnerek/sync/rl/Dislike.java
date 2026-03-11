@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 
+import static hu.Main.ctx;
 import static hu.detox.parsers.JSonUtils.OM;
-import static hu.detox.spring.DetoxConfig.ctx;
 import static hu.detox.szexpartnerek.spring.SzexConfig.query;
 
 @Component("rlDislike")

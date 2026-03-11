@@ -20,8 +20,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
+import static hu.Main.prop;
 import static hu.detox.spring.DetoxConfig.async;
-import static hu.detox.spring.DetoxConfig.prop;
 
 public class SystemUtils extends org.apache.commons.lang3.SystemUtils {
     public static final Tidy HTML_TIDY = new Tidy();
