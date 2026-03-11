@@ -320,7 +320,6 @@ public class DetoxConfig implements BeanPostProcessor {
         else if (Main.ctx() != null) {
             ApplicationContext par = Main.ctx().getParent();
             if (par != null && par.containsBean(beanName)) bean = null;
-            else System.out.println("Bean " + beanName + " := " + bean);
         }
         return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
     }
