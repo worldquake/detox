@@ -85,8 +85,8 @@ DEBUG=${DEBUG:-false}
 [[ ${DEBUG} == *"remote"* ]] && DTX_JARGS+=(-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005)
 [[ ${DEBUG} == *"mgmtr"* ]] && DTX_JARGS+=(-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=5006 -Dcom.sun.management.jmxremote.ssl=false)
 [[ ${DEBUG} == *"mgmtl"* ]] && DTX_JARGS+=(-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=true)
-[[ ${DEBUG} == *"covc"* ]] && DTX_JARGS+=("-javaagent:$JBASE/jacocoagent.jar=destfile=$TARGET/$DTX_EXECUTABLE.exec,append=true")
-[[ ${DEBUG} == *"covf"* ]] && DTX_JARGS+=("-javaagent:$JBASE/jacocoagent.jar=destfile=$TARGET/$DTX_EXECUTABLE.exec,append=false,jmx=true")
+[[ ${DEBUG} == *"covc"* ]] && DTX_JARGS+=("-javaagent:$JBASE/jacocoagent.jar=destfile=$TARGET/$DTX_MAIN_CLASS.exec,append=true")
+[[ ${DEBUG} == *"covf"* ]] && DTX_JARGS+=("-javaagent:$JBASE/jacocoagent.jar=destfile=$TARGET/$DTX_MAIN_CLASS.exec,append=false,jmx=true")
 DTX_JARGS+=("-Dconsole_width=$COLUMNS" "-splash:res/splash.jpg")
 USERINIT=${UBASE}/init.sh && test -f "${USERINIT}" && source "${USERINIT}"
 test -z "${DTX_ENV_HOME}" && DTX_ENV=false || DTX_ENV=true

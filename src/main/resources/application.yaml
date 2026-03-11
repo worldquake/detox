@@ -18,6 +18,9 @@ spring:
       enabled: false
   flyway:
     enabled: false
+  devtools:
+    restart:
+      enabled: false
   shell:
     history:
       name: ${target}/shell.log

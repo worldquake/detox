@@ -9,6 +9,10 @@ java {
 }
 
 configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
     compileOnly {
         extendsFrom annotationProcessor
     }
@@ -67,7 +71,8 @@ dependencies {
 
     testImplementation 'org.springframework.shell:spring-shell-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    runtimeOnly 'org.springframework.boot:spring-boot-devtools'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }
 
 tasks.test {

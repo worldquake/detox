@@ -48,6 +48,7 @@ allprojects {
 distributions {
     main {
         contents {
+            exclude '**/spring-boot-devtools*.jar'
             from("${rootDir}/src/main/sh") {
                 into('')
             }
