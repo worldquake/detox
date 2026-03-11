@@ -79,7 +79,7 @@ argread() {
 		done
 	done
 }
-DTX_JARGS=()
+DTX_JARGS=($DTX_JARGS)
 DEBUG=${DEBUG:-false}
 [[ ${DEBUG} == *"local"* ]] && DTX_JARGS+=(-Ddebug=true -Daj.weaving.verbose=true)
 [[ ${DEBUG} == *"remote"* ]] && DTX_JARGS+=(-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005)
@@ -105,7 +105,7 @@ if $CYGWINBOOL; then
 else
 	export LD_LIBRARY_PATH=$JBASE/native:$LD_LIBRARY_PATH
 fi
-test ! -z "$ASPECTJ" && DTX_JARGS+=("-javaagent$ASPECTJ")
+test ! -z "$ASPECTJ" && DTX_JARGS+=("-javaagent:$ASPECTJ")
 if [ -e $UPDATE ]; then
 	if [[ `basename $UPDATE` == update ]]; then
 		cp -r $UPDATE/* $OABASE/

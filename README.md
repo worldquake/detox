@@ -37,7 +37,7 @@ To enable the `dev` Spring profile (e.g. `application-dev.properties`), run with
 ./gradlew run -Djvm.args="-DIDE=true"
 ```
 
-Also, the `startup.*`scripts can be used as in the build `target/distributions`folder the zip is built.
+Also, the `startup.*` scripts can be used as in the build `target/distributions` folder the zip is built.
 
 ## Architecture Overview
 
