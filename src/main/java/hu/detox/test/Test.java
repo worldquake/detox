@@ -47,17 +47,8 @@ public class Test implements ApplicationListener<ContextRefreshedEvent> {
     @SneakyThrows
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        ChatClient.Builder builder = Main.ctx().getBean(ChatClient.Builder.class);
-        ChatMemory chatMemory = MessageWindowChatMemory.builder()
-                .maxMessages(10)
-                .build();
-        ChatClient chat = builder
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
-                .build();
-
+        ChatClient chat = Main.ctx().getBean(ChatClient.class);
         prompt = chat.prompt().system(SYSTEM_PROMPT).tools(this);
-        sendMessage("Tell me a joke!");
-        sendMessage("What's the weather?");
         var br = new BufferedReader(new InputStreamReader(System.in));
         String ln;
         System.err.print("Ask more questions or just enter to quit: ");

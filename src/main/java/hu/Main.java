@@ -23,12 +23,12 @@ public class Main implements ApplicationContextAware {
     public static final String BEAN_NAME = "rootMain";
     private static ApplicationContext context;
     private static PropertyResolver resolver;
+    public static final boolean IDE = Boolean.getBoolean("IDE");
 
     public static ApplicationContext main(Class<?> any, String[] args) throws Exception {
         System.setProperty("root", any.getPackageName());
-        Agent.init();
         SpringApplication application = new SpringApplication(any);
-        if (Agent.IDE) application.setAdditionalProfiles("dev");
+        if (IDE) application.setAdditionalProfiles("dev");
         return application.run(args);
     }
 
@@ -52,6 +52,7 @@ public class Main implements ApplicationContextAware {
     public void setApplicationContext(ApplicationContext ctx) throws BeansException {
         context = ctx;
         if (resolver != null) return;
+        Agent.start();
         resolver = ctx.getBean(PropertyResolver.class);
         File my = Agent.getFile("application.yaml", FileFilterUtils.fileFileFilter());
         if (my != null) {

@@ -3,7 +3,7 @@ plugins {
     id 'application'
 }
 
-group = 'hu.detox.szexpartnerek'
+group = 'hu.detox'
 version = '1.0-SNAPSHOT'
 description = 'Szexpartnerek web scraper'
 
