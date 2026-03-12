@@ -1,6 +1,5 @@
 package hu.detox.io;
 
-import com.amazonaws.util.StringInputStream;
 import hu.detox.utils.Http;
 import hu.detox.utils.url.URL;
 import kotlin.Pair;
@@ -124,8 +123,7 @@ public class IOHelper extends IOUtils implements Closeable {
         final InputStream ret;
         if (parIs instanceof BufferedInputStream) {
             ret = parIs;
-        } else if (parIs instanceof ByteArrayInputStream
-                || parIs instanceof StringInputStream) {
+        } else if (parIs instanceof ByteArrayInputStream) {
             ret = parIs;
             ret.mark(Integer.MAX_VALUE);
         } else {

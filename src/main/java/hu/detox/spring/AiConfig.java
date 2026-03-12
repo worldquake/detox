@@ -23,6 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
@@ -44,6 +45,7 @@ import static org.springframework.ai.model.openai.autoconfigure.OpenAIAutoConfig
 
 @Configuration
 @EnableConfigurationProperties(AiConfig.OpenAiProperties.class)
+@Import(Main.class)
 public class AiConfig {
 
     @ConfigurationProperties(prefix = "openai")
