@@ -41,7 +41,6 @@ public class Agent implements AutoCloseable {
     public static boolean test = Boolean.getBoolean(Agent.TEST_KEY) || Boolean.parseBoolean(Agent.getEnvOfKey(Agent.TEST_KEY));
     public static String user = System.getProperty(Agent.USERNAME_KEY, Agent.getEnvOfKey(Agent.USERNAME_KEY));
     public static final boolean HOME_FIRST = Boolean.getBoolean(Agent.HOME_FIRST_KEY) || Boolean.parseBoolean(Agent.getEnvOfKey(Agent.HOME_FIRST_KEY));
-    public static final boolean IDE = Boolean.getBoolean("IDE");
     public static final File ENV;
     public static final File[] SYS;
     public static final String TARGET = "target";
@@ -56,12 +55,16 @@ public class Agent implements AutoCloseable {
     private static Graphics2D SPLASHG;
     private static SplashScreen SPLASH;
 
-    static {
+    public static void start() {
         if (!GraphicsEnvironment.isHeadless()) {
             SPLASH = SplashScreen.getSplashScreen();
             SPLASHG = SPLASH != null ? SPLASH.createGraphics() : null;
         }
         Agent.timer("Start");
+    }
+
+    static {
+        initUnits();
         final String sys = System.getProperty(Agent.SYS_KEY, Agent.getEnvOfKey(Agent.SYS_KEY));
         if (StringUtils.isEmpty(sys)) {
             SYS = null;
@@ -141,10 +144,9 @@ public class Agent implements AutoCloseable {
                 (Agent.WORK != null ? "WORK=" + Agent.WORK + "\n" : org.apache.commons.lang3.StringUtils.EMPTY) + // WORK directory must normally exist...
                 "BASE=" + Agent.BASE + // Installation directory
                 "\nJAVA=" + org.apache.commons.lang3.SystemUtils.JAVA_RUNTIME_NAME + " " + org.apache.commons.lang3.SystemUtils.JAVA_RUNTIME_VERSION);
-        Agent.timer("Finish Agent Init (w=" + Agent.WORK + ", b=" + Agent.BASE + ")");
     }
 
-    public static final void splash(final String message) {
+    public static void splash(final String message) {
         if (SPLASHG == null) {
             System.err.println(message);
         } else {
@@ -163,6 +165,7 @@ public class Agent implements AutoCloseable {
         }
         SPLASH = null;
         SPLASHG = null;
+        Agent.timer("Finish Agent Init (w=" + Agent.WORK + ", b=" + Agent.BASE + ")");
     }
 
     private static File initHome() {
@@ -177,7 +180,9 @@ public class Agent implements AutoCloseable {
                 nun = System.getenv("DTX_USER_NAME");
                 if (StringUtils.isEmpty(nun)) {
                     try {
-                        final Process p = Runtime.getRuntime().exec("whoami");
+                        Process p = new ProcessBuilder("whoami")
+                                .redirectErrorStream(true)
+                                .start();
                         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
                         org.apache.commons.io.IOUtils.copy(p.getInputStream(), bos);
                         p.waitFor();
@@ -213,7 +218,7 @@ public class Agent implements AutoCloseable {
         return nhome;
     }
 
-    public static void init() {
+    private static void initUnits() {
         final UnitFormat unitFormat = UnitFormat.getInstance();
         // Duration units
         unitFormat.label(SI.MILLI(SI.SECOND), "ms");

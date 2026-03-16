@@ -25,7 +25,7 @@ import static hu.detox.spring.DetoxConfig.toAmount;
 
 public class IOUtils extends org.apache.commons.io.IOUtils {
     public static final String APPEND = "-append";
-    public static final PrintStream NULL = new PrintStream(ByteStreams.nullOutputStream());
+    public static final PrintStream NULL = new PrintStream(OutputStream.nullOutputStream());
     static int DEFUALT_BUFFER_SIZE = 8192;
     private static Configuration OPENSSLCONFIG;
 

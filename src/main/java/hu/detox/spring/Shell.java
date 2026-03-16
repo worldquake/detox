@@ -109,7 +109,7 @@ public class Shell implements ApplicationListener<SpringApplicationEvent>, AutoC
     @Override
     public void onApplicationEvent(SpringApplicationEvent event) {
         if (event instanceof ApplicationStartedEvent) Agent.closeSplash();
-        if (event instanceof ApplicationReadyEvent && (Agent.IDE || System.console() != null)) {
+        if (event instanceof ApplicationReadyEvent && (hu.Main.IDE || System.console() != null)) {
             intThread = Thread.currentThread();
             intRunner.run((String[]) null);
         }
