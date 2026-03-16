@@ -24,7 +24,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -56,8 +58,6 @@ import static org.springframework.ai.model.openai.autoconfigure.OpenAIAutoConfig
 
 @Configuration
 @ComponentScan
-@DependsOn(Main.BEAN_NAME)
-@Import(Main.class)
 @EnableConfigurationProperties(DetoxConfig.OpenAiProperties.class)
 public class DetoxConfig implements BeanPostProcessor {
     private static final Logbook LOGBOOK = Logbook.builder()

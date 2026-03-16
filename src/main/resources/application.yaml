@@ -8,8 +8,6 @@ spring:
   http:
     converters:
       preferred-json-mapper: jackson2
-  main:
-    web-application-type: servlet
   autoconfigure:
     exclude:
       - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration

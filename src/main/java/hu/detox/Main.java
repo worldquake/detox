@@ -70,11 +70,16 @@ public class Main implements BeanPostProcessor {
     }
 
     public static ApplicationContext main(Class<?> any, String[] args) throws Exception {
+        return main(true, any, args);
+    }
+
+    public static ApplicationContext main(boolean ws, Class<?> any, String[] args) throws Exception {
         try {
             PROMPT = ReflectionUtils.getProperty(any, "PROMPT");
         } catch (IllegalArgumentException ia) {
             // No worries
         }
-        return hu.Main.main(any, args);
+        return hu.Main.main(ws, any, args);
     }
+
 }

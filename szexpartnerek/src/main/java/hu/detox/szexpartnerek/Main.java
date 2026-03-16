@@ -15,7 +15,7 @@ import java.text.Normalizer;
 import static hu.detox.szexpartnerek.spring.SyncCommand.normalize;
 
 @Configuration
-@ComponentScan(basePackageClasses = {SzexConfig.class, hu.detox.Main.class})
+@ComponentScan(basePackageClasses = SzexConfig.class)
 @Component("szexpartnerek")
 @RequiredArgsConstructor
 @ConditionalOnNoApp.Annotation

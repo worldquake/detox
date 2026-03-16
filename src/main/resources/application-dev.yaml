@@ -2,4 +2,4 @@ spring.web.error.include-stacktrace: ALWAYS
 logging.level:
   root: INFO
   org.springframework: INFO
-  org.apache.hc.client5.http.wire: DEBUG
+  org.apache.hc.client5.http.wire: INFO
