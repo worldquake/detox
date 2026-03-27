@@ -101,6 +101,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
 
         @Override
         public String next() {
+            if (offset > 100) throw new IllegalStateException("Offset is too big: " + offset);
             String ret = Integer.toString(offset);
             ret = "offset=" + ret + "&status=" + SMODES[mode];
             offset += pageSize();
