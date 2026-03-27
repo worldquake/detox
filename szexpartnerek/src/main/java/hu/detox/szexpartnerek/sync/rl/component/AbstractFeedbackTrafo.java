@@ -42,6 +42,8 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
         private transient Progress meter = new Progress();
         private transient int[] max;
         private transient int[] curr;
+        // Edge case: In rare occasions a page does not contain any data then we skip iteration
+        private transient boolean hadItem = true;
         private int offset;
         private int mode;
 
@@ -69,6 +71,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
 
         @Override
         public int current(JsonNode node) {
+            hadItem = true;
             if (max == null) first(node);
             int cr = 0, cc = 0;
             for (String sm : SMODES) {
@@ -83,6 +86,7 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
 
         @Override
         public boolean hasNext() {
+            if (!hadItem) nextMode(true);
             return mode < SMODES.length;
         }
 
@@ -101,10 +105,10 @@ public abstract class AbstractFeedbackTrafo extends AbstractTrafoEngine {
 
         @Override
         public String next() {
-            if (offset > 100) throw new IllegalStateException("Offset is too big: " + offset);
             String ret = Integer.toString(offset);
             ret = "offset=" + ret + "&status=" + SMODES[mode];
             offset += pageSize();
+            hadItem = false;
             if (meter != null) meter.step(pageSize());
             return ret;
         }

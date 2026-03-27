@@ -1,8 +1,6 @@
-package hu.detox.szexpartnerek.sync.rl;
+package hu.detox.szexpartnerek.sync;
 
 import hu.detox.spring.Shell;
-import hu.detox.szexpartnerek.sync.Args;
-import hu.detox.szexpartnerek.sync.Sync;
 import hu.detox.utils.strings.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -20,7 +18,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 @Component("szexpartnerekSyncCmd")
 @ConditionalOnExpression("'hu.detox.szexpartnerek.sync.rl'.startsWith('${root}')")
-public class Command implements Function<CommandContext, Sync.Entry> {
+public class Commands implements Function<CommandContext, Sync.Entry> {
     private final hu.detox.szexpartnerek.sync.Shell shell;
 
     @Bean
