@@ -1,6 +1,5 @@
 package hu.detox.io;
 
-import com.google.common.io.ByteStreams;
 import hu.detox.Agent;
 import hu.detox.config.ConfigReader;
 import hu.detox.utils.ThreadUtils;

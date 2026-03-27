@@ -1,7 +1,5 @@
 package hu.detox.utils;
 
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import org.apache.commons.collections.Transformer;
 
 import java.util.*;
@@ -309,13 +307,6 @@ public class CollectionUtils extends org.apache.commons.collections.CollectionUt
         final LinkedList ll = new LinkedList(Arrays.asList(arr));
         CollectionUtils.trafo(ll, tr);
         return ll;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static <T> Collection<T> trafoNoNulls(Collection c, final Transformer tr) {
-        c = CollectionUtils.trafo(c, tr);
-        Iterables.removeIf(c, Predicates.isNull());
-        return c;
     }
 
     public static <T> void removeAllInplaceSorted(final List<T> c, final int... idxs) {

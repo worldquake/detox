@@ -1,8 +1,9 @@
 package hu.detox.utils.url;
 
-import hu.detox.utils.strings.StringUtils;
 import hu.detox.utils.SystemUtils;
 import hu.detox.utils.reflection.ReflectionUtils;
+import hu.detox.utils.strings.StringUtils;
+import jakarta.validation.constraints.NotNull;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.hc.core5.http.HttpHeaders;
@@ -223,6 +224,7 @@ public final class URL implements Cloneable, Serializable {
         return URL.parseKeyValuePair(parQs, URL.QUERY_SEP);
     }
 
+    @NotNull
     public static URL valueOf(String parUrl) {
         parUrl = StringUtils.trimToNull(parUrl.trim());
         if (parUrl == null) return null;

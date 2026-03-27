@@ -2,10 +2,10 @@ package hu.detox.spring;
 
 import hu.detox.Agent;
 import hu.detox.utils.CollectionUtils;
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.net.ssl.*;
 import java.io.File;
 import java.io.FileInputStream;

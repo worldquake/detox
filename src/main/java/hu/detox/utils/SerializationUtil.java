@@ -2,7 +2,8 @@ package hu.detox.utils;
 
 import hu.detox.Agent;
 import hu.detox.io.IOHelper;
-import org.apache.http.client.utils.CloneUtils;
+import hu.detox.utils.reflection.ReflectionUtils;
+import lombok.SneakyThrows;
 
 import java.io.*;
 
@@ -11,6 +12,7 @@ public class SerializationUtil {
     public static final String SER = ".ser";
     private static final String EXT = ".ext";
 
+    @SneakyThrows
     public static <T> T deepClone(final T arg) {
         if (arg == null) {
             return null;
@@ -20,7 +22,7 @@ public class SerializationUtil {
             T ret = null;
             try (final ObjectOutputStream oos = new ObjectOutputStream(sobj)) {
                 if (arg instanceof Externalizable && arg instanceof Cloneable) {
-                    ret = (T) CloneUtils.clone(arg);
+                    ret = ReflectionUtils.invokeMethod(arg, "clone");
                     try {
                         ((Externalizable) ret).writeExternal(oos);
                     } finally {
@@ -38,7 +40,7 @@ public class SerializationUtil {
                 }
                 return ret;
             }
-        } catch (final CloneNotSupportedException | ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             throw new IllegalStateException("Implementation error on " + arg, e);
         } catch (final IOException e) {
             throw new IllegalStateException("Default deepclone IO error on " + arg, e);

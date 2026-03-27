@@ -13,7 +13,7 @@ import hu.detox.szexpartnerek.sync.rl.component.New;
 import hu.detox.szexpartnerek.sync.rl.component.PartnerFeedback;
 import hu.detox.szexpartnerek.sync.rl.persister.PartnerPersister;
 import hu.detox.utils.strings.StringUtils;
-import okhttp3.HttpUrl;
+import hu.detox.utils.url.URL;
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.jetbrains.annotations.NotNull;
@@ -416,7 +416,7 @@ public class Partner extends AbstractTrafoEngine implements ITrafoEngine.Filters
         if (location != null) {
             String glink = text(false, doc.selectFirst("div#mapsInnerContainer iframe"), "src");
             if (glink != null) {
-                glink = HttpUrl.get(glink).queryParameter("q");
+                glink = URL.valueOf(glink).getParameterString("q");
                 if (glink.matches("[0-9.,]+")) { // geo coordinate
                     location.add(glink);
                 }

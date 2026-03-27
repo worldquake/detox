@@ -1,13 +1,12 @@
 package hu.detox.io;
 
-import com.google.api.client.util.ByteStreams;
-import com.google.common.net.HttpHeaders;
 import hu.detox.Agent;
 import hu.detox.parsers.AmountCalculator;
 import hu.detox.utils.SystemUtils;
 import hu.detox.utils.TimeUtils;
 import hu.detox.utils.reflection.ReflectionUtils;
 import hu.detox.utils.strings.StringUtils;
+import io.netty.util.internal.BoundedInputStream;
 import kotlin.Pair;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FilenameUtils;
@@ -18,10 +17,7 @@ import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SerializationUtils;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
 
 import javax.measure.unit.NonSI;
@@ -634,8 +630,8 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
         final long l2 = f2.length();
         boolean ret = l1 == l2 && l1 >= 0 && l2 >= 0;
         if (ret) {
-            InputStream is1 = ByteStreams.limit(new FileInputStream(f1), lenLimit);
-            InputStream is2 = ByteStreams.limit(new FileInputStream(f2), lenLimit);
+            InputStream is1 = new BoundedInputStream(new FileInputStream(f1), (int) lenLimit);
+            InputStream is2 = new BoundedInputStream(new FileInputStream(f2), (int) lenLimit);
             try {
                 is1 = IOHelper.getBuffered(is1, -lenLimit);
                 is2 = IOHelper.getBuffered(is2, -lenLimit);

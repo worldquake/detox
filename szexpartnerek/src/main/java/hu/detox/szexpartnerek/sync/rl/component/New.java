@@ -7,7 +7,7 @@ import hu.detox.szexpartnerek.sync.IPersister;
 import hu.detox.szexpartnerek.sync.ITrafoEngine;
 import hu.detox.szexpartnerek.sync.rl.component.sub.Partner;
 import hu.detox.szexpartnerek.sync.rl.component.sub.User;
-import okhttp3.HttpUrl;
+import hu.detox.utils.url.URL;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
@@ -72,9 +72,9 @@ public class New implements ITrafoEngine {
         on.put(PARTNERS, OM.createArrayNode());
         on.put(USERS, OM.createArrayNode());
         for (Element e : Jsoup.parse(s).select("a")) {
-            var url = HttpUrl.get("http://" + e.attr("href"));
-            Integer id = Integer.valueOf(url.queryParameter("id").replaceAll("[^0-9]+", ""));
-            switch (url.queryParameter("pid")) {
+            var url = URL.valueOf("http://" + e.attr("href"));
+            Integer id = Integer.valueOf(url.getParameterString("id").replaceAll("[^0-9]+", ""));
+            switch (url.getParameterString("pid")) {
                 case "user-data":
                     ((ArrayNode) on.get(USERS)).add(id);
                 case "szexpartner-data":

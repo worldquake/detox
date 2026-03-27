@@ -3,8 +3,8 @@ package hu.detox.utils.url;
 import hu.detox.utils.strings.StringUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.auth.Credentials;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 
 import java.text.MessageFormat;
 
@@ -36,7 +36,7 @@ public class UserPass extends User {
     }
 
     public Credentials toCredentials() {
-        return new UsernamePasswordCredentials(this.getUserName(), this.getPassword());
+        return new UsernamePasswordCredentials(this.getUserName(), this.getPassword().toCharArray());
     }
 
     @Override
